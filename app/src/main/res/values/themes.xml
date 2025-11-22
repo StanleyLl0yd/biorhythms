@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Biorhythms" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary_light</item>
-        <item name="colorOnPrimary">@color/on_primary_light</item>
-        <item name="colorSecondary">@color/secondary_light</item>
-        <item name="colorOnSecondary">@color/on_secondary_light</item>
-        <item name="colorTertiary">@color/tertiary_light</item>
-        <item name="colorOnTertiary">@color/on_tertiary_light</item>
+    <style name="Theme.Biorhythms" parent="@android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/background_light</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
     </style>
 </resources>
