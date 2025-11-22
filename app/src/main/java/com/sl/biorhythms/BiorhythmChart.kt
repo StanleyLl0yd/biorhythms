@@ -75,9 +75,9 @@ fun BiorhythmChart(
     // Считываем цвета из темы ЗДЕСЬ, в @Composable-контексте
     val axisColor = MaterialTheme.colorScheme.outlineVariant
     val gridColor = axisColor.copy(alpha = 0.3f)
-    val physicalColor = Color(0xFFE53935)   // красный
-    val emotionalColor = Color(0xFF43A047)  // зелёный
-    val intellectualColor = Color(0xFF1E88E5) // синий
+    val physicalColor = MaterialTheme.colorScheme.tertiary
+    val emotionalColor = MaterialTheme.colorScheme.secondary
+    val intellectualColor = MaterialTheme.colorScheme.primary
 
     Column(modifier = modifier) {
         Canvas(
@@ -187,11 +187,11 @@ fun BiorhythmLegend(
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier) {
-        LegendItem(label = "Physical", color = Color(0xFFE53935))
+        LegendItem(label = "Physical", color = MaterialTheme.colorScheme.tertiary)
         Spacer(modifier = Modifier.width(12.dp))
-        LegendItem(label = "Emotional", color = Color(0xFF43A047))
+        LegendItem(label = "Emotional", color = MaterialTheme.colorScheme.secondary)
         Spacer(modifier = Modifier.width(12.dp))
-        LegendItem(label = "Intellectual", color = Color(0xFF1E88E5))
+        LegendItem(label = "Intellectual", color = MaterialTheme.colorScheme.primary)
     }
 }
 
