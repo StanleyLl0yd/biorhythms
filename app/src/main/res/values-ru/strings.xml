@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Биоритмы</string>
+
+    <!-- Главный экран -->
+    <string name="title_select_birth_date">Выберите дату рождения</string>
+    <string name="action_tap_to_choose_date">Нажмите, чтобы выбрать дату</string>
+    <string name="chart_title_today_range">Биоритмы на сегодня и ±%1$d дней</string>
+    <string name="placeholder_pick_birth_date">Выберите дату рождения, чтобы увидеть график биоритмов.</string>
+
+    <!-- Диалог выбора даты -->
+    <string name="dialog_title_birth_date">Выбор даты рождения</string>
+    <string name="dialog_ok">ОК</string>
+    <string name="dialog_cancel">Отмена</string>
+
+    <!-- Легенда графика -->
+    <string name="legend_physical">Физический</string>
+    <string name="legend_emotional">Эмоциональный</string>
+    <string name="legend_intellectual">Интеллектуальный</string>
+    <string name="label_today">Сегодня</string>
+
+    <!-- Описание для accessibility -->
+    <string name="chart_a11y_description">
+        График биоритмов с %1$s по %2$s. Сегодня:
+    </string>
+
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_section_appearance">Оформление</string>
+    <string name="settings_section_language">Язык</string>
+    <string name="settings_theme_system">Как на устройстве</string>
+    <string name="settings_theme_light">Светлая тема</string>
+    <string name="settings_theme_dark">Тёмная тема</string>
+    <string name="settings_language_system">Язык устройства</string>
+    <string name="settings_language_russian">Русский</string>
+    <string name="settings_language_english">Английский</string>
+</resources>

@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">Biorhythms</string>
+
+    <!-- Главный экран -->
+    <string name="title_select_birth_date">Select your birth date</string>
+    <string name="action_tap_to_choose_date">Tap to choose date</string>
+    <string name="chart_title_today_range">Biorhythms for ±%1$d days around today</string>
+    <string name="placeholder_pick_birth_date">Pick your birth date to see your biorhythm chart.</string>
+
+    <!-- Диалог выбора даты -->
+    <string name="dialog_title_birth_date">Select your birth date</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <!-- Легенда графика -->
+    <string name="legend_physical">Physical</string>
+    <string name="legend_emotional">Emotional</string>
+    <string name="legend_intellectual">Intellectual</string>
+    <string name="label_today">Today</string>
+
+    <!-- Описание для accessibility -->
+    <string name="chart_a11y_description">
+        Biorhythm chart from %1$s to %2$s. Today:
+    </string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_language">Language</string>
+    <string name="settings_theme_system">Use system theme</string>
+    <string name="settings_theme_light">Light theme</string>
+    <string name="settings_theme_dark">Dark theme</string>
+    <string name="settings_language_system">Use system language</string>
+    <string name="settings_language_russian">Russian</string>
+    <string name="settings_language_english">English</string>
 </resources>

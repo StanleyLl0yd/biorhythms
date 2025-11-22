@@ -1,62 +1,53 @@
 package com.sl.biorhythms
 
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
+import android.app.DatePickerDialog
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import java.time.Instant
+import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
 import java.time.ZoneId
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BirthDatePickerDialog(
     initialDate: LocalDate,
     onDismiss: () -> Unit,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelected: (LocalDate) -> Unit,
 ) {
+    val context = LocalContext.current
     val zoneId = remember { ZoneId.systemDefault() }
-    val initialMillis = remember(initialDate) {
-        initialDate
+    val today = remember { LocalDate.now(zoneId) }
+
+    DisposableEffect(Unit) {
+        val dialog = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selected = LocalDate.of(year, month + 1, dayOfMonth)
+                // не даём выбрать дату в будущем
+                val clamped = if (selected.isAfter(today)) today else selected
+                onDateSelected(clamped)
+            },
+            initialDate.year,
+            initialDate.monthValue - 1,
+            initialDate.dayOfMonth
+        )
+
+        // ограничиваем максимум сегодняшним днём
+        val maxMillis = today
             .atStartOfDay(zoneId)
             .toInstant()
             .toEpochMilli()
-    }
+        dialog.datePicker.maxDate = maxMillis
 
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialMillis,
-        yearRange = 1900..LocalDate.now().year
-    )
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val millis = datePickerState.selectedDateMillis
-                    if (millis != null) {
-                        val date = Instant.ofEpochMilli(millis)
-                            .atZone(zoneId)
-                            .toLocalDate()
-                        onDateSelected(date)
-                    } else {
-                        onDismiss()
-                    }
-                }
-            ) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
+        dialog.setOnDismissListener {
+            onDismiss()
         }
-    ) {
-        DatePicker(state = datePickerState)
+
+        dialog.show()
+
+        onDispose {
+            dialog.setOnDismissListener(null)
+            dialog.dismiss()
+        }
     }
 }

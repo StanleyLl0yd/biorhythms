@@ -1,12 +1,13 @@
 package com.sl.biorhythms
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,8 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sl.biorhythms.ui.theme.BiorhythmsTheme
+import com.sl.biorhythms.ui.theme.EmotionalLineColor
+import com.sl.biorhythms.ui.theme.IntellectualLineColor
+import com.sl.biorhythms.ui.theme.PhysicalLineColor
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -33,7 +41,7 @@ private fun biorhythmValue(daysFromBirth: Long, period: Double): Double =
     sin(2.0 * PI * daysFromBirth / period)
 
 data class BiorhythmLine(
-    val label: String,
+    val labelResId: Int,
     val period: Double,
     val color: Color,
 )
@@ -43,19 +51,19 @@ fun rememberBiorhythmLines(): List<BiorhythmLine> {
     return remember {
         listOf(
             BiorhythmLine(
-                label = "Physical",
+                labelResId = R.string.legend_physical,
                 period = 23.0,
-                color = Color(0xFFE53935),   // ярко-красный
+                color = PhysicalLineColor,
             ),
             BiorhythmLine(
-                label = "Emotional",
+                labelResId = R.string.legend_emotional,
                 period = 28.0,
-                color = Color(0xFF43A047),   // насыщенный зелёный
+                color = EmotionalLineColor,
             ),
             BiorhythmLine(
-                label = "Intellectual",
+                labelResId = R.string.legend_intellectual,
                 period = 33.0,
-                color = Color(0xFF1E88E5),   // синий
+                color = IntellectualLineColor,
             ),
         )
     }
@@ -76,9 +84,6 @@ fun BiorhythmChart(
     val endDate = remember(referenceDate, futureDays) {
         referenceDate.plusDays(futureDays.toLong())
     }
-    val dateFormatter = remember {
-        DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
-    }
 
     val daysOffsets = remember(pastDays, futureDays) {
         (-pastDays..futureDays).toList()
@@ -86,6 +91,7 @@ fun BiorhythmChart(
 
     val axisColor = MaterialTheme.colorScheme.outlineVariant
     val gridColor = axisColor.copy(alpha = 0.3f)
+    val verticalGridColor = gridColor.copy(alpha = 0.3f)
 
     val lineValues: Map<BiorhythmLine, List<Double>> = remember(
         birthDate,
@@ -102,44 +108,90 @@ fun BiorhythmChart(
         }
     }
 
+    val todayIndex = pastDays.coerceAtMost(daysOffsets.lastIndex.coerceAtLeast(0))
+    val todayValues: Map<BiorhythmLine, Double> = lines.associateWith { line ->
+        lineValues[line]?.getOrNull(todayIndex) ?: 0.0
+    }
+
+    val dateFormatter = remember {
+        DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
+    }
+
+    val header = appString(
+        R.string.chart_a11y_description,
+        startDate.format(dateFormatter),
+        endDate.format(dateFormatter),
+    )
+
+    val parts = mutableListOf<String>()
+    for (line in lines) {
+        val label = appString(line.labelResId)
+        val value = todayValues[line] ?: 0.0
+        parts += "$label ${"%.2f".format(value)}"
+    }
+    val chartDescription = "$header ${parts.joinToString(", ")}"
+
     Column(modifier = modifier) {
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .height(200.dp)
+                .semantics { contentDescription = chartDescription },
         ) {
             val width = size.width
             val height = size.height
             val centerY = height / 2f
             val amplitude = height * 0.4f
 
-            val pointCount = daysOffsets.size
-            if (pointCount < 2) return@Canvas
-
-            val stepX = width / (pointCount - 1)
-
-            // Вертикальная сетка
-            for (i in 0 until pointCount) {
-                val x = i * stepX
-                drawLine(
-                    color = gridColor,
-                    start = Offset(x, 0f),
-                    end = Offset(x, height),
-                    strokeWidth = 0.5.dp.toPx(),
-                )
+            val stepsCount = daysOffsets.size
+            val stepX = if (stepsCount > 1) {
+                width / (stepsCount - 1)
+            } else {
+                width
             }
 
-            // Горизонтальная ось (0)
+            val zeroY = centerY
+            val topY = centerY - amplitude
+            val bottomY = centerY + amplitude
+
+            // вертикальная сетка по дням
+            if (stepsCount > 1) {
+                val stroke = 0.5.dp.toPx()
+                for (i in 0..daysOffsets.lastIndex) {
+                    val x = i * stepX
+                    drawLine(
+                        color = verticalGridColor,
+                        start = Offset(x, 0f),
+                        end = Offset(x, height),
+                        strokeWidth = stroke,
+                    )
+                }
+            }
+
+            // горизонтальная сетка для +1 и -1
             drawLine(
-                color = axisColor,
-                start = Offset(0f, centerY),
-                end = Offset(width, centerY),
+                color = gridColor,
+                start = Offset(0f, topY),
+                end = Offset(width, topY),
+                strokeWidth = 1.dp.toPx(),
+            )
+            drawLine(
+                color = gridColor,
+                start = Offset(0f, bottomY),
+                end = Offset(width, bottomY),
                 strokeWidth = 1.dp.toPx(),
             )
 
-            // Вертикальная линия "сегодня"
-            val todayIndex = pastDays
-            val todayX = todayIndex * stepX
+            // линия 0
+            drawLine(
+                color = axisColor,
+                start = Offset(0f, zeroY),
+                end = Offset(width, zeroY),
+                strokeWidth = 1.dp.toPx(),
+            )
+
+            // вертикальная линия "сегодня" поверх сетки
+            val todayX = stepX * todayIndex
             drawLine(
                 color = axisColor,
                 start = Offset(todayX, 0f),
@@ -173,26 +225,27 @@ fun BiorhythmChart(
             }
         }
 
-        // Подписи дат снизу (начало / сегодня / конец)
+        // подписи дат: начало / сегодня / конец
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 4.dp),
+                .padding(top = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = dateFormatter.format(startDate),
+                text = startDate.format(dateFormatter),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = "Today",
+                text = appString(R.string.label_today),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = dateFormatter.format(endDate),
+                text = endDate.format(dateFormatter),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(1f),
@@ -206,12 +259,16 @@ fun BiorhythmLegend(
     lines: List<BiorhythmLine>,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier = modifier) {
-        lines.forEachIndexed { index, line ->
-            if (index > 0) {
-                Spacer(modifier = Modifier.width(12.dp))
-            }
-            LegendItem(label = line.label, color = line.color)
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        lines.forEach { line ->
+            LegendItem(
+                label = appString(line.labelResId),
+                color = line.color,
+            )
         }
     }
 }
@@ -221,11 +278,10 @@ private fun LegendItem(
     label: String,
     color: Color,
 ) {
-    Row {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
                 .size(14.dp)
-                .height(14.dp),
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawRect(color = color)
@@ -235,6 +291,24 @@ private fun LegendItem(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BiorhythmChartPreview() {
+    val lines = rememberBiorhythmLines()
+    BiorhythmsTheme(themeMode = AppThemeMode.SYSTEM) {
+        BiorhythmChart(
+            birthDate = LocalDate.of(1990, 1, 1),
+            referenceDate = LocalDate.now(),
+            pastDays = 15,
+            futureDays = 15,
+            lines = lines,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
         )
     }
 }
