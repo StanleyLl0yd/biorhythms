@@ -2,10 +2,14 @@ package com.sl.biorhythms.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val DeepSpace = Color(0xFF0B1026)
+val StarGlow = Color(0xFFE8EDFF)
+val OrbitBlue = Color(0xFF3C5CE5)
+val OrbitBlueBright = Color(0xFF6AD1FF)
+val OrbitTeal = Color(0xFF1FAE9E)
+val OrbitTealBright = Color(0xFF8FF4E3)
+val OrbitRose = Color(0xFFF05D64)
+val OrbitRoseBright = Color(0xFFFF8DA1)
+val DeepSurface = Color(0xFF131A3A)
+val LightSurface = Color(0xFFFFFFFF)
+val LightBackground = Color(0xFFF3F6FF)
