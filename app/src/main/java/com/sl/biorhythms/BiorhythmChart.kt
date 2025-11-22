@@ -28,8 +28,37 @@ import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.sin
 
-private fun biorhythmValue(daysFromBirth: Long, period: Double): Double {
-    return sin(2.0 * PI * daysFromBirth / period)
+private fun biorhythmValue(daysFromBirth: Long, period: Double): Double =
+    sin(2.0 * PI * daysFromBirth / period)
+
+data class BiorhythmLine(
+    val label: String,
+    val period: Double,
+    val color: Color,
+)
+
+@Composable
+fun rememberBiorhythmLines(): List<BiorhythmLine> {
+    val colorScheme = MaterialTheme.colorScheme
+    return remember(colorScheme) {
+        listOf(
+            BiorhythmLine(
+                label = "Physical",
+                period = 23.0,
+                color = colorScheme.tertiary,
+            ),
+            BiorhythmLine(
+                label = "Emotional",
+                period = 28.0,
+                color = colorScheme.secondary,
+            ),
+            BiorhythmLine(
+                label = "Intellectual",
+                period = 33.0,
+                color = colorScheme.primary,
+            ),
+        )
+    }
 }
 
 @Composable
@@ -38,46 +67,27 @@ fun BiorhythmChart(
     referenceDate: LocalDate,
     pastDays: Int,
     futureDays: Int,
+    lines: List<BiorhythmLine>,
     modifier: Modifier = Modifier
 ) {
     val startDate = remember(referenceDate, pastDays) { referenceDate.minusDays(pastDays.toLong()) }
     val endDate = remember(referenceDate, futureDays) { referenceDate.plusDays(futureDays.toLong()) }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault()) }
 
-    val daysOffsets = remember(pastDays, futureDays) {
-        (-pastDays..futureDays).toList()
-    }
+    val daysOffsets = remember(pastDays, futureDays) { (-pastDays..futureDays).toList() }
 
-    val physicalValues = remember(birthDate, referenceDate, pastDays, futureDays) {
+    fun rememberValues(period: Double) = remember(birthDate, referenceDate, pastDays, futureDays) {
         daysOffsets.map { offset ->
             val date = referenceDate.plusDays(offset.toLong())
             val days = ChronoUnit.DAYS.between(birthDate, date)
-            biorhythmValue(days, 23.0)
+            biorhythmValue(days, period)
         }
     }
 
-    val emotionalValues = remember(birthDate, referenceDate, pastDays, futureDays) {
-        daysOffsets.map { offset ->
-            val date = referenceDate.plusDays(offset.toLong())
-            val days = ChronoUnit.DAYS.between(birthDate, date)
-            biorhythmValue(days, 28.0)
-        }
-    }
-
-    val intellectualValues = remember(birthDate, referenceDate, pastDays, futureDays) {
-        daysOffsets.map { offset ->
-            val date = referenceDate.plusDays(offset.toLong())
-            val days = ChronoUnit.DAYS.between(birthDate, date)
-            biorhythmValue(days, 33.0)
-        }
-    }
-
-    // Считываем цвета из темы ЗДЕСЬ, в @Composable-контексте
     val axisColor = MaterialTheme.colorScheme.outlineVariant
     val gridColor = axisColor.copy(alpha = 0.3f)
-    val physicalColor = MaterialTheme.colorScheme.tertiary
-    val emotionalColor = MaterialTheme.colorScheme.secondary
-    val intellectualColor = MaterialTheme.colorScheme.primary
+
+    val lineValues = lines.associateWith { line -> rememberValues(line.period) }
 
     Column(modifier = modifier) {
         Canvas(
@@ -95,7 +105,6 @@ fun BiorhythmChart(
 
             val stepX = width / (pointCount - 1)
 
-            // Сетка по дням
             daysOffsets.forEachIndexed { index, _ ->
                 val x = index * stepX
                 drawLine(
@@ -106,7 +115,6 @@ fun BiorhythmChart(
                 )
             }
 
-            // Горизонтальная ось (0)
             drawLine(
                 color = axisColor,
                 start = Offset(0f, centerY),
@@ -114,7 +122,6 @@ fun BiorhythmChart(
                 strokeWidth = 1.dp.toPx()
             )
 
-            // Вертикальная линия "сегодня" (смещение 0)
             val todayIndex = pastDays
             val todayX = todayIndex * stepX
             drawLine(
@@ -142,23 +149,12 @@ fun BiorhythmChart(
                 }
             }
 
-            // Красная — физический
-            drawCurve(
-                values = physicalValues,
-                color = physicalColor
-            )
-
-            // Зелёная — эмоциональный
-            drawCurve(
-                values = emotionalValues,
-                color = emotionalColor
-            )
-
-            // Синяя — интеллектуальный
-            drawCurve(
-                values = intellectualValues,
-                color = intellectualColor
-            )
+            lineValues.forEach { (line, values) ->
+                drawCurve(
+                    values = values,
+                    color = line.color,
+                )
+            }
         }
 
         Row(
@@ -184,14 +180,16 @@ fun BiorhythmChart(
 
 @Composable
 fun BiorhythmLegend(
+    lines: List<BiorhythmLine>,
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier) {
-        LegendItem(label = "Physical", color = MaterialTheme.colorScheme.tertiary)
-        Spacer(modifier = Modifier.width(12.dp))
-        LegendItem(label = "Emotional", color = MaterialTheme.colorScheme.secondary)
-        Spacer(modifier = Modifier.width(12.dp))
-        LegendItem(label = "Intellectual", color = MaterialTheme.colorScheme.primary)
+        lines.forEachIndexed { index, line ->
+            if (index > 0) {
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+            LegendItem(label = line.label, color = line.color)
+        }
     }
 }
 

@@ -60,6 +60,7 @@ fun BiorhythmsApp() {
     val today = remember { LocalDate.now() }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val biorhythmLines = rememberBiorhythmLines()
 
     val storedBirthDate by remember {
         context.dataStore.data.map { preferences ->
@@ -126,12 +127,14 @@ fun BiorhythmsApp() {
                     referenceDate = today,
                     pastDays = 15,
                     futureDays = 15,
+                    lines = biorhythmLines,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(240.dp)
                 )
 
                 BiorhythmLegend(
+                    lines = biorhythmLines,
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
