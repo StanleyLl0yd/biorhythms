@@ -5,7 +5,10 @@
     <string name="title_select_birth_date">Выберите дату рождения</string>
     <string name="action_tap_to_choose_date">Нажмите, чтобы выбрать дату</string>
     <string name="chart_title_today_range">Биоритмы на сегодня и ±%1$d дней</string>
-    <string name="placeholder_pick_birth_date">Выберите дату рождения, чтобы увидеть график биоритмов.</string>
+    <string name="placeholder_pick_birth_date">
+        Укажите дату рождения в настройках, чтобы увидеть график биоритмов.
+    </string>
+    <string name="current_birth_date">Дата рождения: %1$s</string>
 
     <!-- Диалог выбора даты -->
     <string name="dialog_title_birth_date">Выбор даты рождения</string>
@@ -33,4 +36,6 @@
     <string name="settings_language_system">Язык устройства</string>
     <string name="settings_language_russian">Русский</string>
     <string name="settings_language_english">Английский</string>
+    <string name="settings_theme_option">Тема</string>
+    <string name="settings_language_option">Язык приложения</string>
 </resources>

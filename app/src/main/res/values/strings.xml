@@ -5,7 +5,10 @@
     <string name="title_select_birth_date">Select your birth date</string>
     <string name="action_tap_to_choose_date">Tap to choose date</string>
     <string name="chart_title_today_range">Biorhythms for ±%1$d days around today</string>
-    <string name="placeholder_pick_birth_date">Pick your birth date to see your biorhythm chart.</string>
+    <string name="placeholder_pick_birth_date">
+        Set your birth date in Settings to see your biorhythm chart.
+    </string>
+    <string name="current_birth_date">Birth date: %1$s</string>
 
     <!-- Диалог выбора даты -->
     <string name="dialog_title_birth_date">Select your birth date</string>
@@ -33,4 +36,6 @@
     <string name="settings_language_system">Use system language</string>
     <string name="settings_language_russian">Russian</string>
     <string name="settings_language_english">English</string>
+    <string name="settings_theme_option">Theme</string>
+    <string name="settings_language_option">App language</string>
 </resources>

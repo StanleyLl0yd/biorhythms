@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -35,10 +36,31 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.math.PI
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 private fun biorhythmValue(daysFromBirth: Long, period: Double): Double =
     sin(2.0 * PI * daysFromBirth / period)
+
+// -1..1 -> -100..100
+private fun toPercent(value: Double): Double =
+    (value * 100.0).coerceIn(-100.0, 100.0)
+
+// градиент от красного (–100) через жёлтый (0) к зелёному (+100)
+private fun colorForPercent(percent: Double): Color {
+    val clamped = percent.coerceIn(-100.0, 100.0)
+    val negative = Color(0xFFFF3B30) // красный
+    val zero = Color(0xFFFFCC00)     // жёлтый
+    val positive = Color(0xFF34C759) // зелёный
+
+    return if (clamped <= 0.0) {
+        val t = ((clamped + 100.0) / 100.0).toFloat() // -100..0 -> 0..1
+        lerp(negative, zero, t)
+    } else {
+        val t = (clamped / 100.0).toFloat()           // 0..100 -> 0..1
+        lerp(zero, positive, t)
+    }
+}
 
 data class BiorhythmLine(
     val labelResId: Int,
@@ -126,8 +148,8 @@ fun BiorhythmChart(
     val parts = mutableListOf<String>()
     for (line in lines) {
         val label = appString(line.labelResId)
-        val value = todayValues[line] ?: 0.0
-        parts += "$label ${"%.2f".format(value)}"
+        val valuePercent = toPercent(todayValues[line] ?: 0.0)
+        parts += "$label ${"%.0f".format(valuePercent)}"
     }
     val chartDescription = "$header ${parts.joinToString(", ")}"
 
@@ -257,17 +279,33 @@ fun BiorhythmChart(
 @Composable
 fun BiorhythmLegend(
     lines: List<BiorhythmLine>,
+    birthDate: LocalDate,
+    referenceDate: LocalDate,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    val daysFromBirth = remember(birthDate, referenceDate) {
+        ChronoUnit.DAYS.between(birthDate, referenceDate)
+    }
+
+    val todayValues: Map<BiorhythmLine, Double> = remember(lines, daysFromBirth) {
+        lines.associateWith { line ->
+            biorhythmValue(daysFromBirth, line.period)
+        }
+    }
+
+    Column(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         lines.forEach { line ->
+            val label = appString(line.labelResId)
+            val raw = todayValues[line] ?: 0.0
+            val percent = toPercent(raw)
+
             LegendItem(
-                label = appString(line.labelResId),
-                color = line.color,
+                label = label,
+                valuePercent = percent,
+                baseColor = line.color,
             )
         }
     }
@@ -276,21 +314,42 @@ fun BiorhythmLegend(
 @Composable
 private fun LegendItem(
     label: String,
-    color: Color,
+    valuePercent: Double,
+    baseColor: Color,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(14.dp)
+    val valueInt = valuePercent.roundToInt()
+    val valueColor = colorForPercent(valuePercent)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawRect(color = color)
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = baseColor)
+                }
             }
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
-        Spacer(modifier = Modifier.width(4.dp))
+
         Text(
-            text = label,
+            text = String.format(Locale.getDefault(), "%+d%%", valueInt),
             style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.End,
+            color = valueColor
         )
     }
 }
@@ -300,15 +359,22 @@ private fun LegendItem(
 private fun BiorhythmChartPreview() {
     val lines = rememberBiorhythmLines()
     BiorhythmsTheme(themeMode = AppThemeMode.SYSTEM) {
-        BiorhythmChart(
-            birthDate = LocalDate.of(1990, 1, 1),
-            referenceDate = LocalDate.now(),
-            pastDays = 15,
-            futureDays = 15,
-            lines = lines,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        )
+        Column(modifier = Modifier.padding(16.dp)) {
+            BiorhythmChart(
+                birthDate = LocalDate.of(1990, 1, 1),
+                referenceDate = LocalDate.now(),
+                pastDays = 15,
+                futureDays = 15,
+                lines = lines,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            BiorhythmLegend(
+                lines = lines,
+                birthDate = LocalDate.of(1990, 1, 1),
+                referenceDate = LocalDate.now(),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }

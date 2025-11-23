@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,9 +39,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 private const val DEFAULT_RANGE_DAYS = 15
 
@@ -77,6 +73,7 @@ fun BiorhythmsRoot(
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
     val language by viewModel.language.collectAsState()
+    val birthDate by viewModel.birthDate.collectAsState()
 
     var currentScreen by rememberSaveable { mutableStateOf(AppScreen.MAIN) }
 
@@ -93,8 +90,10 @@ fun BiorhythmsRoot(
                 AppScreen.SETTINGS -> SettingsScreen(
                     themeMode = themeMode,
                     language = language,
+                    birthDate = birthDate,
                     onThemeModeChange = { viewModel.onThemeModeSelected(it) },
                     onLanguageChange = { viewModel.onLanguageSelected(it) },
+                    onBirthDateChange = { viewModel.onBirthDateSelected(it) },
                     onBack = { currentScreen = AppScreen.MAIN }
                 )
             }
@@ -109,12 +108,6 @@ private fun MainScreen(
 ) {
     val birthDate by viewModel.birthDate.collectAsState()
     val referenceDate by viewModel.referenceDate.collectAsState()
-
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
-
-    val dateFormatter = remember {
-        DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
-    }
 
     val biorhythmLines = rememberBiorhythmLines()
 
@@ -145,34 +138,6 @@ private fun MainScreen(
                 }
             }
 
-            Text(
-                text = appString(R.string.title_select_birth_date),
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            OutlinedButton(
-                onClick = { showDatePicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = birthDate?.format(dateFormatter)
-                        ?: appString(R.string.action_tap_to_choose_date),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            if (showDatePicker) {
-                BirthDatePickerDialog(
-                    initialDate = birthDate ?: LocalDate.now().minusYears(25),
-                    onDismiss = { showDatePicker = false },
-                    onDateSelected = { date ->
-                        showDatePicker = false
-                        viewModel.onBirthDateSelected(date)
-                    }
-                )
-            }
-
             if (birthDate != null) {
                 Text(
                     text = appString(
@@ -191,17 +156,20 @@ private fun MainScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
 
                 BiorhythmLegend(
                     lines = biorhythmLines,
+                    birthDate = birthDate!!,
+                    referenceDate = referenceDate,
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
                 Text(
                     text = appString(R.string.placeholder_pick_birth_date),
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Start
                 )
             }
         }
