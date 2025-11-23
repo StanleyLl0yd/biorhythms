@@ -38,4 +38,19 @@
     <string name="settings_language_english">English</string>
     <string name="settings_theme_option">Theme</string>
     <string name="settings_language_option">App language</string>
+    <!-- Добавьте эти строки в app/src/main/res/values/strings.xml -->
+
+    <!-- Widget -->
+    <string name="widget_title">Biorhythms Today</string>
+    <string name="widget_no_birth_date">Set birth date in app</string>
+    <string name="widget_description">Display your current biorhythms</string>
+    <string name="widget_config_title">Widget Settings</string>
+    <string name="widget_config_transparency">Background Transparency</string>
+    <string name="widget_config_transparent">Transparent</string>
+    <string name="widget_config_opaque">Opaque</string>
+    <string name="widget_config_alpha_value">Transparency: %1$d%%</string>
+    <string name="widget_config_save">Save</string>
+    <string name="widget_physical">Physical</string>
+    <string name="widget_emotional">Emotional</string>
+    <string name="widget_intellectual">Intellectual</string>
 </resources>

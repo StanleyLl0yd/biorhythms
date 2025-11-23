@@ -1,6 +1,5 @@
 package com.sl.biorhythms
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,17 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
 
 private const val DEFAULT_RANGE_DAYS = 15
-
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "biorhythms_prefs",
-)
 
 class MainActivity : ComponentActivity() {
 
@@ -156,7 +148,7 @@ private fun MainScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 BiorhythmLegend(
                     lines = biorhythmLines,
@@ -165,7 +157,7 @@ private fun MainScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = appString(R.string.placeholder_pick_birth_date),
                     style = MaterialTheme.typography.bodyMedium,

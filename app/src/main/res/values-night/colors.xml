@@ -10,4 +10,9 @@
     <color name="on_background_light">#E8EDFF</color>
     <color name="surface_light">#131A3A</color>
     <color name="on_surface_light">#E8EDFF</color>
+    <!-- Добавьте эти цвета в app/src/main/res/values-night/colors.xml -->
+
+    <!-- Widget Colors Dark -->
+    <color name="widget_background_dark">#131A3A</color>
+    <color name="widget_text_dark">#E8EDFF</color>
 </resources>

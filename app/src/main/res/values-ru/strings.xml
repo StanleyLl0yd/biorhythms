@@ -38,4 +38,19 @@
     <string name="settings_language_english">Английский</string>
     <string name="settings_theme_option">Тема</string>
     <string name="settings_language_option">Язык приложения</string>
+    <!-- Добавьте эти строки в app/src/main/res/values-ru/strings.xml -->
+
+    <!-- Widget -->
+    <string name="widget_title">Биоритмы сегодня</string>
+    <string name="widget_no_birth_date">Укажите дату рождения в приложении</string>
+    <string name="widget_description">Отображает текущие биоритмы</string>
+    <string name="widget_config_title">Настройки виджета</string>
+    <string name="widget_config_transparency">Прозрачность фона</string>
+    <string name="widget_config_transparent">Прозрачный</string>
+    <string name="widget_config_opaque">Непрозрачный</string>
+    <string name="widget_config_alpha_value">Прозрачность: %1$d%%</string>
+    <string name="widget_config_save">Сохранить</string>
+    <string name="widget_physical">Физический</string>
+    <string name="widget_emotional">Эмоциональный</string>
+    <string name="widget_intellectual">Интеллектуальный</string>
 </resources>
