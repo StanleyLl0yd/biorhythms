@@ -14,10 +14,10 @@ import android.graphics.RectF
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.ColorUtils
 import com.sl.biorhythms.AppLanguage
 import com.sl.biorhythms.AppThemeMode
 import com.sl.biorhythms.BiorhythmCalculator
+import com.sl.biorhythms.BiorhythmValueColor
 import com.sl.biorhythms.MainActivity
 import com.sl.biorhythms.PreferencesKeys
 import com.sl.biorhythms.R
@@ -255,7 +255,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         canvas.drawText(label, x, baselineY, paint)
 
         val percentText = String.format(locale, "%+d%%", percent.roundToInt())
-        paint.color = colorForPercent(percent)
+        paint.color = BiorhythmValueColor.argb(percent)
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText(percentText, x + maxWidth, baselineY, paint)
 
@@ -282,18 +282,6 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             barHeight / 2f,
             paint,
         )
-    }
-
-    private fun colorForPercent(percent: Double): Int {
-        val clamped = percent.coerceIn(-100.0, 100.0)
-        val negative = 0xFFFF3B30.toInt()
-        val zero = 0xFFFFCC00.toInt()
-        val positive = 0xFF34C759.toInt()
-        return if (clamped <= 0.0) {
-            ColorUtils.blendARGB(negative, zero, ((clamped + 100.0) / 100.0).toFloat())
-        } else {
-            ColorUtils.blendARGB(zero, positive, (clamped / 100.0).toFloat())
-        }
     }
 
     private fun localizedResources(context: Context, locale: Locale): Resources {
