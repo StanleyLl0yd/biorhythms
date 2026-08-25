@@ -77,6 +77,25 @@ jobs:
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
+      - name: Prepare offline signing kit
+        run: |
+          mkdir -p "$RUNNER_TEMP/offline-signing"
+          cp app/build/outputs/apk/release/*.apk "$RUNNER_TEMP/offline-signing/"
+          APKSIGNER_JAR="$(find "$ANDROID_HOME/build-tools" -type f -path '*/lib/apksigner.jar' | sort -V | tail -n 1)"
+          ZIPALIGN="$(find "$ANDROID_HOME/build-tools" -type f -name zipalign | sort -V | tail -n 1)"
+          test -n "$APKSIGNER_JAR"
+          test -n "$ZIPALIGN"
+          cp "$APKSIGNER_JAR" "$RUNNER_TEMP/offline-signing/apksigner.jar"
+          cp "$ZIPALIGN" "$RUNNER_TEMP/offline-signing/zipalign"
+          chmod +x "$RUNNER_TEMP/offline-signing/zipalign"
+
+      - name: Upload offline signing kit
+        uses: actions/upload-artifact@v4
+        with:
+          name: biorhythms-1.2.0-rc1-offline-signing-kit
+          path: ${{ runner.temp }}/offline-signing
+          if-no-files-found: error
+
       - name: Upload release bundle
         uses: actions/upload-artifact@v4
         with:
