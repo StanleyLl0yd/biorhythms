@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import java.util.Locale
 
@@ -17,9 +18,8 @@ fun resolveLocale(language: AppLanguage, systemLocale: Locale): Locale = when (l
 
 @Composable
 fun appLocale(): Locale {
-    val context = LocalContext.current
-    val systemLocale = context.resources.configuration.locales[0]
-    return resolveLocale(LocalAppLanguage.current, systemLocale)
+    val configuration = LocalConfiguration.current
+    return resolveLocale(LocalAppLanguage.current, configuration.locales[0])
 }
 
 @Composable
@@ -28,14 +28,14 @@ fun appString(
     vararg formatArgs: Any?,
 ): String {
     val context = LocalContext.current
-    val baseResources = context.resources
+    val configuration = LocalConfiguration.current
     val language = LocalAppLanguage.current
 
     val resources = if (language == AppLanguage.SYSTEM) {
-        baseResources
+        context.resources
     } else {
-        val config = Configuration(baseResources.configuration)
-        config.setLocale(resolveLocale(language, baseResources.configuration.locales[0]))
+        val config = Configuration(configuration)
+        config.setLocale(resolveLocale(language, configuration.locales[0]))
         context.createConfigurationContext(config).resources
     }
 
