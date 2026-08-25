@@ -18,6 +18,17 @@ class BiorhythmCalculatorTest {
     }
 
     @Test
+    fun emotionalCycleHitsQuarterHalfAndThreeQuarterPoints() {
+        val birthDate = LocalDate.of(1990, 1, 1)
+        val period = BiorhythmCalculator.EMOTIONAL_PERIOD
+
+        assertEquals(1.0, BiorhythmCalculator.value(birthDate, birthDate.plusDays(7), period), 1e-12)
+        assertEquals(0.0, BiorhythmCalculator.value(birthDate, birthDate.plusDays(14), period), 1e-12)
+        assertEquals(-1.0, BiorhythmCalculator.value(birthDate, birthDate.plusDays(21), period), 1e-12)
+        assertEquals(0.0, BiorhythmCalculator.value(birthDate, birthDate.plusDays(28), period), 1e-12)
+    }
+
+    @Test
     fun eachCycleReturnsToZeroAfterItsFullPeriod() {
         val birthDate = LocalDate.of(1990, 1, 1)
 
