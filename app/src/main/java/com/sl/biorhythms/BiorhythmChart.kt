@@ -33,32 +33,18 @@ import com.sl.biorhythms.ui.theme.IntellectualLineColor
 import com.sl.biorhythms.ui.theme.PhysicalLineColor
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import java.util.Locale
-import kotlin.math.PI
 import kotlin.math.roundToInt
-import kotlin.math.sin
 
-private fun biorhythmValue(daysFromBirth: Long, period: Double): Double =
-    sin(2.0 * PI * daysFromBirth / period)
-
-// -1..1 -> -100..100
-private fun toPercent(value: Double): Double =
-    (value * 100.0).coerceIn(-100.0, 100.0)
-
-// градиент от красного (–100) через жёлтый (0) к зелёному (+100)
 private fun colorForPercent(percent: Double): Color {
     val clamped = percent.coerceIn(-100.0, 100.0)
-    val negative = Color(0xFFFF3B30) // красный
-    val zero = Color(0xFFFFCC00)     // жёлтый
-    val positive = Color(0xFF34C759) // зелёный
+    val negative = Color(0xFFFF3B30)
+    val zero = Color(0xFFFFCC00)
+    val positive = Color(0xFF34C759)
 
     return if (clamped <= 0.0) {
-        val t = ((clamped + 100.0) / 100.0).toFloat() // -100..0 -> 0..1
-        lerp(negative, zero, t)
+        lerp(negative, zero, ((clamped + 100.0) / 100.0).toFloat())
     } else {
-        val t = (clamped / 100.0).toFloat()           // 0..100 -> 0..1
-        lerp(zero, positive, t)
+        lerp(zero, positive, (clamped / 100.0).toFloat())
     }
 }
 
@@ -69,26 +55,24 @@ data class BiorhythmLine(
 )
 
 @Composable
-fun rememberBiorhythmLines(): List<BiorhythmLine> {
-    return remember {
-        listOf(
-            BiorhythmLine(
-                labelResId = R.string.legend_physical,
-                period = 23.0,
-                color = PhysicalLineColor,
-            ),
-            BiorhythmLine(
-                labelResId = R.string.legend_emotional,
-                period = 28.0,
-                color = EmotionalLineColor,
-            ),
-            BiorhythmLine(
-                labelResId = R.string.legend_intellectual,
-                period = 33.0,
-                color = IntellectualLineColor,
-            ),
-        )
-    }
+fun rememberBiorhythmLines(): List<BiorhythmLine> = remember {
+    listOf(
+        BiorhythmLine(
+            labelResId = R.string.legend_physical,
+            period = BiorhythmCalculator.PHYSICAL_PERIOD,
+            color = PhysicalLineColor,
+        ),
+        BiorhythmLine(
+            labelResId = R.string.legend_emotional,
+            period = BiorhythmCalculator.EMOTIONAL_PERIOD,
+            color = EmotionalLineColor,
+        ),
+        BiorhythmLine(
+            labelResId = R.string.legend_intellectual,
+            period = BiorhythmCalculator.INTELLECTUAL_PERIOD,
+            color = IntellectualLineColor,
+        ),
+    )
 }
 
 @Composable
@@ -100,13 +84,13 @@ fun BiorhythmChart(
     lines: List<BiorhythmLine>,
     modifier: Modifier = Modifier,
 ) {
+    val locale = appLocale()
     val startDate = remember(referenceDate, pastDays) {
         referenceDate.minusDays(pastDays.toLong())
     }
     val endDate = remember(referenceDate, futureDays) {
         referenceDate.plusDays(futureDays.toLong())
     }
-
     val daysOffsets = remember(pastDays, futureDays) {
         (-pastDays..futureDays).toList()
     }
@@ -115,28 +99,25 @@ fun BiorhythmChart(
     val gridColor = axisColor.copy(alpha = 0.3f)
     val verticalGridColor = gridColor.copy(alpha = 0.3f)
 
-    val lineValues: Map<BiorhythmLine, List<Double>> = remember(
-        birthDate,
-        referenceDate,
-        daysOffsets,
-        lines,
-    ) {
+    val lineValues = remember(birthDate, referenceDate, daysOffsets, lines) {
         lines.associateWith { line ->
             daysOffsets.map { offset ->
-                val date = referenceDate.plusDays(offset.toLong())
-                val days = ChronoUnit.DAYS.between(birthDate, date)
-                biorhythmValue(days, line.period)
+                BiorhythmCalculator.value(
+                    birthDate = birthDate,
+                    date = referenceDate.plusDays(offset.toLong()),
+                    period = line.period,
+                )
             }
         }
     }
 
     val todayIndex = pastDays.coerceAtMost(daysOffsets.lastIndex.coerceAtLeast(0))
-    val todayValues: Map<BiorhythmLine, Double> = lines.associateWith { line ->
+    val todayValues = lines.associateWith { line ->
         lineValues[line]?.getOrNull(todayIndex) ?: 0.0
     }
 
-    val dateFormatter = remember {
-        DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
+    val dateFormatter = remember(locale) {
+        DateTimeFormatter.ofPattern("dd MMM", locale)
     }
 
     val header = appString(
@@ -144,14 +125,17 @@ fun BiorhythmChart(
         startDate.format(dateFormatter),
         endDate.format(dateFormatter),
     )
-
-    val parts = mutableListOf<String>()
-    for (line in lines) {
-        val label = appString(line.labelResId)
-        val valuePercent = toPercent(todayValues[line] ?: 0.0)
-        parts += "$label ${"%.0f".format(valuePercent)}"
+    val chartDescription = buildString {
+        append(header)
+        append(' ')
+        append(
+            lines.joinToString(", ") { line ->
+                val label = appString(line.labelResId)
+                val value = BiorhythmCalculator.percent(todayValues[line] ?: 0.0)
+                "$label ${String.format(locale, "%.0f", value)}"
+            }
+        )
     }
-    val chartDescription = "$header ${parts.joinToString(", ")}"
 
     Column(modifier = modifier) {
         Canvas(
@@ -164,22 +148,14 @@ fun BiorhythmChart(
             val height = size.height
             val centerY = height / 2f
             val amplitude = height * 0.4f
-
             val stepsCount = daysOffsets.size
-            val stepX = if (stepsCount > 1) {
-                width / (stepsCount - 1)
-            } else {
-                width
-            }
-
-            val zeroY = centerY
+            val stepX = if (stepsCount > 1) width / (stepsCount - 1) else width
             val topY = centerY - amplitude
             val bottomY = centerY + amplitude
 
-            // вертикальная сетка по дням
             if (stepsCount > 1) {
                 val stroke = 0.5.dp.toPx()
-                for (i in 0..daysOffsets.lastIndex) {
+                for (i in daysOffsets.indices) {
                     val x = i * stepX
                     drawLine(
                         color = verticalGridColor,
@@ -190,7 +166,6 @@ fun BiorhythmChart(
                 }
             }
 
-            // горизонтальная сетка для +1 и -1
             drawLine(
                 color = gridColor,
                 start = Offset(0f, topY),
@@ -203,16 +178,13 @@ fun BiorhythmChart(
                 end = Offset(width, bottomY),
                 strokeWidth = 1.dp.toPx(),
             )
-
-            // линия 0
             drawLine(
                 color = axisColor,
-                start = Offset(0f, zeroY),
-                end = Offset(width, zeroY),
+                start = Offset(0f, centerY),
+                end = Offset(width, centerY),
                 strokeWidth = 1.dp.toPx(),
             )
 
-            // вертикальная линия "сегодня" поверх сетки
             val todayX = stepX * todayIndex
             drawLine(
                 color = axisColor,
@@ -223,16 +195,16 @@ fun BiorhythmChart(
 
             fun drawCurve(values: List<Double>, color: Color) {
                 for (i in 0 until values.lastIndex) {
-                    val x1 = i * stepX
-                    val x2 = (i + 1) * stepX
-
-                    val y1 = centerY - (values[i].toFloat() * amplitude)
-                    val y2 = centerY - (values[i + 1].toFloat() * amplitude)
-
                     drawLine(
                         color = color,
-                        start = Offset(x1, y1),
-                        end = Offset(x2, y2),
+                        start = Offset(
+                            x = i * stepX,
+                            y = centerY - values[i].toFloat() * amplitude,
+                        ),
+                        end = Offset(
+                            x = (i + 1) * stepX,
+                            y = centerY - values[i + 1].toFloat() * amplitude,
+                        ),
                         strokeWidth = 3.dp.toPx(),
                         cap = StrokeCap.Round,
                     )
@@ -240,14 +212,12 @@ fun BiorhythmChart(
             }
 
             lines.forEach { line ->
-                val values = lineValues[line].orEmpty()
-                if (values.isNotEmpty()) {
+                lineValues[line].orEmpty().takeIf { it.isNotEmpty() }?.let { values ->
                     drawCurve(values, line.color)
                 }
             }
         }
 
-        // подписи дат: начало / сегодня / конец
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -283,29 +253,26 @@ fun BiorhythmLegend(
     referenceDate: LocalDate,
     modifier: Modifier = Modifier,
 ) {
+    val locale = appLocale()
     val daysFromBirth = remember(birthDate, referenceDate) {
-        ChronoUnit.DAYS.between(birthDate, referenceDate)
+        BiorhythmCalculator.daysFromBirth(birthDate, referenceDate)
     }
-
-    val todayValues: Map<BiorhythmLine, Double> = remember(lines, daysFromBirth) {
+    val todayValues = remember(lines, daysFromBirth) {
         lines.associateWith { line ->
-            biorhythmValue(daysFromBirth, line.period)
+            BiorhythmCalculator.value(daysFromBirth, line.period)
         }
     }
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         lines.forEach { line ->
-            val label = appString(line.labelResId)
-            val raw = todayValues[line] ?: 0.0
-            val percent = toPercent(raw)
-
             LegendItem(
-                label = label,
-                valuePercent = percent,
+                label = appString(line.labelResId),
+                valuePercent = BiorhythmCalculator.percent(todayValues[line] ?: 0.0),
                 baseColor = line.color,
+                locale = locale,
             )
         }
     }
@@ -316,9 +283,9 @@ private fun LegendItem(
     label: String,
     valuePercent: Double,
     baseColor: Color,
+    locale: java.util.Locale,
 ) {
     val valueInt = valuePercent.roundToInt()
-    val valueColor = colorForPercent(valuePercent)
 
     Row(
         modifier = Modifier
@@ -328,28 +295,22 @@ private fun LegendItem(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-            ) {
+            Box(modifier = Modifier.size(12.dp)) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     drawRect(color = baseColor)
                 }
             }
             Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-            )
+            Text(text = label, style = MaterialTheme.typography.bodySmall)
         }
 
         Text(
-            text = String.format(Locale.getDefault(), "%+d%%", valueInt),
+            text = String.format(locale, "%+d%%", valueInt),
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.End,
-            color = valueColor
+            color = colorForPercent(valuePercent),
         )
     }
 }
@@ -373,7 +334,7 @@ private fun BiorhythmChartPreview() {
                 lines = lines,
                 birthDate = LocalDate.of(1990, 1, 1),
                 referenceDate = LocalDate.now(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
