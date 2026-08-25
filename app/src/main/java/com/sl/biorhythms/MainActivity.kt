@@ -2,6 +2,7 @@ package com.sl.biorhythms
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,24 +33,27 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
+import com.sl.biorhythms.widget.WidgetUpdater
 
 private const val DEFAULT_RANGE_DAYS = 15
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
             val vm: BiorhythmsViewModel = viewModel(
-                factory = BiorhythmsViewModelFactory(applicationContext.dataStore)
+                factory = BiorhythmsViewModelFactory(applicationContext.dataStore),
             )
-
             BiorhythmsRoot(viewModel = vm)
         }
     }
@@ -56,37 +61,62 @@ class MainActivity : ComponentActivity() {
 
 private enum class AppScreen {
     MAIN,
-    SETTINGS
+    SETTINGS,
 }
 
 @Composable
-fun BiorhythmsRoot(
-    viewModel: BiorhythmsViewModel,
-) {
+fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
     val themeMode by viewModel.themeMode.collectAsState()
     val language by viewModel.language.collectAsState()
     val birthDate by viewModel.birthDate.collectAsState()
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     var currentScreen by rememberSaveable { mutableStateOf(AppScreen.MAIN) }
 
+    DisposableEffect(lifecycleOwner, viewModel, context) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshReferenceDate()
+                WidgetUpdater.requestUpdate(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    BackHandler(enabled = currentScreen == AppScreen.SETTINGS) {
+        currentScreen = AppScreen.MAIN
+    }
+
     BiorhythmsTheme(themeMode = themeMode) {
-        CompositionLocalProvider(
-            LocalAppLanguage provides language
-        ) {
+        CompositionLocalProvider(LocalAppLanguage provides language) {
             when (currentScreen) {
                 AppScreen.MAIN -> MainScreen(
                     viewModel = viewModel,
-                    onOpenSettings = { currentScreen = AppScreen.SETTINGS }
+                    onOpenSettings = { currentScreen = AppScreen.SETTINGS },
                 )
 
                 AppScreen.SETTINGS -> SettingsScreen(
                     themeMode = themeMode,
                     language = language,
                     birthDate = birthDate,
-                    onThemeModeChange = { viewModel.onThemeModeSelected(it) },
-                    onLanguageChange = { viewModel.onLanguageSelected(it) },
-                    onBirthDateChange = { viewModel.onBirthDateSelected(it) },
-                    onBack = { currentScreen = AppScreen.MAIN }
+                    onThemeModeChange = { mode ->
+                        viewModel.onThemeModeSelected(mode) {
+                            WidgetUpdater.requestUpdate(context)
+                        }
+                    },
+                    onLanguageChange = { selectedLanguage ->
+                        viewModel.onLanguageSelected(selectedLanguage) {
+                            WidgetUpdater.requestUpdate(context)
+                        }
+                    },
+                    onBirthDateChange = { date ->
+                        viewModel.onBirthDateSelected(date) {
+                            WidgetUpdater.requestUpdate(context)
+                        }
+                    },
+                    onBack = { currentScreen = AppScreen.MAIN },
                 )
             }
         }
@@ -100,12 +130,9 @@ private fun MainScreen(
 ) {
     val birthDate by viewModel.birthDate.collectAsState()
     val referenceDate by viewModel.referenceDate.collectAsState()
-
     val biorhythmLines = rememberBiorhythmLines()
 
-    Scaffold(
-        contentWindowInsets = WindowInsets.systemBars
-    ) { innerPadding ->
+    Scaffold(contentWindowInsets = WindowInsets.systemBars) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -125,18 +152,15 @@ private fun MainScreen(
                 IconButton(onClick = onOpenSettings) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
-                        contentDescription = appString(R.string.settings_title)
+                        contentDescription = appString(R.string.settings_title),
                     )
                 }
             }
 
             if (birthDate != null) {
                 Text(
-                    text = appString(
-                        R.string.chart_title_today_range,
-                        DEFAULT_RANGE_DAYS
-                    ),
-                    style = MaterialTheme.typography.titleMedium
+                    text = appString(R.string.chart_title_today_range, DEFAULT_RANGE_DAYS),
+                    style = MaterialTheme.typography.titleMedium,
                 )
 
                 BiorhythmChart(
@@ -145,7 +169,7 @@ private fun MainScreen(
                     pastDays = DEFAULT_RANGE_DAYS,
                     futureDays = DEFAULT_RANGE_DAYS,
                     lines = biorhythmLines,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -154,14 +178,14 @@ private fun MainScreen(
                     lines = biorhythmLines,
                     birthDate = birthDate!!,
                     referenceDate = referenceDate,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             } else {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = appString(R.string.placeholder_pick_birth_date),
                     style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Start
+                    textAlign = TextAlign.Start,
                 )
             }
         }
