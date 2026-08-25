@@ -39,11 +39,27 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: Build release and compile Android tests
-        run: ./gradlew assembleRelease compileDebugAndroidTestKotlin --stacktrace
+      - name: Build RC artifacts and compile Android tests
+        run: ./gradlew assembleDebug assembleRelease bundleRelease compileDebugAndroidTestKotlin --stacktrace
 
       - name: Run Android lint
         run: ./gradlew lintDebug --stacktrace
+
+      - name: Upload smoke-test APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: biorhythms-1.2.0-rc1-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Upload release bundle
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: biorhythms-1.2.0-rc1-release-bundle
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
 
       - name: Upload lint reports
         if: always()
