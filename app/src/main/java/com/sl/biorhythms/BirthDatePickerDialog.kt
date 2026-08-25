@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
 import java.time.ZoneId
@@ -19,11 +20,12 @@ fun BirthDatePickerDialog(
     onDateSelected: (LocalDate) -> Unit,
 ) {
     val baseContext = LocalContext.current
+    val configuration = LocalConfiguration.current
     val locale = appLocale()
     val zoneId = remember { ZoneId.systemDefault() }
     val today = remember { LocalDate.now(zoneId) }
-    val context = remember(baseContext, locale) {
-        val config = Configuration(baseContext.resources.configuration)
+    val context = remember(baseContext, configuration, locale) {
+        val config = Configuration(configuration)
         config.setLocale(locale)
         baseContext.createConfigurationContext(config)
     }
