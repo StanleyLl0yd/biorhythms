@@ -38,12 +38,13 @@ class BiorhythmsViewModel(
         }
     }
 
-    fun onBirthDateSelected(date: LocalDate) {
+    fun onBirthDateSelected(date: LocalDate, onPersisted: () -> Unit = {}) {
         _birthDate.value = date
         viewModelScope.launch {
             dataStore.edit { prefs ->
                 prefs[PreferencesKeys.BirthDate] = date.toEpochDay()
             }
+            onPersisted()
         }
     }
 
@@ -51,21 +52,23 @@ class BiorhythmsViewModel(
         _referenceDate.value = LocalDate.now()
     }
 
-    fun onThemeModeSelected(mode: AppThemeMode) {
+    fun onThemeModeSelected(mode: AppThemeMode, onPersisted: () -> Unit = {}) {
         _themeMode.value = mode
         viewModelScope.launch {
             dataStore.edit { prefs ->
                 prefs[PreferencesKeys.ThemeMode] = mode.storedValue
             }
+            onPersisted()
         }
     }
 
-    fun onLanguageSelected(language: AppLanguage) {
+    fun onLanguageSelected(language: AppLanguage, onPersisted: () -> Unit = {}) {
         _language.value = language
         viewModelScope.launch {
             dataStore.edit { prefs ->
                 prefs[PreferencesKeys.Language] = language.storedValue
             }
+            onPersisted()
         }
     }
 }
