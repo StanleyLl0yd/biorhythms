@@ -34,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun SettingsScreen(
@@ -50,8 +49,9 @@ fun SettingsScreen(
     var showThemeDialog by rememberSaveable { mutableStateOf(false) }
     var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
 
-    val dateFormatter = remember {
-        DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
+    val locale = appLocale()
+    val dateFormatter = remember(locale) {
+        DateTimeFormatter.ofPattern("dd MMM yyyy", locale)
     }
 
     val themeValueText = when (themeMode) {
@@ -66,17 +66,14 @@ fun SettingsScreen(
         AppLanguage.EN -> appString(R.string.settings_language_english)
     }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets.systemBars
-    ) { innerPadding ->
+    Scaffold(contentWindowInsets = WindowInsets.systemBars) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // заголовок и back
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -84,61 +81,56 @@ fun SettingsScreen(
                 IconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = appString(R.string.settings_title)
+                        contentDescription = appString(R.string.action_back),
                     )
                 }
                 Text(
                     text = appString(R.string.settings_title),
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
                 )
             }
 
-            // Дата рождения
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = appString(R.string.title_select_birth_date),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
 
                 OutlinedButton(
                     onClick = { showDatePicker = true },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         text = birthDate?.format(dateFormatter)
                             ?: appString(R.string.action_tap_to_choose_date),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }
 
-            // Оформление
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = appString(R.string.settings_section_appearance),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
-
                 SettingsOptionRow(
                     label = appString(R.string.settings_theme_option),
                     value = themeValueText,
-                    onClick = { showThemeDialog = true }
+                    onClick = { showThemeDialog = true },
                 )
             }
 
-            // Язык
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = appString(R.string.settings_section_language),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
-
                 SettingsOptionRow(
                     label = appString(R.string.settings_language_option),
                     value = languageValueText,
-                    onClick = { showLanguageDialog = true }
+                    onClick = { showLanguageDialog = true },
                 )
             }
         }
@@ -150,7 +142,7 @@ fun SettingsScreen(
                 onDateSelected = { date ->
                     showDatePicker = false
                     onBirthDateChange(date)
-                }
+                },
             )
         }
 
@@ -161,7 +153,7 @@ fun SettingsScreen(
                     onThemeModeChange(it)
                     showThemeDialog = false
                 },
-                onDismiss = { showThemeDialog = false }
+                onDismiss = { showThemeDialog = false },
             )
         }
 
@@ -172,7 +164,7 @@ fun SettingsScreen(
                     onLanguageChange(it)
                     showLanguageDialog = false
                 },
-                onDismiss = { showLanguageDialog = false }
+                onDismiss = { showLanguageDialog = false },
             )
         }
     }
@@ -189,25 +181,25 @@ private fun SettingsOptionRow(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Spacer(modifier = Modifier.width(8.dp))
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline
+            tint = MaterialTheme.colorScheme.outline,
         )
     }
 }
@@ -220,27 +212,27 @@ private fun ThemeModeDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = appString(R.string.settings_section_appearance)) },
+        title = { Text(appString(R.string.settings_section_appearance)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                ThemeOptionRow(
+                SettingsRadioOptionRow(
                     label = appString(R.string.settings_theme_system),
                     selected = current == AppThemeMode.SYSTEM,
-                    onClick = { onSelect(AppThemeMode.SYSTEM) }
+                    onClick = { onSelect(AppThemeMode.SYSTEM) },
                 )
-                ThemeOptionRow(
+                SettingsRadioOptionRow(
                     label = appString(R.string.settings_theme_light),
                     selected = current == AppThemeMode.LIGHT,
-                    onClick = { onSelect(AppThemeMode.LIGHT) }
+                    onClick = { onSelect(AppThemeMode.LIGHT) },
                 )
-                ThemeOptionRow(
+                SettingsRadioOptionRow(
                     label = appString(R.string.settings_theme_dark),
                     selected = current == AppThemeMode.DARK,
-                    onClick = { onSelect(AppThemeMode.DARK) }
+                    onClick = { onSelect(AppThemeMode.DARK) },
                 )
             }
         },
-        confirmButton = {}
+        confirmButton = {},
     )
 }
 
@@ -252,32 +244,32 @@ private fun LanguageDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = appString(R.string.settings_section_language)) },
+        title = { Text(appString(R.string.settings_section_language)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                LanguageOptionRow(
+                SettingsRadioOptionRow(
                     label = appString(R.string.settings_language_system),
                     selected = current == AppLanguage.SYSTEM,
-                    onClick = { onSelect(AppLanguage.SYSTEM) }
+                    onClick = { onSelect(AppLanguage.SYSTEM) },
                 )
-                LanguageOptionRow(
+                SettingsRadioOptionRow(
                     label = appString(R.string.settings_language_russian),
                     selected = current == AppLanguage.RU,
-                    onClick = { onSelect(AppLanguage.RU) }
+                    onClick = { onSelect(AppLanguage.RU) },
                 )
-                LanguageOptionRow(
+                SettingsRadioOptionRow(
                     label = appString(R.string.settings_language_english),
                     selected = current == AppLanguage.EN,
-                    onClick = { onSelect(AppLanguage.EN) }
+                    onClick = { onSelect(AppLanguage.EN) },
                 )
             }
         },
-        confirmButton = {}
+        confirmButton = {},
     )
 }
 
 @Composable
-private fun ThemeOptionRow(
+private fun SettingsRadioOptionRow(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -287,34 +279,9 @@ private fun ThemeOptionRow(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = label, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-@Composable
-private fun LanguageOptionRow(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick
-        )
+        RadioButton(selected = selected, onClick = onClick)
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = label, style = MaterialTheme.typography.bodyMedium)
     }

@@ -4,6 +4,17 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+val releaseKeystorePath = System.getenv("BIORHYTHMS_KEYSTORE_PATH")
+val releaseStorePassword = System.getenv("BIORHYTHMS_STORE_PASSWORD")
+val releaseKeyAlias = System.getenv("BIORHYTHMS_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("BIORHYTHMS_KEY_PASSWORD")
+val hasReleaseSigning = listOf(
+    releaseKeystorePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.sl.biorhythms"
     compileSdk = 36
@@ -12,24 +23,41 @@ android {
         applicationId = "com.sl.biorhythms"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 4
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(requireNotNull(releaseKeystorePath))
+                storePassword = requireNotNull(releaseStorePassword)
+                keyAlias = requireNotNull(releaseKeyAlias)
+                keyPassword = requireNotNull(releaseKeyPassword)
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
-        debug {
-            // настройки по умолчанию
+    }
+
+    bundle {
+        language {
+            enableSplit = false
         }
     }
 
@@ -45,13 +73,6 @@ android {
     buildFeatures {
         compose = true
     }
-
-    // современный compose через BOM
-    composeOptions {
-        // при использовании kotlin-compose-плагина здесь можно не задавать версию,
-        // оставляю блок для явной конфигурации при необходимости
-        // kotlinCompilerExtensionVersion = "..."
-    }
 }
 
 dependencies {
@@ -59,28 +80,26 @@ dependencies {
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
+    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation(libs.androidx.compose.material.icons.extended)
 
-    // иконки для Material (календарь и т.п.)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.material)
 
-    // DataStore Preferences
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
-
-    // Material3-тема для XML (Theme.Material3.DayNight.NoActionBar)
-    implementation("com.google.android.material:material:1.12.0")
-
-    // unit-тесты
     testImplementation(libs.junit)
 
-    // androidTest
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

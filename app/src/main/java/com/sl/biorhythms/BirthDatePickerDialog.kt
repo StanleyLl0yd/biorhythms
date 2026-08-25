@@ -1,12 +1,17 @@
 package com.sl.biorhythms
 
 import android.app.DatePickerDialog
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
 import java.time.ZoneId
+
+internal fun clampBirthDate(selected: LocalDate, today: LocalDate): LocalDate =
+    if (selected.isAfter(today)) today else selected
 
 @Composable
 fun BirthDatePickerDialog(
@@ -14,35 +19,35 @@ fun BirthDatePickerDialog(
     onDismiss: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
 ) {
-    val context = LocalContext.current
+    val baseContext = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val locale = appLocale()
     val zoneId = remember { ZoneId.systemDefault() }
     val today = remember { LocalDate.now(zoneId) }
+    val context = remember(baseContext, configuration, locale) {
+        val config = Configuration(configuration)
+        config.setLocale(locale)
+        baseContext.createConfigurationContext(config)
+    }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(context, initialDate, today) {
         val dialog = DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
                 val selected = LocalDate.of(year, month + 1, dayOfMonth)
-                // не даём выбрать дату в будущем
-                val clamped = if (selected.isAfter(today)) today else selected
-                onDateSelected(clamped)
+                onDateSelected(clampBirthDate(selected, today))
             },
             initialDate.year,
             initialDate.monthValue - 1,
-            initialDate.dayOfMonth
+            initialDate.dayOfMonth,
         )
 
-        // ограничиваем максимум сегодняшним днём
-        val maxMillis = today
+        dialog.datePicker.maxDate = today
             .atStartOfDay(zoneId)
             .toInstant()
             .toEpochMilli()
-        dialog.datePicker.maxDate = maxMillis
 
-        dialog.setOnDismissListener {
-            onDismiss()
-        }
-
+        dialog.setOnDismissListener { onDismiss() }
         dialog.show()
 
         onDispose {

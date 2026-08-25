@@ -5,99 +5,160 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
+import com.sl.biorhythms.AppLanguage
+import com.sl.biorhythms.AppThemeMode
+import com.sl.biorhythms.BiorhythmCalculator
+import com.sl.biorhythms.BiorhythmValueColor
 import com.sl.biorhythms.MainActivity
+import com.sl.biorhythms.PreferencesKeys
 import com.sl.biorhythms.R
 import com.sl.biorhythms.dataStore
+import com.sl.biorhythms.resolveLocale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import java.util.Locale
-import kotlin.math.PI
 import kotlin.math.roundToInt
-import kotlin.math.sin
 
 class BiorhythmsWidgetProvider : AppWidgetProvider() {
-
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.Main + job)
 
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
+        appWidgetIds: IntArray,
     ) {
-        for (appWidgetId in appWidgetIds) {
-            scope.launch {
-                try {
-                    updateAppWidget(context, appWidgetManager, appWidgetId)
-                } catch (e: Exception) {
-                    android.util.Log.e("BiorhythmsWidget", "Error updating widget", e)
-                    // Показываем базовый виджет с ошибкой
-                    showErrorWidget(context, appWidgetManager, appWidgetId, e.message)
+        updateAsync(context, appWidgetManager, appWidgetIds)
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle,
+    ) {
+        updateAsync(context, appWidgetManager, intArrayOf(appWidgetId))
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        val prefs = WidgetPreferences(context)
+        appWidgetIds.forEach(prefs::deleteAlpha)
+        super.onDeleted(context, appWidgetIds)
+    }
+
+    private fun updateAsync(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.Default).launch {
+            try {
+                appWidgetIds.forEach { appWidgetId ->
+                    try {
+                        updateAppWidget(context.applicationContext, appWidgetManager, appWidgetId)
+                    } catch (error: Exception) {
+                        android.util.Log.e("BiorhythmsWidget", "Error updating widget", error)
+                        showErrorWidget(context, appWidgetManager, appWidgetId)
+                    }
                 }
+            } finally {
+                pendingResult.finish()
             }
         }
-    }
-
-    override fun onEnabled(context: Context) {
-        // Вызывается при добавлении первого виджета
-    }
-
-    override fun onDisabled(context: Context) {
-        // Вызывается при удалении последнего виджета
-        job.cancel()
     }
 
     private suspend fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
+        appWidgetId: Int,
     ) {
-        val prefs = WidgetPreferences(context)
-        val dataStore = context.dataStore
-
-        // Получаем настройки из DataStore
-        val preferences = dataStore.data.first()
-        val birthDateEpoch = preferences[WidgetPreferences.BirthDateKey]
-        val themeModeInt = preferences[WidgetPreferences.ThemeModeKey] ?: 0
-        val languageInt = preferences[WidgetPreferences.LanguageKey] ?: 0
-
-        // Получаем прозрачность виджета
-        val alpha = prefs.getAlpha(appWidgetId)
-
-        val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
-
-        // Настройка клика на контейнер виджета - открывает приложение
-        val intent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        try {
-            val containerId = context.resources.getIdentifier("widget_container", "id", context.packageName)
-            if (containerId != 0) {
-                views.setOnClickPendingIntent(containerId, pendingIntent)
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("BiorhythmsWidget", "Error setting container click", e)
+        val storedPreferences = context.dataStore.data.first()
+        val birthDateEpoch = storedPreferences[PreferencesKeys.BirthDate]
+        val themeMode = AppThemeMode.fromStored(storedPreferences[PreferencesKeys.ThemeMode])
+        val language = AppLanguage.fromStored(storedPreferences[PreferencesKeys.Language])
+        val locale = resolveLocale(language, context.resources.configuration.locales[0])
+        val resources = localizedResources(context, locale)
+        val alpha = WidgetPreferences(context).getAlpha(appWidgetId)
+        val isDarkTheme = when (themeMode) {
+            AppThemeMode.SYSTEM -> context.isSystemDarkTheme()
+            AppThemeMode.LIGHT -> false
+            AppThemeMode.DARK -> true
         }
 
-        // Настройка клика на кнопку настроек
+        val textColor = ContextCompat.getColor(
+            context,
+            if (isDarkTheme) R.color.widget_text_dark else R.color.widget_text_light,
+        )
+        val backgroundColor = ContextCompat.getColor(
+            context,
+            if (isDarkTheme) R.color.widget_background_dark else R.color.widget_background_light,
+        )
+
+        val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
+        configureClicks(context, views, appWidgetId)
+        applyAppearance(views, textColor, backgroundColor, alpha)
+
+        if (birthDateEpoch == null) {
+            views.setTextViewText(R.id.widget_title, resources.getString(R.string.widget_no_birth_date))
+            views.setImageViewBitmap(R.id.widget_content, null)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+            return
+        }
+
+        val birthDate = LocalDate.ofEpochDay(birthDateEpoch)
+        val today = LocalDate.now()
+        val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+        val density = context.resources.displayMetrics.density
+        val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 250).coerceAtLeast(180)
+        val heightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 120).coerceAtLeast(100)
+        val bitmapWidth = (widthDp * density).roundToInt().coerceIn(300, 1200)
+        val bitmapHeight = (heightDp * density * 0.62f).roundToInt().coerceIn(120, 800)
+
+        val bitmap = generateWidgetBitmap(
+            context = context,
+            birthDate = birthDate,
+            today = today,
+            textColor = textColor,
+            locale = locale,
+            labels = listOf(
+                resources.getString(R.string.legend_physical),
+                resources.getString(R.string.legend_emotional),
+                resources.getString(R.string.legend_intellectual),
+            ),
+            width = bitmapWidth,
+            height = bitmapHeight,
+        )
+
+        views.setTextViewText(R.id.widget_title, resources.getString(R.string.widget_title))
+        views.setImageViewBitmap(R.id.widget_content, bitmap)
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+
+    private fun configureClicks(
+        context: Context,
+        views: RemoteViews,
+        appWidgetId: Int,
+    ) {
+        val openAppIntent = Intent(context, MainActivity::class.java)
+        val openAppPendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        views.setOnClickPendingIntent(R.id.widget_container, openAppPendingIntent)
+
         val configIntent = Intent(context, WidgetConfigActivity::class.java).apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         }
@@ -105,218 +166,72 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             context,
             appWidgetId,
             configIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        views.setOnClickPendingIntent(R.id.widget_settings, configPendingIntent)
+    }
 
-        try {
-            val settingsId = context.resources.getIdentifier("widget_settings", "id", context.packageName)
-            if (settingsId != 0) {
-                views.setOnClickPendingIntent(settingsId, configPendingIntent)
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("BiorhythmsWidget", "Error setting settings click", e)
-        }
-
-        if (birthDateEpoch != null) {
-            val birthDate = LocalDate.ofEpochDay(birthDateEpoch)
-            val today = LocalDate.now()
-
-            // Определяем тему
-            val isDarkTheme = when (themeModeInt) {
-                0 -> context.isSystemDarkTheme()
-                1 -> false
-                2 -> true
-                else -> context.isSystemDarkTheme()
-            }
-
-            // Определяем язык
-            val locale = when (languageInt) {
-                0 -> Locale.getDefault()
-                1 -> Locale.forLanguageTag("ru")
-                2 -> Locale.forLanguageTag("en")
-                else -> Locale.getDefault()
-            }
-
-            // Генерируем контент виджета
-            val bitmap = try {
-                generateWidgetBitmap(context, birthDate, today, isDarkTheme, alpha)
-            } catch (e: Exception) {
-                android.util.Log.e("BiorhythmsWidget", "Error generating bitmap", e)
-                null
-            }
-
-            if (bitmap != null) {
-                try {
-                    val contentId = context.resources.getIdentifier("widget_content", "id", context.packageName)
-                    if (contentId != 0) {
-                        views.setImageViewBitmap(contentId, bitmap)
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("BiorhythmsWidget", "Error setting bitmap", e)
-                }
-            }
-
-            // Устанавливаем текст с локализацией
-            val resources = context.createConfigurationContext(
-                context.resources.configuration.apply { setLocale(locale) }
-            ).resources
-
-            try {
-                val titleId = context.resources.getIdentifier("widget_title", "id", context.packageName)
-                if (titleId != 0) {
-                    views.setTextViewText(titleId, resources.getString(R.string.widget_title))
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("BiorhythmsWidget", "Error setting title", e)
-            }
-
-            // Устанавливаем прозрачность фона
-            try {
-                val alphaValue = (alpha * 255 / 100).coerceIn(0, 255)
-                val backgroundColor = if (isDarkTheme) {
-                    0xFF131A3A.toInt()
-                } else {
-                    0xFFFFFFFF.toInt()
-                }
-                val colorWithAlpha = (backgroundColor and 0x00FFFFFF) or (alphaValue shl 24)
-                val containerId = context.resources.getIdentifier("widget_container", "id", context.packageName)
-                if (containerId != 0) {
-                    views.setInt(containerId, "setBackgroundColor", colorWithAlpha)
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("BiorhythmsWidget", "Error setting background", e)
-            }
-
-        } else {
-            // Если дата рождения не установлена
-            val resources = context.createConfigurationContext(
-                context.resources.configuration.apply {
-                    setLocale(when (languageInt) {
-                        0 -> Locale.getDefault()
-                        1 -> Locale.forLanguageTag("ru")
-                        2 -> Locale.forLanguageTag("en")
-                        else -> Locale.getDefault()
-                    })
-                }
-            ).resources
-
-            try {
-                val titleId = context.resources.getIdentifier("widget_title", "id", context.packageName)
-                if (titleId != 0) {
-                    views.setTextViewText(titleId, resources.getString(R.string.widget_no_birth_date))
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("BiorhythmsWidget", "Error setting no-birth-date title", e)
-            }
-
-            try {
-                val contentId = context.resources.getIdentifier("widget_content", "id", context.packageName)
-                if (contentId != 0) {
-                    views.setImageViewBitmap(contentId, null)
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("BiorhythmsWidget", "Error clearing bitmap", e)
-            }
-        }
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
+    private fun applyAppearance(
+        views: RemoteViews,
+        textColor: Int,
+        backgroundColor: Int,
+        alpha: Int,
+    ) {
+        val alphaValue = (alpha.coerceIn(0, 100) * 255 / 100).coerceIn(0, 255)
+        val colorWithAlpha = (backgroundColor and 0x00FFFFFF) or (alphaValue shl 24)
+        views.setInt(R.id.widget_container, "setBackgroundColor", colorWithAlpha)
+        views.setTextColor(R.id.widget_title, textColor)
+        views.setInt(R.id.widget_settings, "setColorFilter", textColor)
     }
 
     private fun generateWidgetBitmap(
         context: Context,
         birthDate: LocalDate,
         today: LocalDate,
-        isDarkTheme: Boolean,
-        alpha: Int
+        textColor: Int,
+        locale: Locale,
+        labels: List<String>,
+        width: Int,
+        height: Int,
     ): Bitmap {
-        val width = 400
-        val height = 200
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
+        val density = context.resources.displayMetrics.density
+        val daysFromBirth = BiorhythmCalculator.daysFromBirth(birthDate, today)
 
-        val daysFromBirth = ChronoUnit.DAYS.between(birthDate, today)
-
-        // Расчет биоритмов
-        val physical = biorhythmValue(daysFromBirth, 23.0)
-        val emotional = biorhythmValue(daysFromBirth, 28.0)
-        val intellectual = biorhythmValue(daysFromBirth, 33.0)
-
-        val physicalPercent = toPercent(physical)
-        val emotionalPercent = toPercent(emotional)
-        val intellectualPercent = toPercent(intellectual)
-
-        // Цвета
-        val textColor = try {
-            if (isDarkTheme) {
-                ContextCompat.getColor(context, R.color.widget_text_dark)
-            } else {
-                ContextCompat.getColor(context, R.color.widget_text_light)
-            }
-        } catch (e: Exception) {
-            if (isDarkTheme) 0xFFE8EDFF.toInt() else 0xFF0B1026.toInt()
-        }
-
-        val physicalColor = try {
-            ContextCompat.getColor(context, R.color.widget_physical)
-        } catch (e: Exception) {
-            0xFFF05D64.toInt()
-        }
-
-        val emotionalColor = try {
-            ContextCompat.getColor(context, R.color.widget_emotional)
-        } catch (e: Exception) {
-            0xFF1FAE9E.toInt()
-        }
-
-        val intellectualColor = try {
-            ContextCompat.getColor(context, R.color.widget_intellectual)
-        } catch (e: Exception) {
-            0xFF3C5CE5.toInt()
-        }
-
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.textSize = 28f
-        paint.color = textColor
-
-        // Рисуем три строки биоритмов
-        val startY = 40f
-        val lineHeight = 50f
-
-        // Physical
-        drawBiorhythmLine(
-            canvas,
-            try { context.getString(R.string.legend_physical) } catch (e: Exception) { "Physical" },
-            physicalPercent,
-            physicalColor,
-            textColor,
-            20f,
-            startY,
-            width - 40f
+        val values = listOf(
+            BiorhythmCalculator.percent(
+                BiorhythmCalculator.value(daysFromBirth, BiorhythmCalculator.PHYSICAL_PERIOD),
+            ),
+            BiorhythmCalculator.percent(
+                BiorhythmCalculator.value(daysFromBirth, BiorhythmCalculator.EMOTIONAL_PERIOD),
+            ),
+            BiorhythmCalculator.percent(
+                BiorhythmCalculator.value(daysFromBirth, BiorhythmCalculator.INTELLECTUAL_PERIOD),
+            ),
+        )
+        val colors = listOf(
+            ContextCompat.getColor(context, R.color.widget_physical),
+            ContextCompat.getColor(context, R.color.widget_emotional),
+            ContextCompat.getColor(context, R.color.widget_intellectual),
         )
 
-        // Emotional
-        drawBiorhythmLine(
-            canvas,
-            try { context.getString(R.string.legend_emotional) } catch (e: Exception) { "Emotional" },
-            emotionalPercent,
-            emotionalColor,
-            textColor,
-            20f,
-            startY + lineHeight,
-            width - 40f
-        )
-
-        // Intellectual
-        drawBiorhythmLine(
-            canvas,
-            try { context.getString(R.string.legend_intellectual) } catch (e: Exception) { "Intellectual" },
-            intellectualPercent,
-            intellectualColor,
-            textColor,
-            20f,
-            startY + lineHeight * 2,
-            width - 40f
-        )
+        val horizontalPadding = 12f * density
+        val lineHeight = height / 3f
+        labels.forEachIndexed { index, label ->
+            drawBiorhythmLine(
+                canvas = canvas,
+                label = label,
+                percent = values[index],
+                barColor = colors[index],
+                textColor = textColor,
+                locale = locale,
+                x = horizontalPadding,
+                baselineY = lineHeight * index + lineHeight * 0.52f,
+                maxWidth = width - horizontalPadding * 2f,
+                density = density,
+            )
+        }
 
         return bitmap
     }
@@ -327,99 +242,68 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         percent: Double,
         barColor: Int,
         textColor: Int,
+        locale: Locale,
         x: Float,
-        y: Float,
-        maxWidth: Float
+        baselineY: Float,
+        maxWidth: Float,
+        density: Float,
     ) {
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = textColor
+            textSize = 13f * density
+        }
+        canvas.drawText(label, x, baselineY, paint)
 
-        // Рисуем label
-        paint.color = textColor
-        paint.textSize = 24f
-        canvas.drawText(label, x, y, paint)
-
-        // Рисуем процент справа
-        val percentText = String.format(Locale.getDefault(), "%+d%%", percent.roundToInt())
-        val percentColor = colorForPercent(percent)
-        paint.color = percentColor
+        val percentText = String.format(locale, "%+d%%", percent.roundToInt())
+        paint.color = BiorhythmValueColor.argb(percent)
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText(percentText, x + maxWidth, y, paint)
+        canvas.drawText(percentText, x + maxWidth, baselineY, paint)
 
-        // Рисуем прогресс-бар
-        val barY = y + 8f
-        val barHeight = 12f
-        val barWidth = maxWidth * 0.6f
-
-        // Фон бара
+        val barY = baselineY + 5f * density
+        val barHeight = 5f * density
+        val barWidth = maxWidth * 0.60f
+        paint.style = Paint.Style.FILL
         paint.color = textColor
         paint.alpha = 50
-        paint.style = Paint.Style.FILL
-        val backgroundRect = RectF(x, barY, x + barWidth, barY + barHeight)
-        canvas.drawRoundRect(backgroundRect, 6f, 6f, paint)
+        paint.textAlign = Paint.Align.LEFT
+        canvas.drawRoundRect(
+            RectF(x, barY, x + barWidth, barY + barHeight),
+            barHeight / 2f,
+            barHeight / 2f,
+            paint,
+        )
 
-        // Заполненная часть
-        val fillWidth = barWidth * ((percent + 100) / 200).toFloat()
+        val fillWidth = barWidth * ((percent + 100.0) / 200.0).toFloat()
         paint.color = barColor
         paint.alpha = 255
-        val fillRect = RectF(x, barY, x + fillWidth, barY + barHeight)
-        canvas.drawRoundRect(fillRect, 6f, 6f, paint)
+        canvas.drawRoundRect(
+            RectF(x, barY, x + fillWidth, barY + barHeight),
+            barHeight / 2f,
+            barHeight / 2f,
+            paint,
+        )
     }
 
-    private fun biorhythmValue(daysFromBirth: Long, period: Double): Double =
-        sin(2.0 * PI * daysFromBirth / period)
-
-    private fun toPercent(value: Double): Double =
-        (value * 100.0).coerceIn(-100.0, 100.0)
-
-    private fun colorForPercent(percent: Double): Int {
-        return when {
-            percent <= -50 -> 0xFFFF3B30.toInt()
-            percent <= 0 -> 0xFFFFCC00.toInt()
-            percent <= 50 -> 0xFF8BC34A.toInt()
-            else -> 0xFF34C759.toInt()
-        }
-    }
-}
-
-private fun Context.isSystemDarkTheme(): Boolean {
-    val nightMode = resources.configuration.uiMode and
-            android.content.res.Configuration.UI_MODE_NIGHT_MASK
-    return nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
-}
-
-private fun BiorhythmsWidgetProvider.showErrorWidget(
-    context: Context,
-    appWidgetManager: AppWidgetManager,
-    appWidgetId: Int,
-    errorMessage: String?
-) {
-    val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
-
-    val intent = Intent(context, MainActivity::class.java)
-    val pendingIntent = PendingIntent.getActivity(
-        context,
-        0,
-        intent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
-
-    try {
-        val containerId = context.resources.getIdentifier("widget_container", "id", context.packageName)
-        if (containerId != 0) {
-            views.setOnClickPendingIntent(containerId, pendingIntent)
-        }
-    } catch (e: Exception) {
-        android.util.Log.e("BiorhythmsWidget", "Error in error widget", e)
+    private fun localizedResources(context: Context, locale: Locale): Resources {
+        val config = Configuration(context.resources.configuration)
+        config.setLocale(locale)
+        return context.createConfigurationContext(config).resources
     }
 
-    try {
-        val titleId = context.resources.getIdentifier("widget_title", "id", context.packageName)
-        if (titleId != 0) {
-            views.setTextViewText(titleId, "Widget Error: ${errorMessage ?: "Unknown"}")
-        }
-    } catch (e: Exception) {
-        android.util.Log.e("BiorhythmsWidget", "Error setting error message", e)
+    private fun Context.isSystemDarkTheme(): Boolean {
+        val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        return nightMode == Configuration.UI_MODE_NIGHT_YES
     }
 
-    appWidgetManager.updateAppWidget(appWidgetId, views)
+    private fun showErrorWidget(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+    ) {
+        val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
+        configureClicks(context, views, appWidgetId)
+        views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_error))
+        views.setImageViewBitmap(R.id.widget_content, null)
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
 }
