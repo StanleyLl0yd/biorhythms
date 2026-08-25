@@ -48,6 +48,9 @@ jobs:
           if [ -n "$BIORHYTHMS_KEYSTORE_BASE64" ]; then
             echo "$BIORHYTHMS_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/biorhythms-release.jks"
             echo "BIORHYTHMS_KEYSTORE_PATH=$RUNNER_TEMP/biorhythms-release.jks" >> "$GITHUB_ENV"
+            echo "BIORHYTHMS_HAS_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+          else
+            echo "BIORHYTHMS_HAS_RELEASE_SIGNING=false" >> "$GITHUB_ENV"
           fi
 
       - name: Run unit tests
@@ -67,7 +70,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload signed release APK when signing is configured
-        if: ${{ env.BIORHYTHMS_KEYSTORE_PATH != '' }}
+        if: ${{ env.BIORHYTHMS_HAS_RELEASE_SIGNING == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: biorhythms-1.2.0-rc1-signed-release-apk
