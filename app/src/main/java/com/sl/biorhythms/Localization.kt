@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import java.util.Locale
 
 val LocalAppLanguage = staticCompositionLocalOf { AppLanguage.SYSTEM }
@@ -29,10 +30,11 @@ fun appString(
 ): String {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
+    val baseResources = LocalResources.current
     val language = LocalAppLanguage.current
 
     val resources = if (language == AppLanguage.SYSTEM) {
-        context.resources
+        baseResources
     } else {
         val config = Configuration(configuration)
         config.setLocale(resolveLocale(language, configuration.locales[0]))
