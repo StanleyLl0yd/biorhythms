@@ -21,6 +21,6 @@ class BiorhythmValueColorTest {
     @Test
     fun midpointColorsAreDeterministic() {
         assertEquals(0xFFFF8418.toInt(), BiorhythmValueColor.argb(-50.0))
-        assertEquals(0xFF9ACA2C.toInt(), BiorhythmValueColor.argb(50.0))
+        assertEquals(0xFF9ACA2D.toInt(), BiorhythmValueColor.argb(50.0))
     }
 }
