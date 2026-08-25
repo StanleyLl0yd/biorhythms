@@ -56,16 +56,16 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: Build RC artifacts and compile Android tests
+      - name: Build release artifacts and compile Android tests
         run: ./gradlew assembleDebug assembleRelease bundleRelease compileDebugAndroidTestKotlin --stacktrace
 
       - name: Run Android lint
         run: ./gradlew lintDebug --stacktrace
 
-      - name: Upload smoke-test debug APK
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: biorhythms-1.2.0-rc1-debug-apk
+          name: biorhythms-1.2.0-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
@@ -73,7 +73,7 @@ jobs:
         if: ${{ env.BIORHYTHMS_HAS_RELEASE_SIGNING == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: biorhythms-1.2.0-rc1-signed-release-apk
+          name: biorhythms-1.2.0-signed-release-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
@@ -95,14 +95,14 @@ jobs:
       - name: Upload offline signing kit
         uses: actions/upload-artifact@v4
         with:
-          name: biorhythms-1.2.0-rc1-offline-signing-kit
+          name: biorhythms-1.2.0-offline-signing-kit
           path: ${{ runner.temp }}/offline-signing
           if-no-files-found: error
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v4
         with:
-          name: biorhythms-1.2.0-rc1-release-bundle
+          name: biorhythms-1.2.0-release-bundle
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
