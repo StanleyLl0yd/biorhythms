@@ -1,76 +1,118 @@
 # Biorhythms
 
-[English](README_EN.md) · [История изменений](CHANGELOG.md)
+[![Android CI](https://github.com/StanleyLl0yd/biorhythms/actions/workflows/android-ci.yml/badge.svg?branch=main)](https://github.com/StanleyLl0yd/biorhythms/actions/workflows/android-ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/StanleyLl0yd/biorhythms)](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/StanleyLl0yd/biorhythms/total)](https://github.com/StanleyLl0yd/biorhythms/releases)
+[![Android 8+](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Android-приложение для расчёта и визуализации классических биоритмов по дате рождения.
+[![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
+[![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README.ru.md)
 
-Приложение рассчитывает три цикла:
+An Android app for calculating and visualizing classic biorhythm cycles based on a birth date, built with Kotlin, Jetpack Compose and Material 3.
 
-- физический — 23 дня;
-- эмоциональный — 28 дней;
-- интеллектуальный — 33 дня.
+[⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-> Биоритмы не являются медицинским или научно подтверждённым методом диагностики. Приложение предназначено для наглядного расчёта классической модели биоритмов.
+Current version: **1.2.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
 
-## Возможности
+## ✨ Features
 
-- График биоритмов с дневной сеткой и текущими значениями.
-- Выбор и сохранение даты рождения.
-- Светлая, тёмная и системная тема.
-- Русский, английский и системный язык интерфейса.
-- Форматирование дат в соответствии с выбранным языком.
-- Виджет домашнего экрана с текущими значениями биоритмов.
-- Настройка непрозрачности фона виджета.
-- Автоматическое обновление существующих виджетов после изменения даты рождения, темы или языка.
-- Корректная работа виджета при изменении его размера.
+- Physical, emotional and intellectual biorhythm cycles
+- Daily chart grid with current values
+- Birth date selection and persistence
+- Light, dark and system themes
+- English, Russian and system UI language
+- Locale-aware date formatting
+- Home-screen widget with current biorhythm values
+- Per-widget background opacity setting
+- Automatic widget refresh after birth date, theme or language changes
+- Widget rendering that adapts to resizing
 
-## Требования
+> Biorhythms are not a medical or scientifically validated diagnostic method. The app visualizes the classic biorhythm model for informational and entertainment purposes.
 
-- Android 8.0 (API 26) или новее.
+## 📦 Installation
 
-## Сборка
+The recommended way to install the app is to download the signed APK from the latest GitHub Release:
 
-Проект использует Gradle Wrapper, поэтому отдельная установка Gradle не требуется.
+[Download latest release](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+
+Android 8.0 or newer is required.
+
+## 🛠️ Build from source
+
+Requirements:
+
+- Current Android Studio with Android Gradle Plugin 8.13 support
+- JDK 17 or newer
+- Android SDK 36
 
 ```bash
+git clone https://github.com/StanleyLl0yd/biorhythms.git
+cd biorhythms
 ./gradlew assembleDebug
 ```
 
-Release-сборка:
+To run the project checks:
 
 ```bash
-./gradlew assembleRelease
+./gradlew testDebugUnitTest compileDebugAndroidTestKotlin lintDebug assembleRelease bundleRelease
 ```
 
-AAB:
+## 🧱 Technology
 
-```bash
-./gradlew bundleRelease
-```
+| Category | Technology |
+| --- | --- |
+| Language | Kotlin 2.0.21 |
+| UI | Jetpack Compose + Material 3 |
+| State | ViewModel + Lifecycle |
+| Storage | DataStore Preferences |
+| Widget | Android AppWidget / RemoteViews |
+| Build | Gradle 8.13, Kotlin DSL |
+| Android Gradle Plugin | 8.13.1 |
 
-## Проверки
+## ✅ Quality checks
 
-```bash
-./gradlew testDebugUnitTest
-./gradlew compileDebugAndroidTestKotlin
-./gradlew lintDebug
-```
+GitHub Actions automatically validates pull requests and pushes to `main` with:
 
-GitHub Actions автоматически выполняет unit-тесты, release-сборку с R8/resource shrinking, компиляцию instrumentation-тестов и Android Lint.
+- unit tests
+- Android Lint
+- debug APK assembly
+- release APK assembly with R8/resource shrinking
+- release AAB assembly
+- Android instrumentation-test compilation
 
-## Подпись release-сборки
+## 🔐 Release signing
 
-Release signing поддерживается через переменные окружения:
+Release signing is configured through environment variables:
 
 - `BIORHYTHMS_KEYSTORE_PATH`
 - `BIORHYTHMS_STORE_PASSWORD`
 - `BIORHYTHMS_KEY_ALIAS`
 - `BIORHYTHMS_KEY_PASSWORD`
 
-Keystore и пароли не должны храниться в репозитории.
+The production keystore and passwords are not stored in the repository.
 
-## Текущая версия
+## 🌍 Languages
 
-**1.2.0** (`versionCode 4`)
+- English — default
+- Русский
+- System language mode
 
-Подробности — в [CHANGELOG.md](CHANGELOG.md).
+## 📊 Changelog
+
+- [English changelog](CHANGELOG.md)
+- [Русский changelog](CHANGELOG.ru.md)
+- [GitHub Releases](https://github.com/StanleyLl0yd/biorhythms/releases)
+
+## 🤝 Contributing
+
+Contributions and bug reports are welcome. Open an issue or submit a focused pull request.
+
+Please keep changes small, follow Kotlin coding conventions, and include tests for behavior changes where practical.
+
+## 👨‍💻 Author
+
+Stanley Lloyd · [@StanleyLl0yd](https://github.com/StanleyLl0yd)
+
+---
+
+If the project is useful to you, consider giving it a ⭐.
