@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -36,17 +35,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private fun colorForPercent(percent: Double): Color {
-    val clamped = percent.coerceIn(-100.0, 100.0)
-    val negative = Color(0xFFFF3B30)
-    val zero = Color(0xFFFFCC00)
-    val positive = Color(0xFF34C759)
-    return if (clamped <= 0.0) {
-        lerp(negative, zero, ((clamped + 100.0) / 100.0).toFloat())
-    } else {
-        lerp(zero, positive, (clamped / 100.0).toFloat())
-    }
-}
+private fun colorForPercent(percent: Double): Color =
+    Color(BiorhythmValueColor.argb(percent))
 
 data class BiorhythmLine(
     val labelResId: Int,
