@@ -1,32 +1,18 @@
 <resources>
     <string name="app_name">Биоритмы</string>
 
-    <!-- Главный экран -->
     <string name="title_select_birth_date">Выберите дату рождения</string>
     <string name="action_tap_to_choose_date">Нажмите, чтобы выбрать дату</string>
+    <string name="action_back">Назад</string>
     <string name="chart_title_today_range">Биоритмы на сегодня и ±%1$d дней</string>
-    <string name="placeholder_pick_birth_date">
-        Укажите дату рождения в настройках, чтобы увидеть график биоритмов.
-    </string>
-    <string name="current_birth_date">Дата рождения: %1$s</string>
+    <string name="placeholder_pick_birth_date">Укажите дату рождения в настройках, чтобы увидеть график биоритмов.</string>
 
-    <!-- Диалог выбора даты -->
-    <string name="dialog_title_birth_date">Выбор даты рождения</string>
-    <string name="dialog_ok">ОК</string>
-    <string name="dialog_cancel">Отмена</string>
-
-    <!-- Легенда графика -->
     <string name="legend_physical">Физический</string>
     <string name="legend_emotional">Эмоциональный</string>
     <string name="legend_intellectual">Интеллектуальный</string>
     <string name="label_today">Сегодня</string>
+    <string name="chart_a11y_description">График биоритмов с %1$s по %2$s. Сегодня:</string>
 
-    <!-- Описание для accessibility -->
-    <string name="chart_a11y_description">
-        График биоритмов с %1$s по %2$s. Сегодня:
-    </string>
-
-    <!-- Settings -->
     <string name="settings_title">Настройки</string>
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_language">Язык</string>
@@ -38,19 +24,14 @@
     <string name="settings_language_english">Английский</string>
     <string name="settings_theme_option">Тема</string>
     <string name="settings_language_option">Язык приложения</string>
-    <!-- Добавьте эти строки в app/src/main/res/values-ru/strings.xml -->
 
-    <!-- Widget -->
     <string name="widget_title">Биоритмы сегодня</string>
     <string name="widget_no_birth_date">Укажите дату рождения в приложении</string>
     <string name="widget_description">Отображает текущие биоритмы</string>
     <string name="widget_config_title">Настройки виджета</string>
-    <string name="widget_config_transparency">Прозрачность фона</string>
+    <string name="widget_config_transparency">Непрозрачность фона</string>
     <string name="widget_config_transparent">Прозрачный</string>
     <string name="widget_config_opaque">Непрозрачный</string>
-    <string name="widget_config_alpha_value">Прозрачность: %1$d%%</string>
+    <string name="widget_config_alpha_value">Непрозрачность: %1$d%%</string>
     <string name="widget_config_save">Сохранить</string>
-    <string name="widget_physical">Физический</string>
-    <string name="widget_emotional">Эмоциональный</string>
-    <string name="widget_intellectual">Интеллектуальный</string>
 </resources>
