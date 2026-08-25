@@ -9,6 +9,19 @@ import java.util.Locale
 
 val LocalAppLanguage = staticCompositionLocalOf { AppLanguage.SYSTEM }
 
+fun resolveLocale(language: AppLanguage, systemLocale: Locale): Locale = when (language) {
+    AppLanguage.SYSTEM -> systemLocale
+    AppLanguage.RU -> Locale.forLanguageTag("ru")
+    AppLanguage.EN -> Locale.forLanguageTag("en")
+}
+
+@Composable
+fun appLocale(): Locale {
+    val context = LocalContext.current
+    val systemLocale = context.resources.configuration.locales[0]
+    return resolveLocale(LocalAppLanguage.current, systemLocale)
+}
+
 @Composable
 fun appString(
     @StringRes id: Int,
@@ -21,19 +34,8 @@ fun appString(
     val resources = if (language == AppLanguage.SYSTEM) {
         baseResources
     } else {
-        val locale: Locale = when (language) {
-            AppLanguage.SYSTEM ->
-                baseResources.configuration.locales[0]
-
-            AppLanguage.RU ->
-                Locale.forLanguageTag("ru")
-
-            AppLanguage.EN ->
-                Locale.forLanguageTag("en")
-        }
-
         val config = Configuration(baseResources.configuration)
-        config.setLocale(locale)
+        config.setLocale(resolveLocale(language, baseResources.configuration.locales[0]))
         context.createConfigurationContext(config).resources
     }
 
