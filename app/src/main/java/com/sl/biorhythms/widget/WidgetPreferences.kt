@@ -1,6 +1,7 @@
 package com.sl.biorhythms.widget
 
 import android.content.Context
+import androidx.core.content.edit
 
 class WidgetPreferences(context: Context) {
     companion object {
@@ -18,10 +19,14 @@ class WidgetPreferences(context: Context) {
         prefs.getInt(KEY_ALPHA + appWidgetId, DEFAULT_ALPHA).coerceIn(0, 100)
 
     fun setAlpha(appWidgetId: Int, alpha: Int) {
-        prefs.edit().putInt(KEY_ALPHA + appWidgetId, alpha.coerceIn(0, 100)).apply()
+        prefs.edit {
+            putInt(KEY_ALPHA + appWidgetId, alpha.coerceIn(0, 100))
+        }
     }
 
     fun deleteAlpha(appWidgetId: Int) {
-        prefs.edit().remove(KEY_ALPHA + appWidgetId).apply()
+        prefs.edit {
+            remove(KEY_ALPHA + appWidgetId)
+        }
     }
 }
