@@ -9,6 +9,26 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.3.0-beta1] - 2026-08-26
+
+### ✨ Added
+- First-run birth-date onboarding directly on the main screen.
+- Three prominent biorhythm summary cards for the currently selected day.
+- Interactive chart inspection: tap or drag across the chart to select another day and update its values immediately.
+- Live widget preview on the widget configuration screen.
+- Unit tests for chart position mapping and grid generation.
+
+### 🎨 Changed
+- Reduced the chart grid from one vertical line per day to clear five-day intervals.
+- Increased chart height and added a strong selected-day marker with points on all three curves.
+- Biorhythm percentages now use the same color as their corresponding curve instead of a separate red/yellow/green scale.
+- Redesigned Settings with larger Material rows, clearer section hierarchy and more readable typography.
+- Reworked widget opacity controls for better use on narrow screens.
+- Increased core typography sizes and spacing for improved readability.
+- Started the 1.3 development line with `versionCode` 5 and `versionName` `1.3.0-beta1`.
+
+---
+
 ## [1.2.0] - 2026-08-26
 
 ### ✨ Added
