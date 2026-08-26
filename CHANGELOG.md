@@ -9,7 +9,7 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [1.3.0-beta1] - 2026-08-26
+## [1.3.0] - 2026-08-26
 
 ### ✨ Added
 - First-run birth-date onboarding directly on the main screen.
@@ -28,8 +28,8 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Reworked widget opacity controls for better use on narrow screens.
 - Added a checkerboard transparency backdrop to the widget preview so background opacity is immediately visible.
 - Increased core typography sizes and spacing for improved readability.
-- Project licensing is now explicitly PolyForm Noncommercial 1.0.0.
-- Started the 1.3 development line with `versionCode` 5 and `versionName` `1.3.0-beta1`.
+- Project licensing is explicitly PolyForm Noncommercial 1.0.0.
+- Promoted the tested 1.3 beta line to the stable `1.3.0` release with `versionCode` 5 and `versionName` `1.3.0`.
 
 ---
 

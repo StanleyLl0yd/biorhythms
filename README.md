@@ -11,9 +11,9 @@
 
 An Android app for calculating and visualizing classic biorhythm cycles based on a birth date, built with Kotlin, Jetpack Compose and Material 3.
 
-[⬇️ Download the latest stable APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Latest stable release: **1.2.0** · Current development version: **1.3.0-beta1** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
+Current version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
 
 ## ✨ Features
 
@@ -36,13 +36,11 @@ Latest stable release: **1.2.0** · Current development version: **1.3.0-beta1**
 
 ## 📦 Installation
 
-The recommended way to install the stable app is to download the signed APK from the latest GitHub Release:
+The recommended way to install the app is to download the signed APK from the latest GitHub Release:
 
-[Download latest stable release](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[Download latest release](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
 Android 8.0 or newer is required.
-
-Development builds are produced by GitHub Actions for pull requests and should be treated as test builds rather than stable releases.
 
 ## 🛠️ Build from source
 

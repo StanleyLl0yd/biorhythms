@@ -11,9 +11,9 @@
 
 Android-приложение для расчёта и визуализации классических биоритмов по дате рождения, написанное на Kotlin с использованием Jetpack Compose и Material 3.
 
-[⬇️ Скачать последнюю стабильную версию APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[⬇️ Скачать последнюю версию APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Последний стабильный релиз: **1.2.0** · Текущая версия разработки: **1.3.0-beta1** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
+Текущая версия: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
 
 ## ✨ Возможности
 
@@ -36,13 +36,11 @@ Android-приложение для расчёта и визуализации �
 
 ## 📦 Установка
 
-Рекомендуемый способ установки стабильной версии — скачать подписанный APK из последнего GitHub Release:
+Рекомендуемый способ установки — скачать подписанный APK из последнего GitHub Release:
 
-[Скачать последнюю стабильную версию](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[Скачать последнюю версию](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
 Требуется Android 8.0 или новее.
-
-Тестовые сборки версии разработки создаются GitHub Actions для pull request и не считаются стабильными релизами.
 
 ## 🛠️ Сборка из исходников
 
