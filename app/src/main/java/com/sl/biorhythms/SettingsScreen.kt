@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
@@ -54,6 +55,7 @@ fun SettingsScreen(
     onThemeModeChange: (AppThemeMode) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
     onBirthDateChange: (LocalDate) -> Unit,
+    onOpenAbout: () -> Unit,
     onBack: () -> Unit,
 ) {
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
@@ -126,6 +128,15 @@ fun SettingsScreen(
                     label = appString(R.string.settings_language_option),
                     value = languageValueText,
                     onClick = { showLanguageDialog = true },
+                )
+            }
+
+            SettingsSection(title = appString(R.string.settings_section_about)) {
+                SettingsOptionRow(
+                    icon = Icons.Outlined.Info,
+                    label = appString(R.string.settings_about_option),
+                    value = appString(R.string.settings_about_summary),
+                    onClick = onOpenAbout,
                 )
             }
         }
