@@ -10,20 +10,23 @@
 
 An Android app for calculating and visualizing classic biorhythm cycles based on a birth date, built with Kotlin, Jetpack Compose and Material 3.
 
-[⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[⬇️ Download the latest stable APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current version: **1.2.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
+Latest stable release: **1.2.0** · Current development version: **1.3.0-beta1** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
 
 ## ✨ Features
 
 - Physical, emotional and intellectual biorhythm cycles
-- Daily chart grid with current values
+- First-run birth-date onboarding directly on the main screen
+- Selected-day summary cards with all three current values
+- Interactive chart inspection by tap or drag
+- Clear five-day chart grid with a highlighted selected day
 - Birth date selection and persistence
 - Light, dark and system themes
 - English, Russian and system UI language
 - Locale-aware date formatting
 - Home-screen widget with current biorhythm values
-- Per-widget background opacity setting
+- Live widget preview and per-widget background opacity setting
 - Automatic widget refresh after birth date, theme or language changes
 - Widget rendering that adapts to resizing
 
@@ -31,11 +34,13 @@ Current version: **1.2.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36*
 
 ## 📦 Installation
 
-The recommended way to install the app is to download the signed APK from the latest GitHub Release:
+The recommended way to install the stable app is to download the signed APK from the latest GitHub Release:
 
-[Download latest release](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[Download latest stable release](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
 Android 8.0 or newer is required.
+
+Development builds are produced by GitHub Actions for pull requests and should be treated as test builds rather than stable releases.
 
 ## 🛠️ Build from source
 
