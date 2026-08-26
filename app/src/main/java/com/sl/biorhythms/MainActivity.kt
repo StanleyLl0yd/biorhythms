@@ -218,13 +218,6 @@ private fun MainScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-
-                BiorhythmLegend(
-                    lines = biorhythmLines,
-                    birthDate = currentBirthDate,
-                    referenceDate = selectedDate,
-                    modifier = Modifier.fillMaxWidth(),
-                )
             } else {
                 BirthDateOnboardingCard(onChooseDate = { showDatePicker = true })
             }
