@@ -4,6 +4,7 @@
 [![Latest release](https://img.shields.io/github/v/release/StanleyLl0yd/biorhythms)](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/StanleyLl0yd/biorhythms/total)](https://github.com/StanleyLl0yd/biorhythms/releases)
 [![Android 8+](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue)](LICENSE)
 
 [![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README.ru.md)
@@ -29,6 +30,7 @@ Android-приложение для расчёта и визуализации �
 - Живой предпросмотр виджета и индивидуальная настройка непрозрачности фона
 - Автоматическое обновление виджета после изменения даты рождения, темы или языка
 - Корректное отображение виджета при изменении его размера
+- Экран «О приложении» с описанием, автором, лицензией и ссылкой на исходный код в GitHub
 
 > Биоритмы не являются медицинским или научно подтверждённым методом диагностики. Приложение визуализирует классическую модель биоритмов в информационных и развлекательных целях.
 
@@ -107,6 +109,12 @@ Production keystore и пароли в репозитории не хранят�
 - [English changelog](CHANGELOG.md)
 - [Русский changelog](CHANGELOG.ru.md)
 - [GitHub Releases](https://github.com/StanleyLl0yd/biorhythms/releases)
+
+## 📄 Лицензия
+
+Biorhythms распространяется по лицензии [PolyForm Noncommercial License 1.0.0](LICENSE). Использование, изменение и распространение разрешены для некоммерческих целей в соответствии с условиями лицензии.
+
+Официальная страница лицензии: <https://polyformproject.org/licenses/noncommercial/1.0.0>.
 
 ## 🤝 Участие в разработке
 
