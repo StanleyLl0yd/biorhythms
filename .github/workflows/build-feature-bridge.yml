@@ -6,14 +6,15 @@ on:
       - Android CI
     types:
       - completed
+  schedule:
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: read
 
 jobs:
   build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout feature branch
         uses: actions/checkout@v4
