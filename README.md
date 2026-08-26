@@ -124,7 +124,7 @@ Please keep changes small, follow Kotlin coding conventions, and include tests f
 
 ## 👨‍💻 Author
 
-Stanley Lloyd · [@StanleyLl0yd](https://github.com/StanleyLl0yd)
+Stanley Lloyd
 
 ---
 
