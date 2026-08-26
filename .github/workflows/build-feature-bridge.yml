@@ -1,21 +1,16 @@
 name: Feature Build Bridge
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-  workflow_run:
-    workflows:
-      - Android CI
-    types:
-      - completed
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout feature branch
         uses: actions/checkout@v4
@@ -38,7 +33,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Test, build and lint
-        run: ./gradlew testDebugUnitTest assembleRelease lintDebug --stacktrace
+        run: .\gradlew.bat testDebugUnitTest assembleRelease lintDebug --stacktrace
 
       - name: Upload unsigned release APK
         uses: actions/upload-artifact@v4
