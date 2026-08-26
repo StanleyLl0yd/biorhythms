@@ -40,7 +40,6 @@
     <string name="about_description">Biorhythms calculates and visualizes the classic physical, emotional and intellectual biorhythm cycles from your birth date. The model is provided for informational and entertainment purposes and is not a medical diagnostic method.</string>
     <string name="about_author_title">Author</string>
     <string name="about_author_name">Stanley Lloyd</string>
-    <string name="about_author_handle">@StanleyLl0yd</string>
     <string name="about_license_title">License</string>
     <string name="about_license_name">PolyForm Noncommercial 1.0.0</string>
     <string name="about_license_summary">Open the full license terms</string>
