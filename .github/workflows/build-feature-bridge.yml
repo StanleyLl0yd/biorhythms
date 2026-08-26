@@ -1,20 +1,21 @@
 name: Feature Build Bridge
 
 on:
+  push:
+    branches:
+      - main
   workflow_run:
     workflows:
       - Android CI
     types:
       - completed
-  schedule:
-    - cron: '*/5 * * * *'
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout feature branch
         uses: actions/checkout@v4
