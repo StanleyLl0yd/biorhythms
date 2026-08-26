@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
@@ -36,6 +37,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -199,6 +203,9 @@ private fun WidgetPreview(
     val locale = appLocale()
     val today = LocalDate.now()
     val alpha = alphaPercent.coerceIn(0, 100) / 100f
+    val shape = MaterialTheme.shapes.large
+    val checkerLight = MaterialTheme.colorScheme.surfaceVariant
+    val checkerDark = MaterialTheme.colorScheme.outlineVariant
     val values = remember(lines, birthDate, today) {
         if (birthDate == null) {
             emptyMap()
@@ -215,37 +222,74 @@ private fun WidgetPreview(
         }
     }
 
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surface.copy(alpha = alpha),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        tonalElevation = 0.dp,
+    Box(
+        modifier = modifier.clip(shape),
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        TransparencyBackdrop(
+            lightColor = checkerLight,
+            darkColor = checkerDark,
+            modifier = Modifier.matchParentSize(),
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = shape,
+            color = MaterialTheme.colorScheme.surface.copy(alpha = alpha),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
         ) {
-            Text(
-                text = if (birthDate == null) {
-                    appString(R.string.widget_no_birth_date)
-                } else {
-                    appString(R.string.widget_title)
-                },
-                style = MaterialTheme.typography.titleMedium,
-            )
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = if (birthDate == null) {
+                        appString(R.string.widget_no_birth_date)
+                    } else {
+                        appString(R.string.widget_title)
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                )
 
-            if (birthDate != null) {
-                lines.forEach { line ->
-                    val value = values[line] ?: 0.0
-                    WidgetPreviewLine(
-                        label = appString(line.labelResId),
-                        percentText = String.format(locale, "%+d%%", value.roundToInt()),
-                        fraction = ((value + 100.0) / 200.0).toFloat().coerceIn(0f, 1f),
-                        color = line.color,
-                    )
+                if (birthDate != null) {
+                    lines.forEach { line ->
+                        val value = values[line] ?: 0.0
+                        WidgetPreviewLine(
+                            label = appString(line.labelResId),
+                            percentText = String.format(locale, "%+d%%", value.roundToInt()),
+                            fraction = ((value + 100.0) / 200.0).toFloat().coerceIn(0f, 1f),
+                            color = line.color,
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TransparencyBackdrop(
+    lightColor: Color,
+    darkColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        val tileSize = 20.dp.toPx()
+        var row = 0
+        var y = 0f
+        while (y < size.height) {
+            var column = 0
+            var x = 0f
+            while (x < size.width) {
+                drawRect(
+                    color = if ((row + column) % 2 == 0) lightColor else darkColor,
+                    topLeft = Offset(x, y),
+                    size = Size(tileSize, tileSize),
+                )
+                column++
+                x += tileSize
+            }
+            row++
+            y += tileSize
         }
     }
 }
