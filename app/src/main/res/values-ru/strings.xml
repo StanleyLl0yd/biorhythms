@@ -3,19 +3,26 @@
 
     <string name="title_select_birth_date">Выберите дату рождения</string>
     <string name="action_tap_to_choose_date">Нажмите, чтобы выбрать дату</string>
+    <string name="action_choose_birth_date">Выбрать дату рождения</string>
     <string name="action_back">Назад</string>
-    <string name="chart_title_today_range">Биоритмы на сегодня и ±%1$d дней</string>
-    <string name="placeholder_pick_birth_date">Укажите дату рождения в настройках, чтобы увидеть график биоритмов.</string>
+    <string name="action_close">Закрыть</string>
+    <string name="chart_title_today_range">Цикл вокруг сегодня · ±%1$d дней</string>
+    <string name="placeholder_pick_birth_date">Укажите дату рождения, чтобы увидеть график биоритмов.</string>
+    <string name="onboarding_title">Рассчитайте свои биоритмы</string>
+    <string name="onboarding_description">Укажите дату рождения, чтобы увидеть физический, эмоциональный и интеллектуальный циклы на сегодня и ближайшие дни.</string>
+    <string name="chart_interaction_hint">Нажмите или проведите по графику, чтобы посмотреть другой день.</string>
 
     <string name="legend_physical">Физический</string>
     <string name="legend_emotional">Эмоциональный</string>
     <string name="legend_intellectual">Интеллектуальный</string>
     <string name="label_today">Сегодня</string>
-    <string name="chart_a11y_description">График биоритмов с %1$s по %2$s. Сегодня:</string>
+    <string name="chart_a11y_description">График биоритмов с %1$s по %2$s. Выбрано %3$s:</string>
 
     <string name="settings_title">Настройки</string>
+    <string name="settings_section_profile">Профиль</string>
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_language">Язык</string>
+    <string name="settings_birth_date_option">Дата рождения</string>
     <string name="settings_theme_system">Как на устройстве</string>
     <string name="settings_theme_light">Светлая тема</string>
     <string name="settings_theme_dark">Тёмная тема</string>
@@ -30,6 +37,7 @@
     <string name="widget_error">Не удалось обновить виджет</string>
     <string name="widget_description">Отображает текущие биоритмы</string>
     <string name="widget_config_title">Настройки виджета</string>
+    <string name="widget_config_preview">Предпросмотр</string>
     <string name="widget_config_transparency">Непрозрачность фона</string>
     <string name="widget_config_transparent">Прозрачный</string>
     <string name="widget_config_opaque">Непрозрачный</string>
