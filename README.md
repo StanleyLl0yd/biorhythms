@@ -4,6 +4,7 @@
 [![Latest release](https://img.shields.io/github/v/release/StanleyLl0yd/biorhythms)](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/StanleyLl0yd/biorhythms/total)](https://github.com/StanleyLl0yd/biorhythms/releases)
 [![Android 8+](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue)](LICENSE)
 
 [![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README.ru.md)
@@ -12,20 +13,24 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current version: **1.2.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
+Current version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
 
 ## ✨ Features
 
 - Physical, emotional and intellectual biorhythm cycles
-- Daily chart grid with current values
+- First-run birth-date onboarding directly on the main screen
+- Selected-day summary cards with all three current values
+- Interactive chart inspection by tap or drag
+- Clear five-day chart grid with a highlighted selected day
 - Birth date selection and persistence
 - Light, dark and system themes
 - English, Russian and system UI language
 - Locale-aware date formatting
 - Home-screen widget with current biorhythm values
-- Per-widget background opacity setting
+- Live widget preview and per-widget background opacity setting
 - Automatic widget refresh after birth date, theme or language changes
 - Widget rendering that adapts to resizing
+- In-app About screen with the app description, author, license and GitHub source link
 
 > Biorhythms are not a medical or scientifically validated diagnostic method. The app visualizes the classic biorhythm model for informational and entertainment purposes.
 
@@ -103,6 +108,12 @@ The production keystore and passwords are not stored in the repository.
 - [Русский changelog](CHANGELOG.ru.md)
 - [GitHub Releases](https://github.com/StanleyLl0yd/biorhythms/releases)
 
+## 📄 License
+
+Biorhythms is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). Use, modification and redistribution are permitted for noncommercial purposes under the license terms.
+
+The official license page is available at <https://polyformproject.org/licenses/noncommercial/1.0.0>.
+
 ## 🤝 Contributing
 
 Contributions and bug reports are welcome. Open an issue or submit a focused pull request.
@@ -111,7 +122,7 @@ Please keep changes small, follow Kotlin coding conventions, and include tests f
 
 ## 👨‍💻 Author
 
-Stanley Lloyd · [@StanleyLl0yd](https://github.com/StanleyLl0yd)
+Stanley Lloyd
 
 ---
 

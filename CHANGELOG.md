@@ -9,6 +9,30 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.3.0] - 2026-08-26
+
+### ✨ Added
+- First-run birth-date onboarding directly on the main screen.
+- Three prominent biorhythm summary cards for the currently selected day.
+- Interactive chart inspection: tap or drag across the chart to select another day and update its values immediately.
+- Live widget preview on the widget configuration screen.
+- In-app About screen with a short app description, current version, author, license and GitHub source link.
+- Unit tests for chart position mapping and grid generation.
+- Repository license file with the official PolyForm Noncommercial License 1.0.0 terms.
+
+### 🎨 Changed
+- Reduced the chart grid from one vertical line per day to clear five-day intervals.
+- Increased chart height and added a strong selected-day marker with points on all three curves.
+- Biorhythm percentages now use the same color as their corresponding curve instead of a separate red/yellow/green scale.
+- Redesigned Settings with larger Material rows, clearer section hierarchy and more readable typography.
+- Reworked widget opacity controls for better use on narrow screens.
+- Added a checkerboard transparency backdrop to the widget preview so background opacity is immediately visible.
+- Increased core typography sizes and spacing for improved readability.
+- Project licensing is explicitly PolyForm Noncommercial 1.0.0.
+- Promoted the tested 1.3 beta line to the stable `1.3.0` release with `versionCode` 5 and `versionName` `1.3.0`.
+
+---
+
 ## [1.2.0] - 2026-08-26
 
 ### ✨ Added
