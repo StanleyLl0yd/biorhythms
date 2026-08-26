@@ -16,7 +16,9 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Three prominent biorhythm summary cards for the currently selected day.
 - Interactive chart inspection: tap or drag across the chart to select another day and update its values immediately.
 - Live widget preview on the widget configuration screen.
+- In-app About screen with a short app description, current version, author, license and GitHub source link.
 - Unit tests for chart position mapping and grid generation.
+- Repository license file with the official PolyForm Noncommercial License 1.0.0 terms.
 
 ### 🎨 Changed
 - Reduced the chart grid from one vertical line per day to clear five-day intervals.
@@ -25,6 +27,7 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Redesigned Settings with larger Material rows, clearer section hierarchy and more readable typography.
 - Reworked widget opacity controls for better use on narrow screens.
 - Increased core typography sizes and spacing for improved readability.
+- Project licensing is now explicitly PolyForm Noncommercial 1.0.0.
 - Started the 1.3 development line with `versionCode` 5 and `versionName` `1.3.0-beta1`.
 
 ---
