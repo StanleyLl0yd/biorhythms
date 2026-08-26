@@ -22,6 +22,7 @@
     <string name="settings_section_profile">Профиль</string>
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_language">Язык</string>
+    <string name="settings_section_about">О приложении</string>
     <string name="settings_birth_date_option">Дата рождения</string>
     <string name="settings_theme_system">Как на устройстве</string>
     <string name="settings_theme_light">Светлая тема</string>
@@ -31,6 +32,21 @@
     <string name="settings_language_english">Английский</string>
     <string name="settings_theme_option">Тема</string>
     <string name="settings_language_option">Язык приложения</string>
+    <string name="settings_about_option">О Biorhythms</string>
+    <string name="settings_about_summary">Описание, автор, лицензия и исходный код</string>
+
+    <string name="about_title">О приложении</string>
+    <string name="about_version">Версия %1$s</string>
+    <string name="about_description">Biorhythms рассчитывает и визуализирует классические физический, эмоциональный и интеллектуальный циклы биоритмов по дате рождения. Модель предназначена для информационных и развлекательных целей и не является медицинским методом диагностики.</string>
+    <string name="about_author_title">Автор</string>
+    <string name="about_author_name">Stanley Lloyd</string>
+    <string name="about_author_handle">@StanleyLl0yd</string>
+    <string name="about_license_title">Лицензия</string>
+    <string name="about_license_name">PolyForm Noncommercial 1.0.0</string>
+    <string name="about_license_summary">Открыть полный текст лицензии</string>
+    <string name="about_source_title">Исходный код</string>
+    <string name="about_github_label">Репозиторий GitHub</string>
+    <string name="about_github_value">github.com/StanleyLl0yd/biorhythms</string>
 
     <string name="widget_title">Биоритмы сегодня</string>
     <string name="widget_no_birth_date">Укажите дату рождения в приложении</string>
