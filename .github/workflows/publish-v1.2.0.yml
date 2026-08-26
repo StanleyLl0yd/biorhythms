@@ -1,0 +1,111 @@
+name: Publish v1.2.0
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publish-v1.2.0.yml'
+      - '.github/release-assets/v1.2.0/**'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_RUN_ID: '32908526847'
+      BASE_APK_SHA256: '7df0e88f7bc766ad117a160be00c14f3b9167fa53c2c84f45616899da3889c23'
+      PATCH_SHA256: '9fe7075e41754f16e7d160e85af3a8064c7ca7e956ea84195c11e90eb865576e'
+      SIGNED_APK_SHA256: 'cfeceb1b19bfc18da9d1b48086c1794f235cd31423f214f91cce17c04ed6a56a'
+      SIGNER_SHA256: 'f02571c40741e2cb071564f5b63fd3dc38a875d0eda11a8c42269ed635bc2a58'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download validated release base
+        run: |
+          gh run download "$BASE_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name biorhythms-1.2.0-offline-signing-kit \
+            --dir release-base
+          echo "$BASE_APK_SHA256  release-base/app-release-unsigned.apk" | sha256sum -c -
+
+      - name: Reconstruct signed APK
+        run: |
+          cat .github/release-assets/v1.2.0/part-*.b64 > release.patch.b64
+          test "$(wc -c < release.patch.b64)" -eq 81040
+          base64 --decode release.patch.b64 > release.patch.zst
+          echo "$PATCH_SHA256  release.patch.zst" | sha256sum -c -
+          if ! command -v zstd >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y zstd
+          fi
+          zstd -d \
+            --patch-from=release-base/app-release-unsigned.apk \
+            release.patch.zst \
+            -o biorhythms-v1.2.0.apk
+          echo "$SIGNED_APK_SHA256  biorhythms-v1.2.0.apk" | sha256sum -c -
+
+      - name: Verify APK signature
+        run: |
+          java -jar release-base/apksigner.jar verify --verbose --print-certs biorhythms-v1.2.0.apk | tee signature.txt
+          grep -q 'Verified using v2 scheme (APK Signature Scheme v2): true' signature.txt
+          grep -q 'Verified using v3 scheme (APK Signature Scheme v3): true' signature.txt
+          grep -q "certificate SHA-256 digest: $SIGNER_SHA256" signature.txt
+
+      - name: Publish GitHub Release
+        run: |
+          cat > release-notes.md <<'EOF'
+          This release completes the 1.2 line with a home-screen widget, more consistent localization and themes, and a large set of reliability improvements.
+
+          ### 📱 Home-screen widget
+          - Added a home-screen widget with current physical, emotional and intellectual biorhythm values.
+          - Added per-widget background opacity settings.
+          - Widgets refresh immediately after birth date, language or theme changes.
+          - Improved widget resizing and periodic system updates.
+
+          ### 🎨 Interface and localization
+          - Improved light, dark and system theme behavior across the app and widget.
+          - English and Russian localization is now applied consistently to interface text, dates and widget labels.
+          - Fixed system Back navigation from the settings screen.
+          - The current date now refreshes correctly after returning to the app or crossing midnight.
+
+          ### 🛠 Reliability and quality
+          - Unified biorhythm calculations and value colors between the app and widget.
+          - Improved preference persistence for theme and language settings.
+          - Restored the official Gradle Wrapper for clean-clone builds.
+          - Added automated tests and GitHub Actions checks for unit tests, Android Lint, release builds, R8/resource shrinking, AAB generation and Android-test compilation.
+          - The APK is signed with the production signing key so future versions can be installed as updates.
+
+          Android 8.0 (API 26) or newer is required.
+
+          APK SHA-256: `cfeceb1b19bfc18da9d1b48086c1794f235cd31423f214f91cce17c04ed6a56a`
+          EOF
+
+          if gh release view v1.2.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload v1.2.0 "biorhythms-v1.2.0.apk#Android APK" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit v1.2.0 \
+              --repo "$GITHUB_REPOSITORY" \
+              --title 'Biorhythms v1.2.0 – Widget, Localization & Reliability' \
+              --notes-file release-notes.md \
+              --latest
+          else
+            gh release create v1.2.0 \
+              "biorhythms-v1.2.0.apk#Android APK" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target main \
+              --title 'Biorhythms v1.2.0 – Widget, Localization & Reliability' \
+              --notes-file release-notes.md \
+              --latest
+          fi
