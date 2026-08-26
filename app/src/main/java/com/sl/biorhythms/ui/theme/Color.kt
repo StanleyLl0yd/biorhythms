@@ -14,10 +14,6 @@ val DeepSurface = Color(0xFF131A3A)
 val LightSurface = Color(0xFFFFFFFF)
 val LightBackground = Color(0xFFF3F6FF)
 
-/**
- * Цвета линий графика биоритмов — вынесены в тему,
- * чтобы было легко перекрашивать всё приложение.
- */
 val PhysicalLineColor = OrbitRose
 val EmotionalLineColor = OrbitTeal
 val IntellectualLineColor = OrbitBlue
