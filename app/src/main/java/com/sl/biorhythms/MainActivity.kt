@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity() {
 private enum class AppScreen {
     MAIN,
     SETTINGS,
+    ABOUT,
 }
 
 @Composable
@@ -99,8 +100,12 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    BackHandler(enabled = currentScreen == AppScreen.SETTINGS) {
-        currentScreen = AppScreen.MAIN
+    BackHandler(enabled = currentScreen != AppScreen.MAIN) {
+        currentScreen = when (currentScreen) {
+            AppScreen.ABOUT -> AppScreen.SETTINGS
+            AppScreen.SETTINGS -> AppScreen.MAIN
+            AppScreen.MAIN -> AppScreen.MAIN
+        }
     }
 
     BiorhythmsTheme(themeMode = themeMode) {
@@ -130,7 +135,12 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
                             WidgetUpdater.requestUpdate(context)
                         }
                     },
+                    onOpenAbout = { currentScreen = AppScreen.ABOUT },
                     onBack = { currentScreen = AppScreen.MAIN },
+                )
+
+                AppScreen.ABOUT -> AboutScreen(
+                    onBack = { currentScreen = AppScreen.SETTINGS },
                 )
             }
         }
