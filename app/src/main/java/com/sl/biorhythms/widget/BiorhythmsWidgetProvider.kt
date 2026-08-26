@@ -17,7 +17,6 @@ import androidx.core.content.ContextCompat
 import com.sl.biorhythms.AppLanguage
 import com.sl.biorhythms.AppThemeMode
 import com.sl.biorhythms.BiorhythmCalculator
-import com.sl.biorhythms.BiorhythmValueColor
 import com.sl.biorhythms.MainActivity
 import com.sl.biorhythms.PreferencesKeys
 import com.sl.biorhythms.R
@@ -255,7 +254,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         canvas.drawText(label, x, baselineY, paint)
 
         val percentText = String.format(locale, "%+d%%", percent.roundToInt())
-        paint.color = BiorhythmValueColor.argb(percent)
+        paint.color = barColor
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText(percentText, x + maxWidth, baselineY, paint)
 
