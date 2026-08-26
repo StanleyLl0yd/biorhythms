@@ -124,7 +124,7 @@ Bug report и pull request приветствуются. Создавайте is
 
 ## 👨‍💻 Автор
 
-Stanley Lloyd · [@StanleyLl0yd](https://github.com/StanleyLl0yd)
+Stanley Lloyd
 
 ---
 
