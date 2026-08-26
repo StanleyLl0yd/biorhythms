@@ -40,7 +40,6 @@
     <string name="about_description">Biorhythms рассчитывает и визуализирует классические физический, эмоциональный и интеллектуальный циклы биоритмов по дате рождения. Модель предназначена для информационных и развлекательных целей и не является медицинским методом диагностики.</string>
     <string name="about_author_title">Автор</string>
     <string name="about_author_name">Stanley Lloyd</string>
-    <string name="about_author_handle">@StanleyLl0yd</string>
     <string name="about_license_title">Лицензия</string>
     <string name="about_license_name">PolyForm Noncommercial 1.0.0</string>
     <string name="about_license_summary">Открыть полный текст лицензии</string>
