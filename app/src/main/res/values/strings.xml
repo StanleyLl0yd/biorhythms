@@ -3,19 +3,26 @@
 
     <string name="title_select_birth_date">Select your birth date</string>
     <string name="action_tap_to_choose_date">Tap to choose date</string>
+    <string name="action_choose_birth_date">Choose birth date</string>
     <string name="action_back">Back</string>
-    <string name="chart_title_today_range">Biorhythms for ±%1$d days around today</string>
-    <string name="placeholder_pick_birth_date">Set your birth date in Settings to see your biorhythm chart.</string>
+    <string name="action_close">Close</string>
+    <string name="chart_title_today_range">Cycle around today · ±%1$d days</string>
+    <string name="placeholder_pick_birth_date">Set your birth date to see your biorhythm chart.</string>
+    <string name="onboarding_title">Calculate your biorhythms</string>
+    <string name="onboarding_description">Choose your birth date to see your physical, emotional and intellectual cycles for today and the surrounding days.</string>
+    <string name="chart_interaction_hint">Tap or drag across the chart to inspect another day.</string>
 
     <string name="legend_physical">Physical</string>
     <string name="legend_emotional">Emotional</string>
     <string name="legend_intellectual">Intellectual</string>
     <string name="label_today">Today</string>
-    <string name="chart_a11y_description">Biorhythm chart from %1$s to %2$s. Today:</string>
+    <string name="chart_a11y_description">Biorhythm chart from %1$s to %2$s. Selected %3$s:</string>
 
     <string name="settings_title">Settings</string>
+    <string name="settings_section_profile">Profile</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_language">Language</string>
+    <string name="settings_birth_date_option">Birth date</string>
     <string name="settings_theme_system">Use system theme</string>
     <string name="settings_theme_light">Light theme</string>
     <string name="settings_theme_dark">Dark theme</string>
@@ -30,6 +37,7 @@
     <string name="widget_error">Unable to update widget</string>
     <string name="widget_description">Display your current biorhythms</string>
     <string name="widget_config_title">Widget Settings</string>
+    <string name="widget_config_preview">Preview</string>
     <string name="widget_config_transparency">Background opacity</string>
     <string name="widget_config_transparent">Transparent</string>
     <string name="widget_config_opaque">Opaque</string>
