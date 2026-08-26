@@ -36,7 +36,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 
 private const val REPOSITORY_URL = "https://github.com/StanleyLl0yd/biorhythms"
-private const val AUTHOR_URL = "https://github.com/StanleyLl0yd"
 private const val LICENSE_URL = "https://polyformproject.org/licenses/noncommercial/1.0.0"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,11 +89,9 @@ fun AboutScreen(onBack: () -> Unit) {
             }
 
             AboutSection(title = appString(R.string.about_author_title)) {
-                AboutLinkRow(
+                AboutInfoRow(
                     icon = Icons.Outlined.Person,
-                    label = appString(R.string.about_author_name),
-                    value = appString(R.string.about_author_handle),
-                    onClick = { runCatching { uriHandler.openUri(AUTHOR_URL) } },
+                    text = appString(R.string.about_author_name),
                 )
             }
 
@@ -132,6 +129,35 @@ private fun AboutSection(
             modifier = Modifier.padding(horizontal = 4.dp),
         )
         content()
+    }
+}
+
+@Composable
+private fun AboutInfoRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 64.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(modifier = Modifier.width(14.dp))
+            Text(text = text, style = MaterialTheme.typography.bodyLarge)
+        }
     }
 }
 
