@@ -26,6 +26,7 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Biorhythm percentages now use the same color as their corresponding curve instead of a separate red/yellow/green scale.
 - Redesigned Settings with larger Material rows, clearer section hierarchy and more readable typography.
 - Reworked widget opacity controls for better use on narrow screens.
+- Added a checkerboard transparency backdrop to the widget preview so background opacity is immediately visible.
 - Increased core typography sizes and spacing for improved readability.
 - Project licensing is now explicitly PolyForm Noncommercial 1.0.0.
 - Started the 1.3 development line with `versionCode` 5 and `versionName` `1.3.0-beta1`.
