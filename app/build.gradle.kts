@@ -37,6 +37,8 @@ android {
                 storePassword = requireNotNull(releaseStorePassword)
                 keyAlias = requireNotNull(releaseKeyAlias)
                 keyPassword = requireNotNull(releaseKeyPassword)
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }
