@@ -13,7 +13,7 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
+Current version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ✨ Features
 
@@ -46,9 +46,9 @@ Android 8.0 or newer is required.
 
 Requirements:
 
-- Current Android Studio with Android Gradle Plugin 8.13 support
+- Current Android Studio with Android Gradle Plugin 9.3 support
 - JDK 17 or newer
-- Android SDK 36
+- Android SDK 37
 
 ```bash
 git clone https://github.com/StanleyLl0yd/biorhythms.git
@@ -66,13 +66,13 @@ To run the project checks:
 
 | Category | Technology |
 | --- | --- |
-| Language | Kotlin 2.0.21 |
-| UI | Jetpack Compose + Material 3 |
+| Language | Kotlin 2.4.10 |
+| UI | Jetpack Compose 1.12 + Material 3 |
 | State | ViewModel + Lifecycle |
 | Storage | DataStore Preferences |
 | Widget | Android AppWidget / RemoteViews |
-| Build | Gradle 8.13, Kotlin DSL |
-| Android Gradle Plugin | 8.13.1 |
+| Build | Gradle 9.5.0, Kotlin DSL |
+| Android Gradle Plugin | 9.3.2 |
 
 ## ✅ Quality checks
 
