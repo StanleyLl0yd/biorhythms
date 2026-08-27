@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -33,13 +33,13 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android 37 platform
         run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Restore release keystore when configured
         env:
@@ -63,7 +63,7 @@ jobs:
         run: ./gradlew lintDebug --stacktrace
 
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: biorhythms-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -71,14 +71,14 @@ jobs:
 
       - name: Upload signed release APK when signing is configured
         if: ${{ env.ANDROID_HAS_RELEASE_SIGNING == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: biorhythms-signed-release-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
       - name: Upload release bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: biorhythms-release-bundle
           path: app/build/outputs/bundle/release/app-release.aab
@@ -86,7 +86,7 @@ jobs:
 
       - name: Upload lint reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lint-reports
           path: |
