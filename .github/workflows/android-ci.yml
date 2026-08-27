@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BIORHYTHMS_STORE_PASSWORD: ${{ secrets.BIORHYTHMS_STORE_PASSWORD }}
-      BIORHYTHMS_KEY_ALIAS: ${{ secrets.BIORHYTHMS_KEY_ALIAS }}
-      BIORHYTHMS_KEY_PASSWORD: ${{ secrets.BIORHYTHMS_KEY_PASSWORD }}
+      BIORHYTHMS_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      BIORHYTHMS_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      BIORHYTHMS_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -43,7 +43,7 @@ jobs:
 
       - name: Restore release keystore when configured
         env:
-          BIORHYTHMS_KEYSTORE_BASE64: ${{ secrets.BIORHYTHMS_KEYSTORE_BASE64 }}
+          BIORHYTHMS_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$BIORHYTHMS_KEYSTORE_BASE64" ]; then
             echo "$BIORHYTHMS_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/biorhythms-release.jks"
