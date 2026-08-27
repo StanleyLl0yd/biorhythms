@@ -87,14 +87,14 @@ GitHub Actions automatically validates pull requests and pushes to `main` with:
 
 ## 🔐 Release signing
 
-Release signing is configured through environment variables:
+Release signing uses the standard Android signing configuration:
 
-- `BIORHYTHMS_KEYSTORE_PATH`
-- `BIORHYTHMS_STORE_PASSWORD`
-- `BIORHYTHMS_KEY_ALIAS`
-- `BIORHYTHMS_KEY_PASSWORD`
+- `ANDROID_KEYSTORE_PATH`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
 
-The production keystore and passwords are not stored in the repository.
+GitHub Actions restores `ANDROID_KEYSTORE_PATH` from the `ANDROID_KEYSTORE_BASE64` repository secret. The production keystore and passwords are not stored in the repository.
 
 ## 🌍 Languages
 
