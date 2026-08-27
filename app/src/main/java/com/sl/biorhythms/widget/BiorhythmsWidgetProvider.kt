@@ -14,6 +14,7 @@ import android.graphics.RectF
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import com.sl.biorhythms.AppLanguage
 import com.sl.biorhythms.AppThemeMode
 import com.sl.biorhythms.BiorhythmCalculator
@@ -193,7 +194,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         width: Int,
         height: Int,
     ): Bitmap {
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val density = context.resources.displayMetrics.density
         val daysFromBirth = BiorhythmCalculator.daysFromBirth(birthDate, today)

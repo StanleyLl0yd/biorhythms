@@ -1,11 +1,11 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Biorhythms</string>
 
     <string name="action_tap_to_choose_date">Tap to choose date</string>
     <string name="action_choose_birth_date">Choose birth date</string>
     <string name="action_back">Back</string>
     <string name="action_close">Close</string>
-    <string name="chart_title_today_range">Cycle around today · ±%1$d days</string>
+    <string name="chart_title_today_range" tools:ignore="PluralsCandidate">Cycle around today · ±%1$d days</string>
     <string name="onboarding_title">Calculate your biorhythms</string>
     <string name="onboarding_description">Choose your birth date to see your physical, emotional and intellectual cycles for today and the surrounding days.</string>
     <string name="chart_interaction_hint">Tap or drag across the chart to inspect another day.</string>
