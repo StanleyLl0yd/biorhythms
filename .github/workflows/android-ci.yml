@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BIORHYTHMS_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-      BIORHYTHMS_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      BIORHYTHMS_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -43,14 +43,14 @@ jobs:
 
       - name: Restore release keystore when configured
         env:
-          BIORHYTHMS_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$BIORHYTHMS_KEYSTORE_BASE64" ]; then
-            echo "$BIORHYTHMS_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/biorhythms-release.jks"
-            echo "BIORHYTHMS_KEYSTORE_PATH=$RUNNER_TEMP/biorhythms-release.jks" >> "$GITHUB_ENV"
-            echo "BIORHYTHMS_HAS_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/android-release.jks"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/android-release.jks" >> "$GITHUB_ENV"
+            echo "ANDROID_HAS_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
           else
-            echo "BIORHYTHMS_HAS_RELEASE_SIGNING=false" >> "$GITHUB_ENV"
+            echo "ANDROID_HAS_RELEASE_SIGNING=false" >> "$GITHUB_ENV"
           fi
 
       - name: Run unit tests
@@ -70,7 +70,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload signed release APK when signing is configured
-        if: ${{ env.BIORHYTHMS_HAS_RELEASE_SIGNING == 'true' }}
+        if: ${{ env.ANDROID_HAS_RELEASE_SIGNING == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: biorhythms-signed-release-apk
