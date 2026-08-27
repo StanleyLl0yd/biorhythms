@@ -4,10 +4,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val releaseKeystorePath = System.getenv("BIORHYTHMS_KEYSTORE_PATH")
-val releaseStorePassword = System.getenv("BIORHYTHMS_STORE_PASSWORD")
-val releaseKeyAlias = System.getenv("BIORHYTHMS_KEY_ALIAS")
-val releaseKeyPassword = System.getenv("BIORHYTHMS_KEY_PASSWORD")
+val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+val releaseStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
 val hasReleaseSigning = listOf(
     releaseKeystorePath,
     releaseStorePassword,
