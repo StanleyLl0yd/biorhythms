@@ -17,12 +17,12 @@ val hasReleaseSigning = listOf(
 
 android {
     namespace = "com.sl.biorhythms"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.sl.biorhythms"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 5
         versionName = "1.3.0"
 
