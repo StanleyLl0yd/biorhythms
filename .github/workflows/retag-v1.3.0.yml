@@ -1,0 +1,28 @@
+name: Retag v1.3.0
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/retag-v1.3.0.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_COMMIT: 'e9b0e7e8842f97305fe92cd513ef1e00b3412999'
+
+    steps:
+      - name: Move release tag to final commit
+        run: |
+          gh api \
+            --method PATCH \
+            "repos/$GITHUB_REPOSITORY/git/refs/tags/v1.3.0" \
+            -f sha="$RELEASE_COMMIT" \
+            -F force=true
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v1.3.0" --jq '.object.sha')" = "$RELEASE_COMMIT"
