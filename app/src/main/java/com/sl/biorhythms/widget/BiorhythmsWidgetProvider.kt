@@ -68,7 +68,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
                         updateAppWidget(context.applicationContext, appWidgetManager, appWidgetId)
                     } catch (error: Exception) {
                         android.util.Log.e("BiorhythmsWidget", "Error updating widget", error)
-                        showErrorWidget(context, appWidgetManager, appWidgetId)
+                        showErrorWidget(context.applicationContext, appWidgetManager, appWidgetId)
                     }
                 }
             } finally {
@@ -294,14 +294,41 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         return nightMode == Configuration.UI_MODE_NIGHT_YES
     }
 
-    private fun showErrorWidget(
+    private suspend fun showErrorWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
     ) {
+        var themeMode = AppThemeMode.SYSTEM
+        var language = AppLanguage.SYSTEM
+        try {
+            val storedPreferences = context.dataStore.data.first()
+            themeMode = AppThemeMode.fromStored(storedPreferences[PreferencesKeys.ThemeMode])
+            language = AppLanguage.fromStored(storedPreferences[PreferencesKeys.Language])
+        } catch (_: Exception) {
+        }
+
+        val locale = resolveLocale(language, context.resources.configuration.locales[0])
+        val resources = localizedResources(context, locale)
+        val alpha = WidgetPreferences(context).getAlpha(appWidgetId)
+        val isDarkTheme = when (themeMode) {
+            AppThemeMode.SYSTEM -> context.isSystemDarkTheme()
+            AppThemeMode.LIGHT -> false
+            AppThemeMode.DARK -> true
+        }
+        val textColor = ContextCompat.getColor(
+            context,
+            if (isDarkTheme) R.color.widget_text_dark else R.color.widget_text_light,
+        )
+        val backgroundColor = ContextCompat.getColor(
+            context,
+            if (isDarkTheme) R.color.widget_background_dark else R.color.widget_background_light,
+        )
+
         val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
         configureClicks(context, views, appWidgetId)
-        views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_error))
+        applyAppearance(views, textColor, backgroundColor, alpha)
+        views.setTextViewText(R.id.widget_title, resources.getString(R.string.widget_error))
         views.setImageViewBitmap(R.id.widget_content, null)
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }

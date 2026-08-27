@@ -1,13 +1,11 @@
 <resources>
     <string name="app_name">Биоритмы</string>
 
-    <string name="title_select_birth_date">Выберите дату рождения</string>
     <string name="action_tap_to_choose_date">Нажмите, чтобы выбрать дату</string>
     <string name="action_choose_birth_date">Выбрать дату рождения</string>
     <string name="action_back">Назад</string>
     <string name="action_close">Закрыть</string>
     <string name="chart_title_today_range">Цикл вокруг сегодня · ±%1$d дней</string>
-    <string name="placeholder_pick_birth_date">Укажите дату рождения, чтобы увидеть график биоритмов.</string>
     <string name="onboarding_title">Рассчитайте свои биоритмы</string>
     <string name="onboarding_description">Укажите дату рождения, чтобы увидеть физический, эмоциональный и интеллектуальный циклы на сегодня и ближайшие дни.</string>
     <string name="chart_interaction_hint">Нажмите или проведите по графику, чтобы посмотреть другой день.</string>
