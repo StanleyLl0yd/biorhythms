@@ -87,14 +87,14 @@ GitHub Actions автоматически проверяет pull request и pus
 
 ## 🔐 Подпись release-сборки
 
-Подпись release настраивается через переменные окружения:
+Подпись release использует стандартную Android-конфигурацию:
 
-- `BIORHYTHMS_KEYSTORE_PATH`
-- `BIORHYTHMS_STORE_PASSWORD`
-- `BIORHYTHMS_KEY_ALIAS`
-- `BIORHYTHMS_KEY_PASSWORD`
+- `ANDROID_KEYSTORE_PATH`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
 
-Production keystore и пароли в репозитории не хранятся.
+GitHub Actions восстанавливает `ANDROID_KEYSTORE_PATH` из секрета репозитория `ANDROID_KEYSTORE_BASE64`. Production keystore и пароли в репозитории не хранятся.
 
 ## 🌍 Языки
 
