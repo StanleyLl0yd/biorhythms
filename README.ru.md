@@ -13,7 +13,7 @@ Android-приложение для расчёта и визуализации �
 
 [⬇️ Скачать последнюю версию APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Текущая версия: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **36**
+Текущая версия: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ✨ Возможности
 
@@ -46,9 +46,9 @@ Android-приложение для расчёта и визуализации �
 
 Требования:
 
-- актуальная Android Studio с поддержкой Android Gradle Plugin 8.13
+- актуальная Android Studio с поддержкой Android Gradle Plugin 9.3
 - JDK 17 или новее
-- Android SDK 36
+- Android SDK 37
 
 ```bash
 git clone https://github.com/StanleyLl0yd/biorhythms.git
@@ -66,13 +66,13 @@ cd biorhythms
 
 | Категория | Технология |
 | --- | --- |
-| Язык | Kotlin 2.0.21 |
-| UI | Jetpack Compose + Material 3 |
+| Язык | Kotlin 2.4.10 |
+| UI | Jetpack Compose 1.12 + Material 3 |
 | Состояние | ViewModel + Lifecycle |
 | Хранение | DataStore Preferences |
 | Виджет | Android AppWidget / RemoteViews |
-| Сборка | Gradle 8.13, Kotlin DSL |
-| Android Gradle Plugin | 8.13.1 |
+| Сборка | Gradle 9.5.0, Kotlin DSL |
+| Android Gradle Plugin | 9.3.2 |
 
 ## ✅ Контроль качества
 
