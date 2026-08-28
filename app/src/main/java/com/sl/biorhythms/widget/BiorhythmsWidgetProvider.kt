@@ -84,7 +84,8 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         val language = AppLanguage.fromStored(storedPreferences[PreferencesKeys.Language])
         val locale = resolveLocale(language, context.resources.configuration.locales[0])
         val resources = localizedResources(context, locale)
-        val views = createViews(context, appWidgetId, themeMode)
+        val widgetViews = createViews(context, appWidgetId, themeMode)
+        val views = widgetViews.remoteViews
 
         if (birthDateEpoch == null) {
             showStatus(views, resources.getString(R.string.widget_no_birth_date))
@@ -112,7 +113,14 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             ),
         )
 
-        showValues(views, resources, locale, values)
+        showValues(
+            context = context,
+            views = views,
+            resources = resources,
+            locale = locale,
+            values = values,
+            textColor = widgetViews.textColor,
+        )
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
@@ -120,7 +128,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         context: Context,
         appWidgetId: Int,
         themeMode: AppThemeMode,
-    ): RemoteViews {
+    ): WidgetViews {
         val isDarkTheme = when (themeMode) {
             AppThemeMode.SYSTEM -> context.isSystemDarkTheme()
             AppThemeMode.LIGHT -> false
@@ -135,11 +143,10 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             if (isDarkTheme) R.color.widget_background_dark else R.color.widget_background_light,
         )
         val alpha = WidgetPreferences(context).getAlpha(appWidgetId)
-
-        return RemoteViews(context.packageName, R.layout.widget_biorhythms).also { views ->
-            configureClicks(context, views, appWidgetId)
-            applyAppearance(views, textColor, backgroundColor, alpha)
-        }
+        val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
+        configureClicks(context, views, appWidgetId)
+        applyAppearance(views, textColor, backgroundColor, alpha)
+        return WidgetViews(views, textColor)
     }
 
     private fun configureClicks(
@@ -179,14 +186,6 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         views.setTextColor(R.id.widget_title, textColor)
         views.setTextColor(R.id.widget_status, textColor)
         views.setInt(R.id.widget_settings, "setColorFilter", textColor)
-        intArrayOf(
-            R.id.widget_physical_label,
-            R.id.widget_physical_value,
-            R.id.widget_emotional_label,
-            R.id.widget_emotional_value,
-            R.id.widget_intellectual_label,
-            R.id.widget_intellectual_value,
-        ).forEach { viewId -> views.setTextColor(viewId, textColor) }
     }
 
     private fun showStatus(views: RemoteViews, status: String) {
@@ -196,40 +195,33 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
     }
 
     private fun showValues(
+        context: Context,
         views: RemoteViews,
         resources: Resources,
         locale: Locale,
         values: List<Double>,
+        textColor: Int,
     ) {
         views.setViewVisibility(R.id.widget_status, View.GONE)
         views.setViewVisibility(R.id.widget_values, View.VISIBLE)
+        views.removeAllViews(R.id.widget_values)
 
         val labels = listOf(
             resources.getString(R.string.legend_physical),
             resources.getString(R.string.legend_emotional),
             resources.getString(R.string.legend_intellectual),
         )
-        val rowIds = intArrayOf(
-            R.id.widget_physical_row,
-            R.id.widget_emotional_row,
-            R.id.widget_intellectual_row,
-        )
-        val labelIds = intArrayOf(
-            R.id.widget_physical_label,
-            R.id.widget_emotional_label,
-            R.id.widget_intellectual_label,
-        )
-        val valueIds = intArrayOf(
-            R.id.widget_physical_value,
-            R.id.widget_emotional_value,
-            R.id.widget_intellectual_value,
-        )
 
-        labels.indices.forEach { index ->
-            val valueText = String.format(locale, "%+d%%", values[index].roundToInt())
-            views.setTextViewText(labelIds[index], labels[index])
-            views.setTextViewText(valueIds[index], valueText)
-            views.setContentDescription(rowIds[index], "${labels[index]} $valueText")
+        labels.zip(values).forEach { (label, value) ->
+            val valueText = String.format(locale, "%+d%%", value.roundToInt())
+            val row = RemoteViews(context.packageName, R.layout.widget_biorhythm_row).apply {
+                setTextViewText(R.id.widget_cycle_label, label)
+                setTextViewText(R.id.widget_cycle_value, valueText)
+                setTextColor(R.id.widget_cycle_label, textColor)
+                setTextColor(R.id.widget_cycle_value, textColor)
+                setContentDescription(R.id.widget_cycle_row, "$label $valueText")
+            }
+            views.addView(R.id.widget_values, row)
         }
     }
 
@@ -260,10 +252,15 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
 
         val locale = resolveLocale(language, context.resources.configuration.locales[0])
         val resources = localizedResources(context, locale)
-        val views = createViews(context, appWidgetId, themeMode)
+        val views = createViews(context, appWidgetId, themeMode).remoteViews
         showStatus(views, resources.getString(R.string.widget_error))
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
+
+    private data class WidgetViews(
+        val remoteViews: RemoteViews,
+        val textColor: Int,
+    )
 
     private companion object {
         const val TAG = "BiorhythmsWidget"
