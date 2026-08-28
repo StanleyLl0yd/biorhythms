@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -124,7 +125,7 @@ fun BiorhythmChart(
                 .semantics { contentDescription = chartDescription }
                 .pointerInput(pastDays, futureDays) {
                     awaitEachGesture {
-                        val down = awaitFirstDown()
+                        val down = awaitFirstDown(pass = PointerEventPass.Main)
                         onSelectedOffsetChange(
                             chartOffsetForPosition(
                                 x = down.position.x,
