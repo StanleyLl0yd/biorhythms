@@ -1,10 +1,9 @@
 package com.sl.biorhythms
 
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNode
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
 import com.sl.biorhythms.widget.WidgetConfigScreen
@@ -35,9 +34,9 @@ class AccessibilityInstrumentedTest {
             }
         }
 
-        composeRule.onNode(
-            hasContentDescription("Biorhythm chart", substring = true),
-        ).assertExists()
+        composeRule
+            .onNodeWithContentDescription("Biorhythm chart", substring = true)
+            .fetchSemanticsNode()
     }
 
     @Test
@@ -54,8 +53,8 @@ class AccessibilityInstrumentedTest {
             }
         }
 
-        composeRule.onNodeWithText("Physical").assertExists()
-        composeRule.onNodeWithText("Emotional").assertExists()
-        composeRule.onNodeWithText("Intellectual").assertExists()
+        composeRule.onNodeWithText("Physical").fetchSemanticsNode()
+        composeRule.onNodeWithText("Emotional").fetchSemanticsNode()
+        composeRule.onNodeWithText("Intellectual").fetchSemanticsNode()
     }
 }
