@@ -18,12 +18,13 @@ import com.sl.biorhythms.PreferencesKeys
 import com.sl.biorhythms.R
 import com.sl.biorhythms.dataStore
 import com.sl.biorhythms.resolveLocale
+import java.io.IOException
+import java.time.LocalDate
+import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.util.Locale
 import kotlin.math.roundToInt
 
 class BiorhythmsWidgetProvider : AppWidgetProvider() {
@@ -241,15 +242,13 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
     ) {
-        var themeMode = AppThemeMode.SYSTEM
-        var language = AppLanguage.SYSTEM
-        try {
-            val storedPreferences = context.dataStore.data.first()
-            themeMode = AppThemeMode.fromStored(storedPreferences[PreferencesKeys.ThemeMode])
-            language = AppLanguage.fromStored(storedPreferences[PreferencesKeys.Language])
-        } catch (_: Exception) {
+        val storedPreferences = try {
+            context.dataStore.data.first()
+        } catch (_: IOException) {
+            null
         }
-
+        val themeMode = AppThemeMode.fromStored(storedPreferences?.get(PreferencesKeys.ThemeMode))
+        val language = AppLanguage.fromStored(storedPreferences?.get(PreferencesKeys.Language))
         val locale = resolveLocale(language, context.resources.configuration.locales[0])
         val resources = localizedResources(context, locale)
         val views = createViews(context, appWidgetId, themeMode).remoteViews
