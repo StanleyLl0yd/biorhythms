@@ -130,7 +130,7 @@ jobs:
       - name: Start emulator
         run: |
           sudo chmod 666 /dev/kvm || true
-          nohup emulator \
+          nohup "$ANDROID_HOME/emulator/emulator" \
             -avd biorhythms-ci \
             -no-window \
             -no-audio \
