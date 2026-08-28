@@ -13,7 +13,7 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current published version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ✨ Features
 
@@ -29,7 +29,7 @@ Current version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37*
 - Home-screen widget with current biorhythm values
 - Live widget preview and per-widget background opacity setting
 - Automatic widget refresh after birth date, theme or language changes
-- Widget rendering that adapts to resizing
+- Widget rendering that adapts to resizing without bitmap payloads
 - In-app About screen with the app description, author, license and GitHub source link
 
 > Biorhythms are not a medical or scientifically validated diagnostic method. The app visualizes the classic biorhythm model for informational and entertainment purposes.
@@ -56,7 +56,7 @@ cd biorhythms
 ./gradlew assembleDebug
 ```
 
-To run the project checks:
+To run the non-emulator project checks:
 
 ```bash
 ./gradlew testDebugUnitTest compileDebugAndroidTestKotlin lintDebug assembleRelease bundleRelease
@@ -74,20 +74,28 @@ To run the project checks:
 | Build | Gradle 9.5.0, Kotlin DSL |
 | Android Gradle Plugin | 9.3.2 |
 
-## ✅ Quality checks
+## ✅ Quality and security checks
 
-GitHub Actions automatically validates pull requests and pushes to `main` with:
+GitHub Actions validates pull requests and pushes to `main` with:
 
 - unit tests
 - Android Lint
 - debug APK assembly
-- release APK assembly with R8/resource shrinking
-- release AAB assembly
+- unsigned release APK/AAB assembly with R8 and resource shrinking
 - Android instrumentation-test compilation
+- Android runtime instrumentation and accessibility tests on API 37
+
+A weekly CI run also exercises the runtime test suite on the minimum supported API 26. CodeQL analyzes Java/Kotlin code separately, and Gradle dependency verification validates downloaded build artifacts against committed SHA-256 metadata.
+
+The protected `main` branch requires the aggregate `Verify` check, which only passes after both build checks and runtime Android tests succeed.
 
 ## 🔐 Release signing
 
-Release signing uses the standard Android signing configuration:
+Production signing is isolated from normal branch and pull-request CI. Signed APK/AAB artifacts are built only by the Android Release workflow for a version tag such as `v1.4.0`, or by a manual workflow run that explicitly names an existing version tag.
+
+Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts`.
+
+Release signing uses:
 
 - `ANDROID_KEYSTORE_PATH`
 - `ANDROID_KEYSTORE_PASSWORD`
@@ -95,6 +103,10 @@ Release signing uses the standard Android signing configuration:
 - `ANDROID_KEY_PASSWORD`
 
 GitHub Actions restores `ANDROID_KEYSTORE_PATH` from the `ANDROID_KEYSTORE_BASE64` repository secret. The production keystore and passwords are not stored in the repository.
+
+## 🔒 Privacy
+
+The app does not request Internet access and does not include advertising or analytics SDKs. The locally stored preferences file containing the birth date is excluded from Android cloud backup.
 
 ## 🌍 Languages
 

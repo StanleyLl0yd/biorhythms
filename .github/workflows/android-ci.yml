@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+  schedule:
+    - cron: '17 4 * * 1'
 
 permissions:
   contents: read
@@ -14,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
-    name: Verify
+  build:
+    name: Build checks
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -33,6 +35,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: platform-tools
 
       - name: Install Android 37 platform
         run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
@@ -53,6 +57,9 @@ jobs:
       - name: Run Android lint
         run: ./gradlew lintDebug --stacktrace
 
+      - name: Verify release build without signing
+        run: ./gradlew assembleRelease bundleRelease --stacktrace
+
       - name: Upload debug APK
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -72,12 +79,14 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  release:
-    name: Signed release build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: verify
+  android-tests:
+    name: Android runtime tests (API ${{ matrix.api-level }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(github.event_name == 'schedule' && '[{"api-level":"26","system-image":"system-images;android-26;google_apis;x86_64"},{"api-level":"37","system-image":"system-images;android-37.0;google_apis_ps16k;x86_64"}]' || '[{"api-level":"37","system-image":"system-images;android-37.0;google_apis_ps16k;x86_64"}]') }}
 
     steps:
       - name: Checkout
@@ -93,9 +102,15 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: platform-tools emulator
 
-      - name: Install Android 37 platform
-        run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
+      - name: Install Android SDK and system image
+        run: |
+          sdkmanager \
+            "platforms;android-37.0" \
+            "build-tools;37.0.0" \
+            "${{ matrix.system-image }}"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
@@ -104,48 +119,68 @@ jobs:
           cache-read-only: true
           validate-wrappers: true
 
-      - name: Restore and validate release keystore
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      - name: Configure AVD home
         run: |
-          set -euo pipefail
-          test -n "$ANDROID_KEYSTORE_BASE64"
-          test -n "$ANDROID_KEYSTORE_PASSWORD"
-          test -n "$ANDROID_KEY_ALIAS"
-          umask 077
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/android-release.jks"
-          test -s "$RUNNER_TEMP/android-release.jks"
-          keytool -list \
-            -keystore "$RUNNER_TEMP/android-release.jks" \
-            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
-            -alias "$ANDROID_KEY_ALIAS" >/dev/null
+          mkdir -p "$RUNNER_TEMP/avd"
+          echo "ANDROID_AVD_HOME=$RUNNER_TEMP/avd" >> "$GITHUB_ENV"
 
-      - name: Build signed release APK and AAB
-        env:
-          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/android-release.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease bundleRelease --stacktrace
+      - name: Create emulator
+        run: |
+          echo "no" | avdmanager create avd \
+            --force \
+            --name biorhythms-ci \
+            --package "${{ matrix.system-image }}" \
+            --device pixel
 
-      - name: Upload signed release APK
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        with:
-          name: biorhythms-signed-release-apk
-          path: app/build/outputs/apk/release/app-release.apk
-          if-no-files-found: error
-          retention-days: 30
+      - name: Start emulator
+        run: |
+          sudo chmod 666 /dev/kvm || true
+          nohup "$ANDROID_HOME/emulator/emulator" \
+            -avd biorhythms-ci \
+            -no-window \
+            -no-audio \
+            -no-boot-anim \
+            -no-snapshot \
+            -gpu software \
+            > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          timeout 120 adb wait-for-device
+          timeout 240 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == "1" ]]; do sleep 2; done'
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
 
-      - name: Upload release bundle
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        with:
-          name: biorhythms-release-bundle
-          path: app/build/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
-          retention-days: 30
+      - name: Run Android tests
+        run: ./gradlew connectedDebugAndroidTest --stacktrace
 
-      - name: Remove release keystore
+      - name: Upload Android test reports
         if: always()
-        run: rm -f "$RUNNER_TEMP/android-release.jks"
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: android-test-reports-api-${{ matrix.api-level }}
+          path: |
+            app/build/reports/androidTests/connected/
+            app/build/outputs/androidTest-results/connected/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Show emulator log on failure
+        if: failure()
+        run: cat "$RUNNER_TEMP/emulator.log" || true
+
+  verify:
+    name: Verify
+    if: always()
+    needs:
+      - build
+      - android-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Enforce verification results
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          ANDROID_TEST_RESULT: ${{ needs.android-tests.result }}
+        run: |
+          test "$BUILD_RESULT" = "success"
+          test "$ANDROID_TEST_RESULT" = "success"

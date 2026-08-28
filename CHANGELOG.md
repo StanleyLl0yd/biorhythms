@@ -9,6 +9,31 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### 🔐 Security & reliability
+- Moved production APK/AAB signing out of normal `main` pushes into a release-only workflow tied to version tags or an explicit manual release tag.
+- Added release tag/version validation before production signing secrets are used.
+- Excluded the DataStore file containing the birth date from Android cloud backup.
+- Added defensive DataStore read/write handling and birth-date validation.
+- Added Gradle dependency verification with committed SHA-256 metadata.
+- Added CodeQL analysis for Java/Kotlin sources.
+
+### ✅ Quality
+- Added runtime Android instrumentation tests on API 37 and weekly compatibility coverage on API 26.
+- Added runtime accessibility semantics checks for the chart and widget preview.
+- Kept the protected `Verify` status as an aggregate gate over build and runtime Android tests.
+- Reduced Android SDK packages installed by CI to the components each job actually uses.
+- Restored Gradle Wrapper patch updates in Dependabot while keeping minor and major wrapper upgrades deliberate.
+
+### ♿ UI & widget
+- Replaced bitmap-based widget content with native `RemoteViews` text rows to reduce memory use and improve accessibility.
+- Added accessible per-cycle widget descriptions and validated widget configuration IDs against the app's provider.
+- Reduced periodic widget refresh from hourly to daily while preserving immediate refresh after relevant app changes.
+- Made percentage text use contrast-safe theme colors while retaining cycle colors for visual accents.
+
+---
+
 ## [1.3.0] - 2026-08-27
 
 ### ✨ Added
