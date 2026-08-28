@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api-level: ${{ fromJSON(github.event_name == 'schedule' && '[26,37]' || '[37]') }}
+        include: ${{ fromJSON(github.event_name == 'schedule' && '[{"api-level":"26","system-image":"system-images;android-26;google_apis;x86_64"},{"api-level":"37","system-image":"system-images;android-37.0;google_apis_ps16k;x86_64"}]' || '[{"api-level":"37","system-image":"system-images;android-37.0;google_apis_ps16k;x86_64"}]') }}
 
     steps:
       - name: Checkout
@@ -110,7 +110,7 @@ jobs:
           sdkmanager \
             "platforms;android-37.0" \
             "build-tools;37.0.0" \
-            "system-images;android-${{ matrix.api-level }};google_apis;x86_64"
+            "${{ matrix.system-image }}"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
@@ -124,7 +124,7 @@ jobs:
           echo "no" | avdmanager create avd \
             --force \
             --name biorhythms-ci \
-            --package "system-images;android-${{ matrix.api-level }};google_apis;x86_64" \
+            --package "${{ matrix.system-image }}" \
             --device pixel
 
       - name: Start emulator
