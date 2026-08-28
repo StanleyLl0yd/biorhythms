@@ -28,7 +28,8 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout release tag
+      - &checkout_release
+        name: Checkout release tag
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ env.RELEASE_TAG }}
@@ -45,12 +46,22 @@ jobs:
           test "$RELEASE_TAG" = "v$version_name"
           echo "Validated $RELEASE_TAG with versionCode $version_code"
 
-      - name: Set up Android release environment
-        uses: ./.github/actions/android-gradle-setup
+      - &checkout_ci_helpers
+        name: Checkout CI helpers
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .ci
+          persist-credentials: false
+
+      - &setup_release_environment
+        name: Set up Android release environment
+        uses: ./.ci/.github/actions/android-gradle-setup
         with:
           gradle-cache-read-only: true
 
-      - name: Install Android 37 platform
+      - &install_android_platform
+        name: Install Android 37 platform
         run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
 
       - name: Run release verification
@@ -63,19 +74,10 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Checkout release tag
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          ref: ${{ env.RELEASE_TAG }}
-          persist-credentials: false
-
-      - name: Set up Android release environment
-        uses: ./.github/actions/android-gradle-setup
-        with:
-          gradle-cache-read-only: true
-
-      - name: Install Android 37 platform
-        run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
+      - *checkout_release
+      - *checkout_ci_helpers
+      - *setup_release_environment
+      - *install_android_platform
 
       - name: Restore and validate release keystore
         env:
