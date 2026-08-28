@@ -119,6 +119,11 @@ jobs:
           cache-read-only: true
           validate-wrappers: true
 
+      - name: Configure AVD home
+        run: |
+          mkdir -p "$RUNNER_TEMP/avd"
+          echo "ANDROID_AVD_HOME=$RUNNER_TEMP/avd" >> "$GITHUB_ENV"
+
       - name: Create emulator
         run: |
           echo "no" | avdmanager create avd \
