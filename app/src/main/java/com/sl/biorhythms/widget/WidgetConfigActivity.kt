@@ -41,9 +41,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.BiorhythmCalculator
+import com.sl.biorhythms.BiorhythmLine
 import com.sl.biorhythms.BiorhythmsViewModel
 import com.sl.biorhythms.BiorhythmsViewModelFactory
 import com.sl.biorhythms.LocalAppLanguage
@@ -214,43 +216,18 @@ private fun WidgetPreview(
     val checkerLight = MaterialTheme.colorScheme.surfaceVariant
     val checkerDark = MaterialTheme.colorScheme.outlineVariant
     val values = remember(lines, birthDate, today) {
-        if (birthDate == null) {
-            emptyMap()
-        } else {
-            lines.associateWith { line ->
-                BiorhythmCalculator.percent(
-                    BiorhythmCalculator.value(
-                        birthDate = birthDate,
-                        date = today,
-                        period = line.period,
-                    ),
-                )
-            }
-        }
+        calculatePreviewValues(lines, birthDate, today)
     }
 
     Box(
         modifier = modifier
             .clip(shape)
             .drawBehind {
-                val tileSize = 20.dp.toPx()
-                var row = 0
-                var y = 0f
-                while (y < size.height) {
-                    var column = 0
-                    var x = 0f
-                    while (x < size.width) {
-                        drawRect(
-                            color = if ((row + column) % 2 == 0) checkerLight else checkerDark,
-                            topLeft = Offset(x, y),
-                            size = Size(tileSize, tileSize),
-                        )
-                        column++
-                        x += tileSize
-                    }
-                    row++
-                    y += tileSize
-                }
+                drawCheckerboard(
+                    lightColor = checkerLight,
+                    darkColor = checkerDark,
+                    tileSize = 20.dp.toPx(),
+                )
             },
     ) {
         Surface(
@@ -286,6 +263,49 @@ private fun WidgetPreview(
                 }
             }
         }
+    }
+}
+
+private fun calculatePreviewValues(
+    lines: List<BiorhythmLine>,
+    birthDate: LocalDate?,
+    date: LocalDate,
+): Map<BiorhythmLine, Double> {
+    if (birthDate == null) {
+        return emptyMap()
+    }
+    return lines.associateWith { line ->
+        BiorhythmCalculator.percent(
+            BiorhythmCalculator.value(
+                birthDate = birthDate,
+                date = date,
+                period = line.period,
+            ),
+        )
+    }
+}
+
+private fun DrawScope.drawCheckerboard(
+    lightColor: Color,
+    darkColor: Color,
+    tileSize: Float,
+) {
+    var row = 0
+    var y = 0f
+    while (y < size.height) {
+        var column = 0
+        var x = 0f
+        while (x < size.width) {
+            drawRect(
+                color = if ((row + column) % 2 == 0) lightColor else darkColor,
+                topLeft = Offset(x, y),
+                size = Size(tileSize, tileSize),
+            )
+            column++
+            x += tileSize
+        }
+        row++
+        y += tileSize
     }
 }
 
