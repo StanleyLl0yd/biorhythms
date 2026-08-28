@@ -45,26 +45,13 @@ jobs:
           test "$RELEASE_TAG" = "v$version_name"
           echo "Validated $RELEASE_TAG with versionCode $version_code"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+      - name: Set up Android release environment
+        uses: ./.github/actions/android-gradle-setup
         with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
-        with:
-          packages: platform-tools
+          gradle-cache-read-only: true
 
       - name: Install Android 37 platform
         run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-        with:
-          cache-provider: basic
-          cache-read-only: true
-          validate-wrappers: true
 
       - name: Run release verification
         run: ./gradlew testDebugUnitTest lintDebug assembleRelease bundleRelease --stacktrace
@@ -82,26 +69,13 @@ jobs:
           ref: ${{ env.RELEASE_TAG }}
           persist-credentials: false
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+      - name: Set up Android release environment
+        uses: ./.github/actions/android-gradle-setup
         with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
-        with:
-          packages: platform-tools
+          gradle-cache-read-only: true
 
       - name: Install Android 37 platform
         run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-        with:
-          cache-provider: basic
-          cache-read-only: true
-          validate-wrappers: true
 
       - name: Restore and validate release keystore
         env:
