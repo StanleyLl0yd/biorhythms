@@ -1,6 +1,7 @@
 package com.sl.biorhythms.widget
 
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -67,7 +68,14 @@ class WidgetConfigActivity : ComponentActivity() {
             AppWidgetManager.INVALID_APPWIDGET_ID,
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+        val manager = AppWidgetManager.getInstance(this)
+        val expectedProvider = ComponentName(this, BiorhythmsWidgetProvider::class.java)
+        val actualProvider = if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            null
+        } else {
+            manager.getAppWidgetInfo(appWidgetId)?.provider
+        }
+        if (actualProvider != expectedProvider) {
             finish()
             return
         }
@@ -298,7 +306,7 @@ private fun WidgetPreviewLine(
             Text(
                 text = percentText,
                 style = MaterialTheme.typography.bodySmall,
-                color = color,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
         Box(

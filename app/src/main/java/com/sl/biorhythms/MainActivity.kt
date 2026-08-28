@@ -349,7 +349,7 @@ private fun BiorhythmSummaryCard(
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
-                color = line.color,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
