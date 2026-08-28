@@ -10,14 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
@@ -29,7 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -41,10 +38,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+private data class SelectionOption<T>(
+    val value: T,
+    val label: String,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,8 +104,8 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            SettingsSection(title = appString(R.string.settings_section_profile)) {
-                SettingsOptionRow(
+            SectionBlock(title = appString(R.string.settings_section_profile)) {
+                SectionRow(
                     icon = Icons.Outlined.CalendarMonth,
                     label = appString(R.string.settings_birth_date_option),
                     value = birthDate?.format(dateFormatter)
@@ -113,8 +114,8 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsSection(title = appString(R.string.settings_section_appearance)) {
-                SettingsOptionRow(
+            SectionBlock(title = appString(R.string.settings_section_appearance)) {
+                SectionRow(
                     icon = Icons.Outlined.Palette,
                     label = appString(R.string.settings_theme_option),
                     value = themeValueText,
@@ -122,8 +123,8 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsSection(title = appString(R.string.settings_section_language)) {
-                SettingsOptionRow(
+            SectionBlock(title = appString(R.string.settings_section_language)) {
+                SectionRow(
                     icon = Icons.Outlined.Language,
                     label = appString(R.string.settings_language_option),
                     value = languageValueText,
@@ -131,8 +132,8 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsSection(title = appString(R.string.settings_section_about)) {
-                SettingsOptionRow(
+            SectionBlock(title = appString(R.string.settings_section_about)) {
+                SectionRow(
                     icon = Icons.Outlined.Info,
                     label = appString(R.string.settings_about_option),
                     value = appString(R.string.settings_about_summary),
@@ -154,10 +155,16 @@ fun SettingsScreen(
     }
 
     if (showThemeDialog) {
-        ThemeModeDialog(
+        SelectionDialog(
+            title = appString(R.string.settings_section_appearance),
             current = themeMode,
-            onSelect = {
-                onThemeModeChange(it)
+            options = listOf(
+                SelectionOption(AppThemeMode.SYSTEM, appString(R.string.settings_theme_system)),
+                SelectionOption(AppThemeMode.LIGHT, appString(R.string.settings_theme_light)),
+                SelectionOption(AppThemeMode.DARK, appString(R.string.settings_theme_dark)),
+            ),
+            onSelect = { selected ->
+                onThemeModeChange(selected)
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false },
@@ -165,10 +172,16 @@ fun SettingsScreen(
     }
 
     if (showLanguageDialog) {
-        LanguageDialog(
+        SelectionDialog(
+            title = appString(R.string.settings_section_language),
             current = language,
-            onSelect = {
-                onLanguageChange(it)
+            options = listOf(
+                SelectionOption(AppLanguage.SYSTEM, appString(R.string.settings_language_system)),
+                SelectionOption(AppLanguage.RU, appString(R.string.settings_language_russian)),
+                SelectionOption(AppLanguage.EN, appString(R.string.settings_language_english)),
+            ),
+            onSelect = { selected ->
+                onLanguageChange(selected)
                 showLanguageDialog = false
             },
             onDismiss = { showLanguageDialog = false },
@@ -177,131 +190,25 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsSection(
+private fun <T> SelectionDialog(
     title: String,
-    content: @Composable () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 4.dp),
-        )
-        content()
-    }
-}
-
-@Composable
-private fun SettingsOptionRow(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp),
-            )
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(text = label, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ThemeModeDialog(
-    current: AppThemeMode,
-    onSelect: (AppThemeMode) -> Unit,
+    current: T,
+    options: List<SelectionOption<T>>,
+    onSelect: (T) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.settings_section_appearance)) },
+        title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                SettingsRadioOptionRow(
-                    label = appString(R.string.settings_theme_system),
-                    selected = current == AppThemeMode.SYSTEM,
-                    onClick = { onSelect(AppThemeMode.SYSTEM) },
-                )
-                SettingsRadioOptionRow(
-                    label = appString(R.string.settings_theme_light),
-                    selected = current == AppThemeMode.LIGHT,
-                    onClick = { onSelect(AppThemeMode.LIGHT) },
-                )
-                SettingsRadioOptionRow(
-                    label = appString(R.string.settings_theme_dark),
-                    selected = current == AppThemeMode.DARK,
-                    onClick = { onSelect(AppThemeMode.DARK) },
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(appString(R.string.action_close))
-            }
-        },
-    )
-}
-
-@Composable
-private fun LanguageDialog(
-    current: AppLanguage,
-    onSelect: (AppLanguage) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.settings_section_language)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                SettingsRadioOptionRow(
-                    label = appString(R.string.settings_language_system),
-                    selected = current == AppLanguage.SYSTEM,
-                    onClick = { onSelect(AppLanguage.SYSTEM) },
-                )
-                SettingsRadioOptionRow(
-                    label = appString(R.string.settings_language_russian),
-                    selected = current == AppLanguage.RU,
-                    onClick = { onSelect(AppLanguage.RU) },
-                )
-                SettingsRadioOptionRow(
-                    label = appString(R.string.settings_language_english),
-                    selected = current == AppLanguage.EN,
-                    onClick = { onSelect(AppLanguage.EN) },
-                )
+                options.forEach { option ->
+                    SettingsRadioOptionRow(
+                        label = option.label,
+                        selected = current == option.value,
+                        onClick = { onSelect(option.value) },
+                    )
+                }
             }
         },
         confirmButton = {
