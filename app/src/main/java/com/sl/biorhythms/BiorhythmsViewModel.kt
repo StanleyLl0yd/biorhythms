@@ -2,6 +2,7 @@ package com.sl.biorhythms
 
 import android.util.Log
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
@@ -53,21 +54,13 @@ class BiorhythmsViewModel(
 
     fun onBirthDateSelected(date: LocalDate, onPersisted: () -> Unit = {}) {
         val validDate = validatedBirthDate(date)
-        val previous = _birthDate.value
-        _birthDate.value = validDate
-        viewModelScope.launch {
-            try {
-                dataStore.edit { prefs ->
-                    prefs[PreferencesKeys.BirthDate] = validDate.toEpochDay()
-                }
-            } catch (error: IOException) {
-                if (_birthDate.value == validDate) {
-                    _birthDate.value = previous
-                }
-                Log.e(TAG, "Unable to persist birth date", error)
-                return@launch
-            }
-            onPersisted()
+        persistSelection(
+            state = _birthDate,
+            value = validDate,
+            errorMessage = "Unable to persist birth date",
+            onPersisted = onPersisted,
+        ) { prefs ->
+            prefs[PreferencesKeys.BirthDate] = validDate.toEpochDay()
         }
     }
 
@@ -76,37 +69,44 @@ class BiorhythmsViewModel(
     }
 
     fun onThemeModeSelected(mode: AppThemeMode, onPersisted: () -> Unit = {}) {
-        val previous = _themeMode.value
-        _themeMode.value = mode
-        viewModelScope.launch {
-            try {
-                dataStore.edit { prefs ->
-                    prefs[PreferencesKeys.ThemeMode] = mode.storedValue
-                }
-            } catch (error: IOException) {
-                if (_themeMode.value == mode) {
-                    _themeMode.value = previous
-                }
-                Log.e(TAG, "Unable to persist theme", error)
-                return@launch
-            }
-            onPersisted()
+        persistSelection(
+            state = _themeMode,
+            value = mode,
+            errorMessage = "Unable to persist theme",
+            onPersisted = onPersisted,
+        ) { prefs ->
+            prefs[PreferencesKeys.ThemeMode] = mode.storedValue
         }
     }
 
     fun onLanguageSelected(language: AppLanguage, onPersisted: () -> Unit = {}) {
-        val previous = _language.value
-        _language.value = language
+        persistSelection(
+            state = _language,
+            value = language,
+            errorMessage = "Unable to persist language",
+            onPersisted = onPersisted,
+        ) { prefs ->
+            prefs[PreferencesKeys.Language] = language.storedValue
+        }
+    }
+
+    private fun <T> persistSelection(
+        state: MutableStateFlow<T>,
+        value: T,
+        errorMessage: String,
+        onPersisted: () -> Unit,
+        persist: suspend (MutablePreferences) -> Unit,
+    ) {
+        val previous = state.value
+        state.value = value
         viewModelScope.launch {
             try {
-                dataStore.edit { prefs ->
-                    prefs[PreferencesKeys.Language] = language.storedValue
-                }
+                dataStore.edit(persist)
             } catch (error: IOException) {
-                if (_language.value == language) {
-                    _language.value = previous
+                if (state.value == value) {
+                    state.value = previous
                 }
-                Log.e(TAG, "Unable to persist language", error)
+                Log.e(TAG, errorMessage, error)
                 return@launch
             }
             onPersisted()
