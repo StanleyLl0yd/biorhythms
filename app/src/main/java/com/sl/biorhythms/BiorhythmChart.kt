@@ -4,16 +4,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +33,6 @@ import com.sl.biorhythms.ui.theme.PhysicalLineColor
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.roundToInt
 
 data class BiorhythmLine(
     val labelResId: Int,
@@ -354,85 +348,21 @@ private fun DrawScope.drawCurve(
     }
 }
 
-@Composable
-fun BiorhythmLegend(
-    lines: List<BiorhythmLine>,
-    birthDate: LocalDate,
-    referenceDate: LocalDate,
-    modifier: Modifier = Modifier,
-) {
-    val locale = appLocale()
-    val daysFromBirth = remember(birthDate, referenceDate) {
-        BiorhythmCalculator.daysFromBirth(birthDate, referenceDate)
-    }
-    val values = remember(lines, daysFromBirth) {
-        lines.associateWith { line -> BiorhythmCalculator.value(daysFromBirth, line.period) }
-    }
-
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        lines.forEach { line ->
-            LegendItem(
-                label = appString(line.labelResId),
-                valuePercent = BiorhythmCalculator.percent(values[line] ?: 0.0),
-                baseColor = line.color,
-                locale = locale,
-            )
-        }
-    }
-}
-
-@Composable
-private fun LegendItem(
-    label: String,
-    valuePercent: Double,
-    baseColor: Color,
-    locale: Locale,
-) {
-    val valueInt = valuePercent.roundToInt()
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-            Box(modifier = Modifier.size(12.dp)) {
-                Canvas(modifier = Modifier.fillMaxSize()) { drawRect(color = baseColor) }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(label, style = MaterialTheme.typography.bodyMedium)
-        }
-        Text(
-            text = String.format(locale, "%+d%%", valueInt),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.End,
-            color = baseColor,
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun BiorhythmChartPreview() {
     val lines = rememberBiorhythmLines()
     BiorhythmsTheme(themeMode = AppThemeMode.SYSTEM) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            BiorhythmChart(
-                birthDate = LocalDate.of(1990, 1, 1),
-                referenceDate = LocalDate.now(),
-                range = BiorhythmChartRange(pastDays = 15, futureDays = 15),
-                lines = lines,
-                selectedOffset = 0,
-                onSelectedOffsetChange = {},
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            BiorhythmLegend(
-                lines = lines,
-                birthDate = LocalDate.of(1990, 1, 1),
-                referenceDate = LocalDate.now(),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        BiorhythmChart(
+            birthDate = LocalDate.of(1990, 1, 1),
+            referenceDate = LocalDate.now(),
+            range = BiorhythmChartRange(pastDays = 15, futureDays = 15),
+            lines = lines,
+            selectedOffset = 0,
+            onSelectedOffsetChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        )
     }
 }

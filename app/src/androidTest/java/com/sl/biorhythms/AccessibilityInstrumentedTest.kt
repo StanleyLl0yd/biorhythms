@@ -1,7 +1,6 @@
 package com.sl.biorhythms
 
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -39,7 +38,7 @@ class AccessibilityInstrumentedTest {
     }
 
     @Test
-    fun widgetPreviewExposesCycleLabelsAsText() {
+    fun widgetPreviewMatchesWidgetContent() {
         composeRule.setContent {
             BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
                 CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
@@ -52,8 +51,27 @@ class AccessibilityInstrumentedTest {
             }
         }
 
+        composeRule.onNodeWithText("Biorhythms Today").fetchSemanticsNode()
         composeRule.onNodeWithText("Physical").fetchSemanticsNode()
         composeRule.onNodeWithText("Emotional").fetchSemanticsNode()
         composeRule.onNodeWithText("Intellectual").fetchSemanticsNode()
+    }
+
+    @Test
+    fun widgetPreviewKeepsTitleWhenBirthDateIsMissing() {
+        composeRule.setContent {
+            BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
+                CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                    WidgetConfigScreen(
+                        initialAlpha = 75,
+                        birthDate = null,
+                        onSave = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Biorhythms Today").fetchSemanticsNode()
+        composeRule.onNodeWithText("Set birth date in app").fetchSemanticsNode()
     }
 }

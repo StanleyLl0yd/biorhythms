@@ -11,6 +11,15 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### 🐛 Fixed
+- Widget title and settings accessibility text now follow the app-selected language instead of falling back to the system locale.
+- Widget configuration preview now matches the actual home-screen widget structure instead of showing visual bars that are not rendered by the widget.
+
+### 🧹 Maintenance
+- Removed unused chart legend code, obsolete widget color resources and an empty custom ProGuard file.
+- Hardened release verification so an AAB must be explicitly reported as verified by `jarsigner` before publication.
+- Added regression coverage for widget localization and preview content.
+
 ---
 
 ## [1.4.0] - 2026-08-31

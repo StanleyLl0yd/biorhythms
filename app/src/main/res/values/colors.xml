@@ -6,7 +6,4 @@
     <color name="widget_background_dark">#131A3A</color>
     <color name="widget_text_light">#0B1026</color>
     <color name="widget_text_dark">#E8EDFF</color>
-    <color name="widget_physical">#F05D64</color>
-    <color name="widget_emotional">#1FAE9E</color>
-    <color name="widget_intellectual">#3C5CE5</color>
 </resources>
