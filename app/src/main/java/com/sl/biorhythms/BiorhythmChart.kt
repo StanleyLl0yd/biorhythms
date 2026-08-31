@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
@@ -45,6 +46,25 @@ data class BiorhythmLine(
     val color: Color,
 )
 
+data class BiorhythmChartRange(
+    val pastDays: Int,
+    val futureDays: Int,
+)
+
+private data class ChartColors(
+    val axis: Color,
+    val grid: Color,
+    val verticalGrid: Color,
+    val selected: Color,
+)
+
+private data class ChartGeometry(
+    val stepX: Float,
+    val topY: Float,
+    val bottomY: Float,
+    val centerY: Float,
+)
+
 @Composable
 fun rememberBiorhythmLines(): List<BiorhythmLine> = remember {
     listOf(
@@ -58,13 +78,14 @@ fun rememberBiorhythmLines(): List<BiorhythmLine> = remember {
 fun BiorhythmChart(
     birthDate: LocalDate,
     referenceDate: LocalDate,
-    pastDays: Int,
-    futureDays: Int,
+    range: BiorhythmChartRange,
     lines: List<BiorhythmLine>,
     selectedOffset: Int,
     onSelectedOffsetChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val pastDays = range.pastDays
+    val futureDays = range.futureDays
     val locale = appLocale()
     val startDate = remember(referenceDate, pastDays) { referenceDate.minusDays(pastDays.toLong()) }
     val endDate = remember(referenceDate, futureDays) { referenceDate.plusDays(futureDays.toLong()) }
@@ -77,8 +98,12 @@ fun BiorhythmChart(
 
     val axisColor = MaterialTheme.colorScheme.outlineVariant
     val gridColor = axisColor.copy(alpha = 0.35f)
-    val verticalGridColor = gridColor.copy(alpha = 0.55f)
-    val selectedColor = MaterialTheme.colorScheme.primary
+    val chartColors = ChartColors(
+        axis = axisColor,
+        grid = gridColor,
+        verticalGrid = gridColor.copy(alpha = 0.55f),
+        selected = MaterialTheme.colorScheme.primary,
+    )
 
     val lineValues = remember(birthDate, referenceDate, daysOffsets, lines) {
         lines.associateWith { line ->
@@ -109,13 +134,12 @@ fun BiorhythmChart(
         endDate.format(dateFormatter),
         selectedDateText,
     )
-    val descriptionParts = mutableListOf<String>()
-    for (line in lines) {
-        val label = appString(line.labelResId)
-        val value = BiorhythmCalculator.percent(selectedValues[line] ?: 0.0)
-        descriptionParts += "$label ${String.format(locale, "%.0f", value)}"
-    }
-    val chartDescription = "$header ${descriptionParts.joinToString(", ")}"
+    val chartDescription = chartDescription(
+        header = header,
+        lines = lines,
+        selectedValues = selectedValues,
+        locale = locale,
+    )
 
     Column(modifier = modifier) {
         Canvas(
@@ -123,36 +147,7 @@ fun BiorhythmChart(
                 .fillMaxWidth()
                 .height(260.dp)
                 .semantics { contentDescription = chartDescription }
-                .pointerInput(pastDays, futureDays) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(pass = PointerEventPass.Main)
-                        onSelectedOffsetChange(
-                            chartOffsetForPosition(
-                                x = down.position.x,
-                                width = size.width.toFloat(),
-                                pastDays = pastDays,
-                                futureDays = futureDays,
-                            ),
-                        )
-
-                        do {
-                            val event = awaitPointerEvent()
-                            event.changes.forEach { change ->
-                                if (change.pressed) {
-                                    onSelectedOffsetChange(
-                                        chartOffsetForPosition(
-                                            x = change.position.x,
-                                            width = size.width.toFloat(),
-                                            pastDays = pastDays,
-                                            futureDays = futureDays,
-                                        ),
-                                    )
-                                    change.consume()
-                                }
-                            }
-                        } while (event.changes.any { it.pressed })
-                    }
-                },
+                .chartSelectionInput(pastDays, futureDays, onSelectedOffsetChange),
         ) {
             val width = size.width
             val height = size.height
@@ -160,68 +155,35 @@ fun BiorhythmChart(
             val amplitude = height * 0.4f
             val stepsCount = daysOffsets.size
             val stepX = if (stepsCount > 1) width / (stepsCount - 1) else width
-            val topY = centerY - amplitude
-            val bottomY = centerY + amplitude
-
-            if (stepsCount > 1) {
-                val gridStroke = 0.6.dp.toPx()
-                gridOffsets.forEach { offset ->
-                    val index = offset + pastDays
-                    val x = index * stepX
-                    drawLine(verticalGridColor, Offset(x, 0f), Offset(x, height), gridStroke)
-                }
-            }
-
-            drawLine(gridColor, Offset(0f, topY), Offset(width, topY), 1.dp.toPx())
-            drawLine(gridColor, Offset(0f, bottomY), Offset(width, bottomY), 1.dp.toPx())
-            drawLine(axisColor, Offset(0f, centerY), Offset(width, centerY), 1.dp.toPx())
-
-            val todayX = stepX * todayIndex
-            if (selectedIndex != todayIndex) {
-                drawLine(
-                    color = axisColor,
-                    start = Offset(todayX, 0f),
-                    end = Offset(todayX, height),
-                    strokeWidth = 1.25.dp.toPx(),
-                )
-            }
-
-            val selectedX = stepX * selectedIndex
-            drawLine(
-                color = selectedColor,
-                start = Offset(selectedX, 0f),
-                end = Offset(selectedX, height),
-                strokeWidth = 2.dp.toPx(),
+            val geometry = ChartGeometry(
+                stepX = stepX,
+                topY = centerY - amplitude,
+                bottomY = centerY + amplitude,
+                centerY = centerY,
             )
 
-            fun drawCurve(values: List<Double>, color: Color) {
-                for (i in 0 until values.lastIndex) {
-                    drawLine(
-                        color = color,
-                        start = Offset(i * stepX, centerY - values[i].toFloat() * amplitude),
-                        end = Offset((i + 1) * stepX, centerY - values[i + 1].toFloat() * amplitude),
-                        strokeWidth = 3.dp.toPx(),
-                        cap = StrokeCap.Round,
-                    )
-                }
-            }
-
-            lines.forEach { line ->
-                val values = lineValues[line].orEmpty()
-                if (values.isNotEmpty()) {
-                    drawCurve(values, line.color)
-                    values.getOrNull(selectedIndex)?.let { value ->
-                        drawCircle(
-                            color = line.color,
-                            radius = 4.5.dp.toPx(),
-                            center = Offset(
-                                selectedX,
-                                centerY - value.toFloat() * amplitude,
-                            ),
-                        )
-                    }
-                }
-            }
+            drawChartGrid(
+                gridOffsets = gridOffsets,
+                pastDays = pastDays,
+                drawVerticalGrid = stepsCount > 1,
+                geometry = geometry,
+                colors = chartColors,
+            )
+            drawChartSelection(
+                stepX = stepX,
+                todayIndex = todayIndex,
+                selectedIndex = selectedIndex,
+                axisColor = chartColors.axis,
+                selectedColor = chartColors.selected,
+            )
+            drawBiorhythmCurves(
+                lines = lines,
+                lineValues = lineValues,
+                selectedIndex = selectedIndex,
+                stepX = stepX,
+                centerY = centerY,
+                amplitude = amplitude,
+            )
         }
 
         Row(
@@ -250,6 +212,145 @@ fun BiorhythmChart(
                 modifier = Modifier.weight(1f),
             )
         }
+    }
+}
+
+@Composable
+private fun chartDescription(
+    header: String,
+    lines: List<BiorhythmLine>,
+    selectedValues: Map<BiorhythmLine, Double>,
+    locale: Locale,
+): String {
+    val values = mutableListOf<String>()
+    for (line in lines) {
+        val label = appString(line.labelResId)
+        val value = BiorhythmCalculator.percent(selectedValues[line] ?: 0.0)
+        values += "$label ${String.format(locale, "%.0f", value)}"
+    }
+    return "$header ${values.joinToString(", ")}"
+}
+
+private fun Modifier.chartSelectionInput(
+    pastDays: Int,
+    futureDays: Int,
+    onSelectedOffsetChange: (Int) -> Unit,
+): Modifier = pointerInput(pastDays, futureDays, onSelectedOffsetChange) {
+    awaitEachGesture {
+        val down = awaitFirstDown(pass = PointerEventPass.Main)
+        onSelectedOffsetChange(
+            chartOffsetForPosition(
+                x = down.position.x,
+                width = size.width.toFloat(),
+                pastDays = pastDays,
+                futureDays = futureDays,
+            ),
+        )
+
+        do {
+            val event = awaitPointerEvent()
+            event.changes.forEach { change ->
+                if (change.pressed) {
+                    onSelectedOffsetChange(
+                        chartOffsetForPosition(
+                            x = change.position.x,
+                            width = size.width.toFloat(),
+                            pastDays = pastDays,
+                            futureDays = futureDays,
+                        ),
+                    )
+                    change.consume()
+                }
+            }
+        } while (event.changes.any { it.pressed })
+    }
+}
+
+private fun DrawScope.drawChartGrid(
+    gridOffsets: List<Int>,
+    pastDays: Int,
+    drawVerticalGrid: Boolean,
+    geometry: ChartGeometry,
+    colors: ChartColors,
+) {
+    if (drawVerticalGrid) {
+        val gridStroke = 0.6.dp.toPx()
+        gridOffsets.forEach { offset ->
+            val x = (offset + pastDays) * geometry.stepX
+            drawLine(colors.verticalGrid, Offset(x, 0f), Offset(x, size.height), gridStroke)
+        }
+    }
+
+    drawLine(colors.grid, Offset(0f, geometry.topY), Offset(size.width, geometry.topY), 1.dp.toPx())
+    drawLine(colors.grid, Offset(0f, geometry.bottomY), Offset(size.width, geometry.bottomY), 1.dp.toPx())
+    drawLine(colors.axis, Offset(0f, geometry.centerY), Offset(size.width, geometry.centerY), 1.dp.toPx())
+}
+
+private fun DrawScope.drawChartSelection(
+    stepX: Float,
+    todayIndex: Int,
+    selectedIndex: Int,
+    axisColor: Color,
+    selectedColor: Color,
+) {
+    val todayX = stepX * todayIndex
+    if (selectedIndex != todayIndex) {
+        drawLine(
+            color = axisColor,
+            start = Offset(todayX, 0f),
+            end = Offset(todayX, size.height),
+            strokeWidth = 1.25.dp.toPx(),
+        )
+    }
+
+    val selectedX = stepX * selectedIndex
+    drawLine(
+        color = selectedColor,
+        start = Offset(selectedX, 0f),
+        end = Offset(selectedX, size.height),
+        strokeWidth = 2.dp.toPx(),
+    )
+}
+
+private fun DrawScope.drawBiorhythmCurves(
+    lines: List<BiorhythmLine>,
+    lineValues: Map<BiorhythmLine, List<Double>>,
+    selectedIndex: Int,
+    stepX: Float,
+    centerY: Float,
+    amplitude: Float,
+) {
+    val selectedX = stepX * selectedIndex
+    lines.forEach { line ->
+        val values = lineValues[line].orEmpty()
+        if (values.isNotEmpty()) {
+            drawCurve(values, line.color, stepX, centerY, amplitude)
+            values.getOrNull(selectedIndex)?.let { value ->
+                drawCircle(
+                    color = line.color,
+                    radius = 4.5.dp.toPx(),
+                    center = Offset(selectedX, centerY - value.toFloat() * amplitude),
+                )
+            }
+        }
+    }
+}
+
+private fun DrawScope.drawCurve(
+    values: List<Double>,
+    color: Color,
+    stepX: Float,
+    centerY: Float,
+    amplitude: Float,
+) {
+    for (index in 0 until values.lastIndex) {
+        drawLine(
+            color = color,
+            start = Offset(index * stepX, centerY - values[index].toFloat() * amplitude),
+            end = Offset((index + 1) * stepX, centerY - values[index + 1].toFloat() * amplitude),
+            strokeWidth = 3.dp.toPx(),
+            cap = StrokeCap.Round,
+        )
     }
 }
 
@@ -319,8 +420,7 @@ private fun BiorhythmChartPreview() {
             BiorhythmChart(
                 birthDate = LocalDate.of(1990, 1, 1),
                 referenceDate = LocalDate.now(),
-                pastDays = 15,
-                futureDays = 15,
+                range = BiorhythmChartRange(pastDays = 15, futureDays = 15),
                 lines = lines,
                 selectedOffset = 0,
                 onSelectedOffsetChange = {},
