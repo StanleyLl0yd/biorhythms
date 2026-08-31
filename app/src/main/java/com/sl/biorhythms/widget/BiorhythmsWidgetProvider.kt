@@ -85,7 +85,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         val language = AppLanguage.fromStored(storedPreferences[PreferencesKeys.Language])
         val locale = resolveLocale(language, context.resources.configuration.locales[0])
         val resources = localizedResources(context, locale)
-        val widgetViews = createViews(context, appWidgetId, themeMode)
+        val widgetViews = createViews(context, appWidgetId, themeMode, resources)
         val views = widgetViews.remoteViews
 
         if (birthDateEpoch == null) {
@@ -129,6 +129,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         context: Context,
         appWidgetId: Int,
         themeMode: AppThemeMode,
+        resources: Resources,
     ): WidgetViews {
         val isDarkTheme = when (themeMode) {
             AppThemeMode.SYSTEM -> context.isSystemDarkTheme()
@@ -147,6 +148,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
         configureClicks(context, views, appWidgetId)
         applyAppearance(views, textColor, backgroundColor, alpha)
+        applyLocalizedText(views, resources)
         return WidgetViews(views, textColor)
     }
 
@@ -187,6 +189,11 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         views.setTextColor(R.id.widget_title, textColor)
         views.setTextColor(R.id.widget_status, textColor)
         views.setInt(R.id.widget_settings, "setColorFilter", textColor)
+    }
+
+    private fun applyLocalizedText(views: RemoteViews, resources: Resources) {
+        views.setTextViewText(R.id.widget_title, resources.getString(R.string.widget_title))
+        views.setContentDescription(R.id.widget_settings, resources.getString(R.string.settings_title))
     }
 
     private fun showStatus(views: RemoteViews, status: String) {
@@ -251,7 +258,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         val language = AppLanguage.fromStored(storedPreferences?.get(PreferencesKeys.Language))
         val locale = resolveLocale(language, context.resources.configuration.locales[0])
         val resources = localizedResources(context, locale)
-        val views = createViews(context, appWidgetId, themeMode).remoteViews
+        val views = createViews(context, appWidgetId, themeMode, resources).remoteViews
         showStatus(views, resources.getString(R.string.widget_error))
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
