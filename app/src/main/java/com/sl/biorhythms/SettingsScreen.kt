@@ -42,6 +42,20 @@ import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+data class SettingsState(
+    val themeMode: AppThemeMode,
+    val language: AppLanguage,
+    val birthDate: LocalDate?,
+)
+
+data class SettingsActions(
+    val onThemeModeChange: (AppThemeMode) -> Unit,
+    val onLanguageChange: (AppLanguage) -> Unit,
+    val onBirthDateChange: (LocalDate) -> Unit,
+    val onOpenAbout: () -> Unit,
+    val onBack: () -> Unit,
+)
+
 private data class SelectionOption<T>(
     val value: T,
     val label: String,
@@ -50,14 +64,8 @@ private data class SelectionOption<T>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    themeMode: AppThemeMode,
-    language: AppLanguage,
-    birthDate: LocalDate?,
-    onThemeModeChange: (AppThemeMode) -> Unit,
-    onLanguageChange: (AppLanguage) -> Unit,
-    onBirthDateChange: (LocalDate) -> Unit,
-    onOpenAbout: () -> Unit,
-    onBack: () -> Unit,
+    state: SettingsState,
+    actions: SettingsActions,
 ) {
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var showThemeDialog by rememberSaveable { mutableStateOf(false) }
@@ -68,13 +76,13 @@ fun SettingsScreen(
         DateTimeFormatter.ofPattern("d MMMM yyyy", locale)
     }
 
-    val themeValueText = when (themeMode) {
+    val themeValueText = when (state.themeMode) {
         AppThemeMode.SYSTEM -> appString(R.string.settings_theme_system)
         AppThemeMode.LIGHT -> appString(R.string.settings_theme_light)
         AppThemeMode.DARK -> appString(R.string.settings_theme_dark)
     }
 
-    val languageValueText = when (language) {
+    val languageValueText = when (state.language) {
         AppLanguage.SYSTEM -> appString(R.string.settings_language_system)
         AppLanguage.RU -> appString(R.string.settings_language_russian)
         AppLanguage.EN -> appString(R.string.settings_language_english)
@@ -85,7 +93,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = { Text(appString(R.string.settings_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = actions.onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = appString(R.string.action_back),
@@ -108,7 +116,7 @@ fun SettingsScreen(
                 SectionRow(
                     icon = Icons.Outlined.CalendarMonth,
                     label = appString(R.string.settings_birth_date_option),
-                    value = birthDate?.format(dateFormatter)
+                    value = state.birthDate?.format(dateFormatter)
                         ?: appString(R.string.action_tap_to_choose_date),
                     onClick = { showDatePicker = true },
                 )
@@ -137,7 +145,7 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Info,
                     label = appString(R.string.settings_about_option),
                     value = appString(R.string.settings_about_summary),
-                    onClick = onOpenAbout,
+                    onClick = actions.onOpenAbout,
                 )
             }
         }
@@ -145,11 +153,11 @@ fun SettingsScreen(
 
     if (showDatePicker) {
         BirthDatePickerDialog(
-            initialDate = birthDate ?: LocalDate.now().minusYears(25),
+            initialDate = state.birthDate ?: LocalDate.now().minusYears(25),
             onDismiss = { showDatePicker = false },
             onDateSelected = { date ->
                 showDatePicker = false
-                onBirthDateChange(date)
+                actions.onBirthDateChange(date)
             },
         )
     }
@@ -157,14 +165,14 @@ fun SettingsScreen(
     if (showThemeDialog) {
         SelectionDialog(
             title = appString(R.string.settings_section_appearance),
-            current = themeMode,
+            current = state.themeMode,
             options = listOf(
                 SelectionOption(AppThemeMode.SYSTEM, appString(R.string.settings_theme_system)),
                 SelectionOption(AppThemeMode.LIGHT, appString(R.string.settings_theme_light)),
                 SelectionOption(AppThemeMode.DARK, appString(R.string.settings_theme_dark)),
             ),
             onSelect = { selected ->
-                onThemeModeChange(selected)
+                actions.onThemeModeChange(selected)
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false },
@@ -174,14 +182,14 @@ fun SettingsScreen(
     if (showLanguageDialog) {
         SelectionDialog(
             title = appString(R.string.settings_section_language),
-            current = language,
+            current = state.language,
             options = listOf(
                 SelectionOption(AppLanguage.SYSTEM, appString(R.string.settings_language_system)),
                 SelectionOption(AppLanguage.RU, appString(R.string.settings_language_russian)),
                 SelectionOption(AppLanguage.EN, appString(R.string.settings_language_english)),
             ),
             onSelect = { selected ->
-                onLanguageChange(selected)
+                actions.onLanguageChange(selected)
                 showLanguageDialog = false
             },
             onDismiss = { showLanguageDialog = false },
