@@ -111,7 +111,8 @@ jobs:
           apksigner_path="$ANDROID_SDK_ROOT/build-tools/37.0.0/apksigner"
           test -x "$apksigner_path"
           "$apksigner_path" verify app/build/outputs/apk/release/app-release.apk
-          jarsigner -verify app/build/outputs/bundle/release/app-release.aab >/dev/null
+          aab_verification=$(jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1)
+          grep -Fq 'jar verified.' <<< "$aab_verification"
 
       - name: Upload signed release APK
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
