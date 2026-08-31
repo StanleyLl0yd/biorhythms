@@ -1,5 +1,6 @@
 package com.sl.biorhythms.widget
 
+import android.content.Context
 import android.content.res.Configuration
 import android.view.View
 import android.widget.FrameLayout
@@ -17,10 +18,31 @@ import org.junit.runner.RunWith
 class WidgetLocalizationInstrumentedTest {
 
     @Test
-    fun localizedWidgetTextOverridesSystemResourceLocale() {
+    fun widgetLocalizedTextUsesProvidedResources() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+        assertWidgetText(
+            context = context,
+            languageTag = "en",
+            expectedTitle = "Biorhythms Today",
+            expectedSettings = "Settings",
+        )
+        assertWidgetText(
+            context = context,
+            languageTag = "ru",
+            expectedTitle = "Биоритмы сегодня",
+            expectedSettings = "Настройки",
+        )
+    }
+
+    private fun assertWidgetText(
+        context: Context,
+        languageTag: String,
+        expectedTitle: String,
+        expectedSettings: String,
+    ) {
         val configuration = Configuration(context.resources.configuration).apply {
-            setLocale(Locale.forLanguageTag("ru"))
+            setLocale(Locale.forLanguageTag(languageTag))
         }
         val resources = context.createConfigurationContext(configuration).resources
         val remoteViews = RemoteViews(context.packageName, R.layout.widget_biorhythms)
@@ -31,7 +53,7 @@ class WidgetLocalizationInstrumentedTest {
         val title = root.findViewById<TextView>(R.id.widget_title)
         val settings = root.findViewById<View>(R.id.widget_settings)
 
-        assertEquals("Биоритмы сегодня", title.text.toString())
-        assertEquals("Настройки", settings.contentDescription.toString())
+        assertEquals(expectedTitle, title.text.toString())
+        assertEquals(expectedSettings, settings.contentDescription.toString())
     }
 }
