@@ -127,3 +127,19 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### ✨ Added
 - Initial release.
+
+---
+
+## Version Naming Convention
+
+- **Major (X.0.0)**: breaking changes or major redesigns
+- **Minor (1.X.0)**: new features and significant improvements
+- **Patch (1.2.X)**: bug fixes and minor improvements
+
+---
+
+## Links
+
+- [Repository](https://github.com/StanleyLl0yd/biorhythms)
+- [Issues](https://github.com/StanleyLl0yd/biorhythms/issues)
+- [Releases](https://github.com/StanleyLl0yd/biorhythms/releases)
