@@ -222,12 +222,13 @@ private fun chartDescription(
     selectedValues: Map<BiorhythmLine, Double>,
     locale: Locale,
 ): String {
-    val values = lines.joinToString(", ") { line ->
+    val values = mutableListOf<String>()
+    for (line in lines) {
         val label = appString(line.labelResId)
         val value = BiorhythmCalculator.percent(selectedValues[line] ?: 0.0)
-        "$label ${String.format(locale, "%.0f", value)}"
+        values += "$label ${String.format(locale, "%.0f", value)}"
     }
-    return "$header $values"
+    return "$header ${values.joinToString(", ")}"
 }
 
 private fun Modifier.chartSelectionInput(
