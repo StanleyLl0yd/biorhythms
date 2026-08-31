@@ -11,6 +11,15 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### 🐛 Fixed
+- Widget title and settings accessibility text now follow the app-selected language instead of falling back to the system locale.
+- Widget configuration preview now matches the actual home-screen widget structure instead of showing visual bars that are not rendered by the widget.
+
+### 🧹 Maintenance
+- Removed unused chart legend code, obsolete widget color resources and an empty custom ProGuard file.
+- Hardened release verification so an AAB must be explicitly reported as verified by `jarsigner` before publication.
+- Added regression coverage for widget localization and preview content.
+
 ---
 
 ## [1.4.0] - 2026-08-31
@@ -118,19 +127,3 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### ✨ Added
 - Initial release.
-
----
-
-## Version Naming Convention
-
-- **Major (X.0.0)**: breaking changes or major redesigns
-- **Minor (1.X.0)**: new features and significant improvements
-- **Patch (1.2.X)**: bug fixes and minor improvements
-
----
-
-## Links
-
-- [Repository](https://github.com/StanleyLl0yd/biorhythms)
-- [Issues](https://github.com/StanleyLl0yd/biorhythms/issues)
-- [Releases](https://github.com/StanleyLl0yd/biorhythms/releases)
