@@ -148,7 +148,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget_biorhythms)
         configureClicks(context, views, appWidgetId)
         applyAppearance(views, textColor, backgroundColor, alpha)
-        applyLocalizedText(views, resources)
+        applyWidgetLocalizedText(views, resources)
         return WidgetViews(views, textColor)
     }
 
@@ -189,11 +189,6 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         views.setTextColor(R.id.widget_title, textColor)
         views.setTextColor(R.id.widget_status, textColor)
         views.setInt(R.id.widget_settings, "setColorFilter", textColor)
-    }
-
-    private fun applyLocalizedText(views: RemoteViews, resources: Resources) {
-        views.setTextViewText(R.id.widget_title, resources.getString(R.string.widget_title))
-        views.setContentDescription(R.id.widget_settings, resources.getString(R.string.settings_title))
     }
 
     private fun showStatus(views: RemoteViews, status: String) {
@@ -271,4 +266,9 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
     private companion object {
         const val TAG = "BiorhythmsWidget"
     }
+}
+
+internal fun applyWidgetLocalizedText(views: RemoteViews, resources: Resources) {
+    views.setTextViewText(R.id.widget_title, resources.getString(R.string.widget_title))
+    views.setContentDescription(R.id.widget_settings, resources.getString(R.string.settings_title))
 }
