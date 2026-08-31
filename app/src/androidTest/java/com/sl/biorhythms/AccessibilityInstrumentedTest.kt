@@ -24,8 +24,7 @@ class AccessibilityInstrumentedTest {
                     BiorhythmChart(
                         birthDate = LocalDate.of(1990, 1, 1),
                         referenceDate = LocalDate.of(2026, 8, 28),
-                        pastDays = 15,
-                        futureDays = 15,
+                        range = BiorhythmChartRange(pastDays = 15, futureDays = 15),
                         lines = rememberBiorhythmLines(),
                         selectedOffset = 0,
                         onSelectedOffsetChange = {},
