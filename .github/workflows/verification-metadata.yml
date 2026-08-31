@@ -8,7 +8,7 @@ on:
       - '.github/workflows/verification-metadata.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   generate:
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Set up Android build environment
         uses: ./.github/actions/android-gradle-setup
@@ -32,6 +32,19 @@ jobs:
 
       - name: Generate SHA-256 verification metadata
         run: ./gradlew --write-verification-metadata sha256 testDebugUnitTest assembleDebug compileDebugAndroidTestKotlin lintDebug assembleRelease bundleRelease --stacktrace
+
+      - name: Commit generated metadata
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- gradle/verification-metadata.xml; then
+            echo "Verification metadata is already complete."
+            exit 0
+          fi
+          git config user.name "Stanley Lloyd"
+          git config user.email "131160519+StanleyLl0yd@users.noreply.github.com"
+          git add gradle/verification-metadata.xml
+          git commit -m "Update dependency verification metadata"
+          git push origin HEAD:release/v1.4.0
 
       - name: Upload verification metadata
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
