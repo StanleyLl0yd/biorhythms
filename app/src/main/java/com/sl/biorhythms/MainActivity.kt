@@ -117,26 +117,30 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
                 )
 
                 AppScreen.SETTINGS -> SettingsScreen(
-                    themeMode = themeMode,
-                    language = language,
-                    birthDate = birthDate,
-                    onThemeModeChange = { mode ->
-                        viewModel.onThemeModeSelected(mode) {
-                            WidgetUpdater.requestUpdate(context)
-                        }
-                    },
-                    onLanguageChange = { selectedLanguage ->
-                        viewModel.onLanguageSelected(selectedLanguage) {
-                            WidgetUpdater.requestUpdate(context)
-                        }
-                    },
-                    onBirthDateChange = { date ->
-                        viewModel.onBirthDateSelected(date) {
-                            WidgetUpdater.requestUpdate(context)
-                        }
-                    },
-                    onOpenAbout = { currentScreen = AppScreen.ABOUT },
-                    onBack = { currentScreen = AppScreen.MAIN },
+                    state = SettingsState(
+                        themeMode = themeMode,
+                        language = language,
+                        birthDate = birthDate,
+                    ),
+                    actions = SettingsActions(
+                        onThemeModeChange = { mode ->
+                            viewModel.onThemeModeSelected(mode) {
+                                WidgetUpdater.requestUpdate(context)
+                            }
+                        },
+                        onLanguageChange = { selectedLanguage ->
+                            viewModel.onLanguageSelected(selectedLanguage) {
+                                WidgetUpdater.requestUpdate(context)
+                            }
+                        },
+                        onBirthDateChange = { date ->
+                            viewModel.onBirthDateSelected(date) {
+                                WidgetUpdater.requestUpdate(context)
+                            }
+                        },
+                        onOpenAbout = { currentScreen = AppScreen.ABOUT },
+                        onBack = { currentScreen = AppScreen.MAIN },
+                    ),
                 )
 
                 AppScreen.ABOUT -> AboutScreen(
@@ -215,8 +219,10 @@ private fun MainScreen(
                 BiorhythmChart(
                     birthDate = currentBirthDate,
                     referenceDate = referenceDate,
-                    pastDays = DEFAULT_RANGE_DAYS,
-                    futureDays = DEFAULT_RANGE_DAYS,
+                    range = BiorhythmChartRange(
+                        pastDays = DEFAULT_RANGE_DAYS,
+                        futureDays = DEFAULT_RANGE_DAYS,
+                    ),
                     lines = biorhythmLines,
                     selectedOffset = selectedOffset,
                     onSelectedOffsetChange = { selectedOffset = it },
