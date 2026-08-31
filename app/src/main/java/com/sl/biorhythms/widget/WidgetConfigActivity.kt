@@ -253,7 +253,7 @@ private fun WidgetPreview(
                     )
                     Icon(
                         imageVector = Icons.Filled.Settings,
-                        contentDescription = appString(R.string.settings_title),
+                        contentDescription = null,
                     )
                 }
 
