@@ -58,6 +58,13 @@ private data class ChartColors(
     val selected: Color,
 )
 
+private data class ChartGeometry(
+    val stepX: Float,
+    val topY: Float,
+    val bottomY: Float,
+    val centerY: Float,
+)
+
 @Composable
 fun rememberBiorhythmLines(): List<BiorhythmLine> = remember {
     listOf(
@@ -90,10 +97,11 @@ fun BiorhythmChart(
     val todayIndex = pastDays.coerceIn(0, daysOffsets.lastIndex.coerceAtLeast(0))
 
     val axisColor = MaterialTheme.colorScheme.outlineVariant
+    val gridColor = axisColor.copy(alpha = 0.35f)
     val chartColors = ChartColors(
         axis = axisColor,
-        grid = axisColor.copy(alpha = 0.35f),
-        verticalGrid = axisColor.copy(alpha = 0.35f).copy(alpha = 0.55f),
+        grid = gridColor,
+        verticalGrid = gridColor.copy(alpha = 0.55f),
         selected = MaterialTheme.colorScheme.primary,
     )
 
@@ -147,17 +155,18 @@ fun BiorhythmChart(
             val amplitude = height * 0.4f
             val stepsCount = daysOffsets.size
             val stepX = if (stepsCount > 1) width / (stepsCount - 1) else width
-            val topY = centerY - amplitude
-            val bottomY = centerY + amplitude
+            val geometry = ChartGeometry(
+                stepX = stepX,
+                topY = centerY - amplitude,
+                bottomY = centerY + amplitude,
+                centerY = centerY,
+            )
 
             drawChartGrid(
                 gridOffsets = gridOffsets,
                 pastDays = pastDays,
-                stepX = stepX,
                 drawVerticalGrid = stepsCount > 1,
-                topY = topY,
-                bottomY = bottomY,
-                centerY = centerY,
+                geometry = geometry,
                 colors = chartColors,
             )
             drawChartSelection(
@@ -259,24 +268,21 @@ private fun Modifier.chartSelectionInput(
 private fun DrawScope.drawChartGrid(
     gridOffsets: List<Int>,
     pastDays: Int,
-    stepX: Float,
     drawVerticalGrid: Boolean,
-    topY: Float,
-    bottomY: Float,
-    centerY: Float,
+    geometry: ChartGeometry,
     colors: ChartColors,
 ) {
     if (drawVerticalGrid) {
         val gridStroke = 0.6.dp.toPx()
         gridOffsets.forEach { offset ->
-            val x = (offset + pastDays) * stepX
+            val x = (offset + pastDays) * geometry.stepX
             drawLine(colors.verticalGrid, Offset(x, 0f), Offset(x, size.height), gridStroke)
         }
     }
 
-    drawLine(colors.grid, Offset(0f, topY), Offset(size.width, topY), 1.dp.toPx())
-    drawLine(colors.grid, Offset(0f, bottomY), Offset(size.width, bottomY), 1.dp.toPx())
-    drawLine(colors.axis, Offset(0f, centerY), Offset(size.width, centerY), 1.dp.toPx())
+    drawLine(colors.grid, Offset(0f, geometry.topY), Offset(size.width, geometry.topY), 1.dp.toPx())
+    drawLine(colors.grid, Offset(0f, geometry.bottomY), Offset(size.width, geometry.bottomY), 1.dp.toPx())
+    drawLine(colors.axis, Offset(0f, geometry.centerY), Offset(size.width, geometry.centerY), 1.dp.toPx())
 }
 
 private fun DrawScope.drawChartSelection(
