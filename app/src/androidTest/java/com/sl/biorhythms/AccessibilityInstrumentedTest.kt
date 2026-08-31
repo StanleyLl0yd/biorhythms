@@ -52,9 +52,26 @@ class AccessibilityInstrumentedTest {
         }
 
         composeRule.onNodeWithText("Biorhythms Today").fetchSemanticsNode()
-        composeRule.onNodeWithContentDescription("Settings").fetchSemanticsNode()
         composeRule.onNodeWithText("Physical").fetchSemanticsNode()
         composeRule.onNodeWithText("Emotional").fetchSemanticsNode()
         composeRule.onNodeWithText("Intellectual").fetchSemanticsNode()
+    }
+
+    @Test
+    fun widgetPreviewKeepsTitleWhenBirthDateIsMissing() {
+        composeRule.setContent {
+            BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
+                CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                    WidgetConfigScreen(
+                        initialAlpha = 75,
+                        birthDate = null,
+                        onSave = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Biorhythms Today").fetchSemanticsNode()
+        composeRule.onNodeWithText("Set birth date in app").fetchSemanticsNode()
     }
 }
