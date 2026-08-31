@@ -11,18 +11,27 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.4.0] - 2026-08-31
+
 ### 🔐 Security & reliability
 - Moved production APK/AAB signing out of normal `main` pushes into a release-only workflow tied to version tags or an explicit manual release tag.
 - Added release tag/version validation before production signing secrets are used.
 - Excluded the DataStore file containing the birth date from Android cloud backup.
-- Added defensive DataStore read/write handling and birth-date validation.
+- Added defensive DataStore read/write handling, rollback behavior and birth-date validation.
+- Explicitly disabled cleartext network traffic.
 - Added Gradle dependency verification with committed SHA-256 metadata.
-- Added CodeQL analysis for Java/Kotlin sources.
+- Added CodeQL analysis and SonarQube Cloud quality analysis to the protected branch gates.
+- Enabled Dependabot vulnerability alerts and security updates for the repository.
 
 ### ✅ Quality
 - Added runtime Android instrumentation tests on API 37 and weekly compatibility coverage on API 26.
 - Added runtime accessibility semantics checks for the chart and widget preview.
-- Kept the protected `Verify` status as an aggregate gate over build and runtime Android tests.
+- Protected `main` now requires `Verify`, `CodeQL` and `SonarCloud Code Analysis` before merging.
+- Refactored chart rendering, settings state/actions and shared UI components to reduce cognitive complexity and duplication without changing app behavior.
+- Reduced duplication on new code below the configured Sonar quality threshold and resolved the actionable Sonar findings.
+- Consolidated repeated Android/Gradle CI setup into a local reusable action.
 - Reduced Android SDK packages installed by CI to the components each job actually uses.
 - Restored Gradle Wrapper patch updates in Dependabot while keeping minor and major wrapper upgrades deliberate.
 
@@ -31,6 +40,11 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added accessible per-cycle widget descriptions and validated widget configuration IDs against the app's provider.
 - Reduced periodic widget refresh from hourly to daily while preserving immediate refresh after relevant app changes.
 - Made percentage text use contrast-safe theme colors while retaining cycle colors for visual accents.
+- Removed redundant version-specific widget metadata while preserving Android 12+ cell sizing and older-version fallback behavior.
+
+### 📦 Release
+- Bumped the app to `versionCode` 6 and `versionName` `1.4.0`.
+- Release automation now publishes the signed APK, signed AAB and `SHA256SUMS.txt` as permanent GitHub Release assets after the signed build succeeds.
 
 ---
 

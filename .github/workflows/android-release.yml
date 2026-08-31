@@ -105,6 +105,12 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew assembleRelease bundleRelease --stacktrace
 
+      - name: Verify signed release outputs
+        run: |
+          set -euo pipefail
+          apksigner verify app/build/outputs/apk/release/app-release.apk
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab >/dev/null
+
       - name: Upload signed release APK
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -124,3 +130,57 @@ jobs:
       - name: Remove release keystore
         if: always()
         run: rm -f "$RUNNER_TEMP/android-release.jks"
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: signed-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+
+    steps:
+      - name: Download signed release artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets/apk release-assets/bundle
+          gh run download "$GITHUB_RUN_ID" \
+            --name "biorhythms-${RELEASE_TAG}-signed-apk" \
+            --dir release-assets/apk
+          gh run download "$GITHUB_RUN_ID" \
+            --name "biorhythms-${RELEASE_TAG}-bundle" \
+            --dir release-assets/bundle
+
+      - name: Prepare release assets
+        run: |
+          set -euo pipefail
+          test -s release-assets/apk/app-release.apk
+          test -s release-assets/bundle/app-release.aab
+          mv release-assets/apk/app-release.apk "release-assets/biorhythms-${RELEASE_TAG}.apk"
+          mv release-assets/bundle/app-release.aab "release-assets/biorhythms-${RELEASE_TAG}.aab"
+          (
+            cd release-assets
+            sha256sum "biorhythms-${RELEASE_TAG}.apk" "biorhythms-${RELEASE_TAG}.aab" > SHA256SUMS.txt
+          )
+
+      - name: Publish GitHub Release
+        run: |
+          set -euo pipefail
+          assets=(
+            "release-assets/biorhythms-${RELEASE_TAG}.apk"
+            "release-assets/biorhythms-${RELEASE_TAG}.aab"
+            "release-assets/SHA256SUMS.txt"
+          )
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --verify-tag \
+              --title "Biorhythms ${RELEASE_TAG#v}" \
+              --generate-notes \
+              --latest
+          fi

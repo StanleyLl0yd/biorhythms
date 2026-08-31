@@ -13,7 +13,7 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current published version: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current published version: **1.4.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ✨ Features
 
@@ -40,7 +40,7 @@ The recommended way to install the app is to download the signed APK from the la
 
 [Download latest release](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Android 8.0 or newer is required.
+Android 8.0 or newer is required. Each release also includes an AAB and a `SHA256SUMS.txt` file for verifying the published binaries.
 
 ## 🛠️ Build from source
 
@@ -85,15 +85,15 @@ GitHub Actions validates pull requests and pushes to `main` with:
 - Android instrumentation-test compilation
 - Android runtime instrumentation and accessibility tests on API 37
 
-A weekly CI run also exercises the runtime test suite on the minimum supported API 26. CodeQL analyzes Java/Kotlin code separately, and Gradle dependency verification validates downloaded build artifacts against committed SHA-256 metadata.
+A weekly CI run also exercises the runtime test suite on the minimum supported API 26. CodeQL analyzes Java/Kotlin code separately, SonarQube Cloud enforces the configured quality gate, and Gradle dependency verification validates downloaded build artifacts against committed SHA-256 metadata.
 
-The protected `main` branch requires the aggregate `Verify` check, which only passes after both build checks and runtime Android tests succeed.
+The protected `main` branch requires `Verify`, `CodeQL` and `SonarCloud Code Analysis` before changes can be merged.
 
 ## 🔐 Release signing
 
 Production signing is isolated from normal branch and pull-request CI. Signed APK/AAB artifacts are built only by the Android Release workflow for a version tag such as `v1.4.0`, or by a manual workflow run that explicitly names an existing version tag.
 
-Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts`.
+Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts`. After the signed build succeeds, a separate publish job without signing secrets creates the GitHub Release and attaches the signed APK, AAB and `SHA256SUMS.txt`.
 
 Release signing uses:
 

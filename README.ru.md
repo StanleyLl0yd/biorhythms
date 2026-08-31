@@ -13,7 +13,7 @@ Android-приложение для расчёта и визуализации �
 
 [⬇️ Скачать последнюю версию APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Текущая опубликованная версия: **1.3.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Текущая опубликованная версия: **1.4.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ✨ Возможности
 
@@ -40,7 +40,7 @@ Android-приложение для расчёта и визуализации �
 
 [Скачать последнюю версию](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Требуется Android 8.0 или новее.
+Требуется Android 8.0 или новее. Каждый релиз также содержит AAB и файл `SHA256SUMS.txt` для проверки опубликованных бинарных файлов.
 
 ## 🛠️ Сборка из исходников
 
@@ -85,15 +85,15 @@ GitHub Actions проверяет pull request и push в `main`:
 - компиляцией Android instrumentation-тестов
 - реальным запуском instrumentation- и accessibility-тестов на API 37
 
-Раз в неделю runtime-тесты дополнительно выполняются на минимально поддерживаемом API 26. Отдельный workflow CodeQL анализирует Java/Kotlin-код, а Gradle dependency verification сверяет загруженные зависимости с зафиксированными SHA-256.
+Раз в неделю runtime-тесты дополнительно выполняются на минимально поддерживаемом API 26. Отдельный workflow CodeQL анализирует Java/Kotlin-код, SonarQube Cloud применяет настроенный quality gate, а Gradle dependency verification сверяет загруженные зависимости с зафиксированными SHA-256.
 
-Защищённая ветка `main` требует итоговую проверку `Verify`; она становится зелёной только после успешных build checks и runtime Android tests.
+Защищённая ветка `main` требует успешных проверок `Verify`, `CodeQL` и `SonarCloud Code Analysis` перед merge.
 
 ## 🔐 Подпись release-сборки
 
 Production signing отделён от обычного CI веток и pull request. Подписанные APK/AAB создаются только workflow Android Release для тега версии, например `v1.4.0`, либо при ручном запуске с явным указанием существующего тега версии.
 
-Перед подписью workflow проверяет, что тег соответствует `versionName` в `app/build.gradle.kts`.
+Перед подписью workflow проверяет, что тег соответствует `versionName` в `app/build.gradle.kts`. После успешной подписанной сборки отдельный publish job без signing secrets создаёт GitHub Release и прикладывает подписанные APK, AAB и `SHA256SUMS.txt`.
 
 Подпись использует:
 
