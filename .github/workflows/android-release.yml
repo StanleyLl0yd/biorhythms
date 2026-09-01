@@ -67,6 +67,16 @@ jobs:
       - name: Run release verification
         run: ./gradlew testDebugUnitTest lintDebug assembleRelease bundleRelease --stacktrace
 
+      - name: Verify Google Play release compatibility
+        run: |
+          set -euo pipefail
+          release_apk=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
+          test -n "$release_apk"
+          python3 .ci/.github/scripts/verify-play-compatibility.py \
+            --gradle-file app/build.gradle.kts \
+            --apk "$release_apk" \
+            --aab app/build/outputs/bundle/release/app-release.aab
+
   signed-release:
     name: Signed release build
     needs: verify-release
@@ -97,13 +107,13 @@ jobs:
             -storepass "$ANDROID_KEYSTORE_PASSWORD" \
             -alias "$ANDROID_KEY_ALIAS" >/dev/null
 
-      - name: Build signed release APK and AAB
+      - name: Build signed release AAB and APK
         env:
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/android-release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease bundleRelease --stacktrace
+        run: ./gradlew bundleRelease assembleRelease --stacktrace
 
       - name: Verify signed release outputs
         run: |
@@ -113,20 +123,24 @@ jobs:
           "$apksigner_path" verify app/build/outputs/apk/release/app-release.apk
           aab_verification=$(jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1)
           grep -Fq 'jar verified.' <<< "$aab_verification"
+          python3 .ci/.github/scripts/verify-play-compatibility.py \
+            --gradle-file app/build.gradle.kts \
+            --apk app/build/outputs/apk/release/app-release.apk \
+            --aab app/build/outputs/bundle/release/app-release.aab
 
-      - name: Upload signed release APK
+      - name: Upload Google Play bundle
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: biorhythms-${{ env.RELEASE_TAG }}-signed-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          name: biorhythms-${{ env.RELEASE_TAG }}-google-play-aab
+          path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload release bundle
+      - name: Upload direct-install APK
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: biorhythms-${{ env.RELEASE_TAG }}-bundle
-          path: app/build/outputs/bundle/release/app-release.aab
+          name: biorhythms-${{ env.RELEASE_TAG }}-direct-install-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -150,32 +164,32 @@ jobs:
       - name: Download signed release artifacts
         run: |
           set -euo pipefail
-          mkdir -p release-assets/apk release-assets/bundle
+          mkdir -p release-assets/bundle release-assets/apk
           gh run download "$GITHUB_RUN_ID" \
-            --name "biorhythms-${RELEASE_TAG}-signed-apk" \
-            --dir release-assets/apk
-          gh run download "$GITHUB_RUN_ID" \
-            --name "biorhythms-${RELEASE_TAG}-bundle" \
+            --name "biorhythms-${RELEASE_TAG}-google-play-aab" \
             --dir release-assets/bundle
+          gh run download "$GITHUB_RUN_ID" \
+            --name "biorhythms-${RELEASE_TAG}-direct-install-apk" \
+            --dir release-assets/apk
 
       - name: Prepare release assets
         run: |
           set -euo pipefail
-          test -s release-assets/apk/app-release.apk
           test -s release-assets/bundle/app-release.aab
-          mv release-assets/apk/app-release.apk "release-assets/biorhythms-${RELEASE_TAG}.apk"
+          test -s release-assets/apk/app-release.apk
           mv release-assets/bundle/app-release.aab "release-assets/biorhythms-${RELEASE_TAG}.aab"
+          mv release-assets/apk/app-release.apk "release-assets/biorhythms-${RELEASE_TAG}.apk"
           (
             cd release-assets
-            sha256sum "biorhythms-${RELEASE_TAG}.apk" "biorhythms-${RELEASE_TAG}.aab" > SHA256SUMS.txt
+            sha256sum "biorhythms-${RELEASE_TAG}.aab" "biorhythms-${RELEASE_TAG}.apk" > SHA256SUMS.txt
           )
 
       - name: Publish GitHub Release
         run: |
           set -euo pipefail
           assets=(
-            "release-assets/biorhythms-${RELEASE_TAG}.apk"
             "release-assets/biorhythms-${RELEASE_TAG}.aab"
+            "release-assets/biorhythms-${RELEASE_TAG}.apk"
             "release-assets/SHA256SUMS.txt"
           )
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
