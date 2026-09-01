@@ -215,10 +215,11 @@ private fun WidgetPreview(
     val shape = MaterialTheme.shapes.large
     val checkerLight = MaterialTheme.colorScheme.surfaceVariant
     val checkerDark = MaterialTheme.colorScheme.outlineVariant
-    val values = remember(lines, birthDate, today) {
+    val percentTexts = remember(lines, birthDate, today, locale) {
         birthDate?.let { date ->
             lines.map { line ->
-                BiorhythmCalculator.percent(date, today, line.period)
+                val percent = BiorhythmCalculator.percent(date, today, line.period)
+                String.format(locale, "%+d%%", percent.roundToInt())
             }
         }.orEmpty()
     }
@@ -270,7 +271,7 @@ private fun WidgetPreview(
                     lines.forEachIndexed { index, line ->
                         WidgetPreviewLine(
                             label = appString(line.labelResId),
-                            percentText = String.format(locale, "%+d%%", values[index].roundToInt()),
+                            percentText = percentTexts[index],
                         )
                     }
                 }
