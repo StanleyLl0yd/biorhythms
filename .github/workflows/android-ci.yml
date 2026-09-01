@@ -36,12 +36,7 @@ jobs:
         run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
 
       - name: Run unit tests
-        run: |
-          set +e
-          ./gradlew --write-verification-metadata sha256 testDebugUnitTest --stacktrace
-          status=$?
-          git diff -- gradle/verification-metadata.xml
-          exit "$status"
+        run: ./gradlew testDebugUnitTest --stacktrace
 
       - name: Build debug APK and compile Android tests
         run: ./gradlew assembleDebug compileDebugAndroidTestKotlin --stacktrace
