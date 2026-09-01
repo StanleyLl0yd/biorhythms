@@ -11,6 +11,15 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### 🧹 Maintenance
+- Replaced the manual Compose lifecycle observer with `LifecycleEventEffect` while preserving the existing `ON_RESUME` refresh and widget-update behavior.
+- Removed the redundant direct `lifecycle-runtime-ktx` dependency after confirming the app compiles against the lifecycle Compose/ViewModel artifacts it uses directly.
+- Centralized the top-level Kotlin Gradle plugin version on the version catalog to prevent it from drifting from the Compose plugin version.
+
+### ⚡ Performance
+- Reused explicit-language Android `Resources` across recompositions instead of recreating a configuration context for every localized string lookup.
+- Cached formatted biorhythm percentage text in the widget preview so opacity-slider recompositions do not repeat unchanged calculations and formatting.
+
 ### 📦 Google Play compatibility
 - Confirmed `minSdk = 26`, `targetSdk = 37` and `compileSdk = 37` with the current AGP 9.3.2 toolchain instead of raising platform requirements further.
 - Made the signed AAB the primary Google Play release artifact while keeping the signed APK as a supplementary GitHub/direct-install artifact.
