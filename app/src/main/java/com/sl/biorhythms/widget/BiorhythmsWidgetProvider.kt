@@ -18,6 +18,7 @@ import com.sl.biorhythms.PreferencesKeys
 import com.sl.biorhythms.R
 import com.sl.biorhythms.dataStore
 import com.sl.biorhythms.resolveLocale
+import com.sl.biorhythms.storedBirthDate
 import java.io.IOException
 import java.time.LocalDate
 import java.util.Locale
@@ -80,38 +81,25 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int,
     ) {
         val storedPreferences = context.dataStore.data.first()
-        val birthDateEpoch = storedPreferences[PreferencesKeys.BirthDate]
         val themeMode = AppThemeMode.fromStored(storedPreferences[PreferencesKeys.ThemeMode])
         val language = AppLanguage.fromStored(storedPreferences[PreferencesKeys.Language])
         val locale = resolveLocale(language, context.resources.configuration.locales[0])
         val resources = localizedResources(context, locale)
         val widgetViews = createViews(context, appWidgetId, themeMode, resources)
         val views = widgetViews.remoteViews
-
-        if (birthDateEpoch == null) {
-            showStatus(views, resources.getString(R.string.widget_no_birth_date))
-            appWidgetManager.updateAppWidget(appWidgetId, views)
-            return
-        }
-
-        val birthDate = runCatching { LocalDate.ofEpochDay(birthDateEpoch) }.getOrNull()
         val today = LocalDate.now()
-        if (birthDate == null || birthDate.isAfter(today)) {
+        val birthDate = storedBirthDate(storedPreferences[PreferencesKeys.BirthDate], today)
+
+        if (birthDate == null) {
             showStatus(views, resources.getString(R.string.widget_no_birth_date))
             appWidgetManager.updateAppWidget(appWidgetId, views)
             return
         }
 
         val values = listOf(
-            BiorhythmCalculator.percent(
-                BiorhythmCalculator.value(birthDate, today, BiorhythmCalculator.PHYSICAL_PERIOD),
-            ),
-            BiorhythmCalculator.percent(
-                BiorhythmCalculator.value(birthDate, today, BiorhythmCalculator.EMOTIONAL_PERIOD),
-            ),
-            BiorhythmCalculator.percent(
-                BiorhythmCalculator.value(birthDate, today, BiorhythmCalculator.INTELLECTUAL_PERIOD),
-            ),
+            BiorhythmCalculator.percent(birthDate, today, BiorhythmCalculator.PHYSICAL_PERIOD),
+            BiorhythmCalculator.percent(birthDate, today, BiorhythmCalculator.EMOTIONAL_PERIOD),
+            BiorhythmCalculator.percent(birthDate, today, BiorhythmCalculator.INTELLECTUAL_PERIOD),
         )
 
         showValues(
@@ -183,7 +171,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         backgroundColor: Int,
         alpha: Int,
     ) {
-        val alphaValue = (alpha.coerceIn(0, 100) * 255 / 100).coerceIn(0, 255)
+        val alphaValue = alpha * 255 / 100
         val colorWithAlpha = (backgroundColor and 0x00FFFFFF) or (alphaValue shl 24)
         views.setInt(R.id.widget_container, "setBackgroundColor", colorWithAlpha)
         views.setTextColor(R.id.widget_title, textColor)
