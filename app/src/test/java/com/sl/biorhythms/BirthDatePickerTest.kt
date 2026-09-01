@@ -28,4 +28,18 @@ class BirthDatePickerTest {
 
         assertEquals(today, clampBirthDate(selected, today))
     }
+
+    @Test
+    fun datePickerMillisRoundTripKeepsCalendarDate() {
+        val dates = listOf(
+            LocalDate.of(1977, 12, 1),
+            LocalDate.of(2000, 2, 29),
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 8, 25),
+        )
+
+        dates.forEach { date ->
+            assertEquals(date, datePickerMillisToLocalDate(date.toDatePickerMillis()))
+        }
+    }
 }

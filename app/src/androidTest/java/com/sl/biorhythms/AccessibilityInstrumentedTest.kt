@@ -38,6 +38,25 @@ class AccessibilityInstrumentedTest {
     }
 
     @Test
+    fun birthDatePickerUsesSelectedAppLanguage() {
+        composeRule.setContent {
+            BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
+                CompositionLocalProvider(LocalAppLanguage provides AppLanguage.RU) {
+                    BirthDatePickerDialog(
+                        initialDate = LocalDate.of(1990, 1, 1),
+                        onDismiss = {},
+                        onDateSelected = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Выбрать дату рождения").fetchSemanticsNode()
+        composeRule.onNodeWithText("ОК").fetchSemanticsNode()
+        composeRule.onNodeWithText("Отмена").fetchSemanticsNode()
+    }
+
+    @Test
     fun widgetPreviewMatchesWidgetContent() {
         composeRule.setContent {
             BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {

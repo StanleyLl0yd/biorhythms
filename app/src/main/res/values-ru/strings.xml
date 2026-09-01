@@ -5,6 +5,8 @@
     <string name="action_choose_birth_date">Выбрать дату рождения</string>
     <string name="action_back">Назад</string>
     <string name="action_close">Закрыть</string>
+    <string name="action_confirm">ОК</string>
+    <string name="action_cancel">Отмена</string>
     <string name="chart_title_today_range">Цикл вокруг сегодня · ±%1$d дней</string>
     <string name="onboarding_title">Рассчитайте свои биоритмы</string>
     <string name="onboarding_description">Укажите дату рождения, чтобы увидеть физический, эмоциональный и интеллектуальный циклы на сегодня и ближайшие дни.</string>
