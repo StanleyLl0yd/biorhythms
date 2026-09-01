@@ -13,7 +13,7 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current published version: **1.4.1** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current published version: **1.4.2** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ✨ Features
 
@@ -71,7 +71,7 @@ To run the non-emulator project checks:
 | State | ViewModel + Lifecycle |
 | Storage | DataStore Preferences |
 | Widget | Android AppWidget / RemoteViews |
-| Build | Gradle 9.5.1, Kotlin DSL |
+| Build | Gradle 9.7.1, Kotlin DSL |
 | Android Gradle Plugin | 9.3.2 |
 
 ## ✅ Quality and security checks
@@ -91,7 +91,7 @@ The protected `main` branch requires `Verify`, `CodeQL` and `SonarCloud Code Ana
 
 ## 🔐 Release signing
 
-Production signing is isolated from normal branch and pull-request CI. Signed APK/AAB artifacts are built only by the Android Release workflow for a version tag such as `v1.4.1`, or by a manual workflow run that explicitly names an existing version tag.
+Production signing is isolated from normal branch and pull-request CI. Signed APK/AAB artifacts are built only by the Android Release workflow for a version tag such as `v1.4.2`, or by a manual workflow run that explicitly names an existing version tag.
 
 Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts`. After the signed build succeeds, a separate publish job without signing secrets creates the GitHub Release and attaches the signed APK, AAB and `SHA256SUMS.txt`.
 
