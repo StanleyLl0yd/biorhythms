@@ -46,7 +46,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.BiorhythmCalculator
-import com.sl.biorhythms.BiorhythmLine
 import com.sl.biorhythms.BiorhythmsViewModel
 import com.sl.biorhythms.BiorhythmsViewModelFactory
 import com.sl.biorhythms.LocalAppLanguage
@@ -212,12 +211,16 @@ private fun WidgetPreview(
     val lines = rememberBiorhythmLines()
     val locale = appLocale()
     val today = LocalDate.now()
-    val alpha = alphaPercent.coerceIn(0, 100) / 100f
+    val alpha = alphaPercent / 100f
     val shape = MaterialTheme.shapes.large
     val checkerLight = MaterialTheme.colorScheme.surfaceVariant
     val checkerDark = MaterialTheme.colorScheme.outlineVariant
     val values = remember(lines, birthDate, today) {
-        calculatePreviewValues(lines, birthDate, today)
+        birthDate?.let { date ->
+            lines.map { line ->
+                BiorhythmCalculator.percent(date, today, line.period)
+            }
+        }.orEmpty()
     }
 
     Box(
@@ -264,35 +267,15 @@ private fun WidgetPreview(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
-                    lines.forEach { line ->
-                        val value = values[line] ?: 0.0
+                    lines.forEachIndexed { index, line ->
                         WidgetPreviewLine(
                             label = appString(line.labelResId),
-                            percentText = String.format(locale, "%+d%%", value.roundToInt()),
+                            percentText = String.format(locale, "%+d%%", values[index].roundToInt()),
                         )
                     }
                 }
             }
         }
-    }
-}
-
-private fun calculatePreviewValues(
-    lines: List<BiorhythmLine>,
-    birthDate: LocalDate?,
-    date: LocalDate,
-): Map<BiorhythmLine, Double> {
-    if (birthDate == null) {
-        return emptyMap()
-    }
-    return lines.associateWith { line ->
-        BiorhythmCalculator.percent(
-            BiorhythmCalculator.value(
-                birthDate = birthDate,
-                date = date,
-                period = line.period,
-            ),
-        )
     }
 }
 
