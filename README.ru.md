@@ -13,7 +13,7 @@ Android-приложение для расчёта и визуализации �
 
 [⬇️ Скачать последнюю версию APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Текущая опубликованная версия: **1.4.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Текущая опубликованная версия: **1.4.1** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ✨ Возможности
 
@@ -71,7 +71,7 @@ cd biorhythms
 | Состояние | ViewModel + Lifecycle |
 | Хранение | DataStore Preferences |
 | Виджет | Android AppWidget / RemoteViews |
-| Сборка | Gradle 9.5.0, Kotlin DSL |
+| Сборка | Gradle 9.5.1, Kotlin DSL |
 | Android Gradle Plugin | 9.3.2 |
 
 ## ✅ Контроль качества и безопасности
@@ -91,7 +91,7 @@ GitHub Actions проверяет pull request и push в `main`:
 
 ## 🔐 Подпись release-сборки
 
-Production signing отделён от обычного CI веток и pull request. Подписанные APK/AAB создаются только workflow Android Release для тега версии, например `v1.4.0`, либо при ручном запуске с явным указанием существующего тега версии.
+Production signing отделён от обычного CI веток и pull request. Подписанные APK/AAB создаются только workflow Android Release для тега версии, например `v1.4.1`, либо при ручном запуске с явным указанием существующего тега версии.
 
 Перед подписью workflow проверяет, что тег соответствует `versionName` в `app/build.gradle.kts`. После успешной подписанной сборки отдельный publish job без signing secrets создаёт GitHub Release и прикладывает подписанные APK, AAB и `SHA256SUMS.txt`.
 
