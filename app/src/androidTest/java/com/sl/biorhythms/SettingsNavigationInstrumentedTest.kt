@@ -1,12 +1,12 @@
 package com.sl.biorhythms
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.click
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -23,9 +23,9 @@ class SettingsNavigationInstrumentedTest {
         val activity = composeRule.activity
         val settingsTitle = activity.getString(R.string.settings_title)
         val themeOption = activity.getString(R.string.settings_theme_option)
-        val themeSystem = activity.getString(R.string.settings_theme_system)
+        val lightTheme = activity.getString(R.string.settings_theme_light)
         val languageOption = activity.getString(R.string.settings_language_option)
-        val languageSystem = activity.getString(R.string.settings_language_system)
+        val englishLanguage = activity.getString(R.string.settings_language_english)
         val aboutOption = activity.getString(R.string.settings_about_option)
         val aboutTitle = activity.getString(R.string.about_title)
         val close = activity.getString(R.string.action_close)
@@ -34,11 +34,11 @@ class SettingsNavigationInstrumentedTest {
         composeRule.onNodeWithContentDescription(settingsTitle).performClick()
 
         composeRule.onNodeWithText(themeOption).performTouchInput { click() }
-        composeRule.onNodeWithText(themeSystem).assertIsDisplayed()
+        composeRule.onNodeWithText(lightTheme).assertIsDisplayed()
         composeRule.onNodeWithText(close).performClick()
 
         composeRule.onNodeWithText(languageOption).performTouchInput { click() }
-        composeRule.onNodeWithText(languageSystem).assertIsDisplayed()
+        composeRule.onNodeWithText(englishLanguage).assertIsDisplayed()
         composeRule.onNodeWithText(close).performClick()
 
         composeRule.onNodeWithText(aboutOption).performTouchInput { click() }
