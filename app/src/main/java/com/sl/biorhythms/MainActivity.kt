@@ -113,6 +113,7 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
             when (currentScreen) {
                 AppScreen.MAIN -> MainScreen(
                     viewModel = viewModel,
+                    birthDate = birthDate,
                     onOpenSettings = { currentScreen = AppScreen.SETTINGS },
                 )
 
@@ -154,9 +155,9 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
 @Composable
 private fun MainScreen(
     viewModel: BiorhythmsViewModel,
+    birthDate: LocalDate?,
     onOpenSettings: () -> Unit,
 ) {
-    val birthDate by viewModel.birthDate.collectAsState()
     val referenceDate by viewModel.referenceDate.collectAsState()
     val biorhythmLines = rememberBiorhythmLines()
     val context = LocalContext.current
@@ -194,8 +195,7 @@ private fun MainScreen(
                 }
             }
 
-            val currentBirthDate = birthDate
-            if (currentBirthDate != null) {
+            if (birthDate != null) {
                 val selectedDate = referenceDate.plusDays(selectedOffset.toLong())
                 val selectedDateLabel = if (selectedOffset == 0) {
                     appString(R.string.label_today)
@@ -206,7 +206,7 @@ private fun MainScreen(
                 SelectedBiorhythmSummary(
                     title = selectedDateLabel,
                     lines = biorhythmLines,
-                    birthDate = currentBirthDate,
+                    birthDate = birthDate,
                     date = selectedDate,
                     locale = locale,
                 )
@@ -217,7 +217,7 @@ private fun MainScreen(
                 )
 
                 BiorhythmChart(
-                    birthDate = currentBirthDate,
+                    birthDate = birthDate,
                     referenceDate = referenceDate,
                     range = BiorhythmChartRange(
                         pastDays = DEFAULT_RANGE_DAYS,
@@ -299,24 +299,17 @@ private fun SelectedBiorhythmSummary(
     locale: Locale,
 ) {
     val values = remember(lines, birthDate, date) {
-        lines.associateWith { line ->
-            BiorhythmCalculator.percent(
-                BiorhythmCalculator.value(
-                    birthDate = birthDate,
-                    date = date,
-                    period = line.period,
-                ),
-            )
+        lines.map { line ->
+            BiorhythmCalculator.percent(birthDate, date, line.period)
         }
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = title, style = MaterialTheme.typography.titleMedium)
-        lines.forEach { line ->
-            val value = values[line] ?: 0.0
+        lines.forEachIndexed { index, line ->
             BiorhythmSummaryCard(
                 label = appString(line.labelResId),
-                value = String.format(locale, "%+d%%", value.roundToInt()),
+                value = String.format(locale, "%+d%%", values[index].roundToInt()),
                 line = line,
             )
         }
