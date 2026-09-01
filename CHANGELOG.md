@@ -11,6 +11,13 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### 📦 Google Play compatibility
+- Confirmed `minSdk = 26`, `targetSdk = 37` and `compileSdk = 37` with the current AGP 9.3.2 toolchain instead of raising platform requirements further.
+- Made the signed AAB the primary Google Play release artifact while keeping the signed APK as a supplementary GitHub/direct-install artifact.
+- Added release-artifact verification for `arm64-v8a`, 64-bit counterparts of shipped 32-bit libraries, supported ABI families, matching APK/AAB native contents, 16 KB ELF alignment, 16 KB APK ZIP alignment and AAB `PAGE_ALIGNMENT_16K`.
+- Added an explicit runtime assertion that the API 37 instrumentation-test emulator uses a 16 KB memory page size.
+- Verified that the current transitive AndroidX native libraries are present for `arm64-v8a`, `armeabi-v7a`, `x86_64` and `x86` and are 16 KB compatible.
+
 ---
 
 ## [1.4.2] - 2026-09-01
