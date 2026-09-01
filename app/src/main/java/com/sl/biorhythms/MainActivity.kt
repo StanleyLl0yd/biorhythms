@@ -35,7 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
 import com.sl.biorhythms.widget.WidgetUpdater
@@ -81,9 +81,9 @@ private enum class AppScreen {
 
 @Composable
 fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
-    val themeMode by viewModel.themeMode.collectAsState()
-    val language by viewModel.language.collectAsState()
-    val birthDate by viewModel.birthDate.collectAsState()
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val language by viewModel.language.collectAsStateWithLifecycle()
+    val birthDate by viewModel.birthDate.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -113,6 +113,7 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
             when (currentScreen) {
                 AppScreen.MAIN -> MainScreen(
                     viewModel = viewModel,
+                    birthDate = birthDate,
                     onOpenSettings = { currentScreen = AppScreen.SETTINGS },
                 )
 
@@ -154,10 +155,10 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
 @Composable
 private fun MainScreen(
     viewModel: BiorhythmsViewModel,
+    birthDate: LocalDate?,
     onOpenSettings: () -> Unit,
 ) {
-    val birthDate by viewModel.birthDate.collectAsState()
-    val referenceDate by viewModel.referenceDate.collectAsState()
+    val referenceDate by viewModel.referenceDate.collectAsStateWithLifecycle()
     val biorhythmLines = rememberBiorhythmLines()
     val context = LocalContext.current
     val locale = appLocale()
@@ -194,8 +195,7 @@ private fun MainScreen(
                 }
             }
 
-            val currentBirthDate = birthDate
-            if (currentBirthDate != null) {
+            if (birthDate != null) {
                 val selectedDate = referenceDate.plusDays(selectedOffset.toLong())
                 val selectedDateLabel = if (selectedOffset == 0) {
                     appString(R.string.label_today)
@@ -206,7 +206,7 @@ private fun MainScreen(
                 SelectedBiorhythmSummary(
                     title = selectedDateLabel,
                     lines = biorhythmLines,
-                    birthDate = currentBirthDate,
+                    birthDate = birthDate,
                     date = selectedDate,
                     locale = locale,
                 )
@@ -217,7 +217,7 @@ private fun MainScreen(
                 )
 
                 BiorhythmChart(
-                    birthDate = currentBirthDate,
+                    birthDate = birthDate,
                     referenceDate = referenceDate,
                     range = BiorhythmChartRange(
                         pastDays = DEFAULT_RANGE_DAYS,
@@ -299,24 +299,17 @@ private fun SelectedBiorhythmSummary(
     locale: Locale,
 ) {
     val values = remember(lines, birthDate, date) {
-        lines.associateWith { line ->
-            BiorhythmCalculator.percent(
-                BiorhythmCalculator.value(
-                    birthDate = birthDate,
-                    date = date,
-                    period = line.period,
-                ),
-            )
+        lines.map { line ->
+            BiorhythmCalculator.percent(birthDate, date, line.period)
         }
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = title, style = MaterialTheme.typography.titleMedium)
-        lines.forEach { line ->
-            val value = values[line] ?: 0.0
+        lines.forEachIndexed { index, line ->
             BiorhythmSummaryCard(
                 label = appString(line.labelResId),
-                value = String.format(locale, "%+d%%", value.roundToInt()),
+                value = String.format(locale, "%+d%%", values[index].roundToInt()),
                 line = line,
             )
         }

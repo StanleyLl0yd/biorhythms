@@ -100,7 +100,7 @@ fun BiorhythmChart(
     )
 
     val lineValues = remember(birthDate, referenceDate, daysOffsets, lines) {
-        lines.associateWith { line ->
+        lines.map { line ->
             daysOffsets.map { offset ->
                 BiorhythmCalculator.value(
                     birthDate = birthDate,
@@ -110,9 +110,8 @@ fun BiorhythmChart(
             }
         }
     }
-
-    val selectedValues = lines.associateWith { line ->
-        lineValues[line]?.getOrNull(selectedIndex) ?: 0.0
+    val selectedValues = lineValues.map { values ->
+        values.getOrNull(selectedIndex) ?: 0.0
     }
     val dateFormatter = remember(locale) { DateTimeFormatter.ofPattern("dd MMM", locale) }
     val selectedDate = referenceDate.plusDays(clampedSelectedOffset.toLong())
@@ -213,13 +212,13 @@ fun BiorhythmChart(
 private fun chartDescription(
     header: String,
     lines: List<BiorhythmLine>,
-    selectedValues: Map<BiorhythmLine, Double>,
+    selectedValues: List<Double>,
     locale: Locale,
 ): String {
     val values = mutableListOf<String>()
-    for (line in lines) {
+    for ((index, line) in lines.withIndex()) {
         val label = appString(line.labelResId)
-        val value = BiorhythmCalculator.percent(selectedValues[line] ?: 0.0)
+        val value = BiorhythmCalculator.percent(selectedValues.getOrElse(index) { 0.0 })
         values += "$label ${String.format(locale, "%.0f", value)}"
     }
     return "$header ${values.joinToString(", ")}"
@@ -308,15 +307,15 @@ private fun DrawScope.drawChartSelection(
 
 private fun DrawScope.drawBiorhythmCurves(
     lines: List<BiorhythmLine>,
-    lineValues: Map<BiorhythmLine, List<Double>>,
+    lineValues: List<List<Double>>,
     selectedIndex: Int,
     stepX: Float,
     centerY: Float,
     amplitude: Float,
 ) {
     val selectedX = stepX * selectedIndex
-    lines.forEach { line ->
-        val values = lineValues[line].orEmpty()
+    lines.forEachIndexed { index, line ->
+        val values = lineValues.getOrNull(index).orEmpty()
         if (values.isNotEmpty()) {
             drawCurve(values, line.color, stepX, centerY, amplitude)
             values.getOrNull(selectedIndex)?.let { value ->
