@@ -13,6 +13,22 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.4.2] - 2026-09-01
+
+### 🧹 Maintenance
+- Completed a repository-wide cleanup and deep refactor while preserving existing behavior, UI/UX, persistence formats, widget contracts and release behavior.
+- Removed redundant Android/Gradle configuration, a duplicate module `.gitignore`, inherited widget activity theme configuration and unnecessary internal validation/clamping.
+- Replaced short-lived map-based biorhythm value storage with ordered lists and removed duplicate birth-date state collection.
+- Reused shared stored-birth-date validation in the widget instead of duplicating date conversion and future-date checks.
+- Switched Compose `StateFlow` observation to lifecycle-aware collection to avoid unnecessary collection while activities are inactive.
+- Upgraded Gradle from 9.5.1 to 9.7.1 with the official distribution checksum pinned and updated strict dependency-verification metadata for the new build graph.
+- Kept Espresso 3.7.0 explicitly pinned after verification showed that it is required to keep the Android test dependency graph on the intended compatible versions.
+
+### ✅ Quality
+- Revalidated unit tests, Android-test compilation, Android Lint, unsigned release APK/AAB builds, API 37 runtime instrumentation tests, CodeQL and SonarQube Cloud after the refactor and Gradle upgrade.
+
+---
+
 ## [1.4.1] - 2026-09-01
 
 ### 🐛 Fixed
