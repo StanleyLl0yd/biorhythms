@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +43,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.BiorhythmCalculator
 import com.sl.biorhythms.BiorhythmsViewModel
@@ -89,9 +89,9 @@ class WidgetConfigActivity : ComponentActivity() {
             val vm: BiorhythmsViewModel = viewModel(
                 factory = BiorhythmsViewModelFactory(applicationContext.dataStore),
             )
-            val themeMode by vm.themeMode.collectAsState()
-            val language by vm.language.collectAsState()
-            val birthDate by vm.birthDate.collectAsState()
+            val themeMode by vm.themeMode.collectAsStateWithLifecycle()
+            val language by vm.language.collectAsStateWithLifecycle()
+            val birthDate by vm.birthDate.collectAsStateWithLifecycle()
 
             BiorhythmsTheme(themeMode = themeMode) {
                 CompositionLocalProvider(LocalAppLanguage provides language) {
