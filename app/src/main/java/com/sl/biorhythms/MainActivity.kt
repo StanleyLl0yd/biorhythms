@@ -35,7 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
 import com.sl.biorhythms.widget.WidgetUpdater
@@ -81,9 +81,9 @@ private enum class AppScreen {
 
 @Composable
 fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
-    val themeMode by viewModel.themeMode.collectAsState()
-    val language by viewModel.language.collectAsState()
-    val birthDate by viewModel.birthDate.collectAsState()
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val language by viewModel.language.collectAsStateWithLifecycle()
+    val birthDate by viewModel.birthDate.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -158,7 +158,7 @@ private fun MainScreen(
     birthDate: LocalDate?,
     onOpenSettings: () -> Unit,
 ) {
-    val referenceDate by viewModel.referenceDate.collectAsState()
+    val referenceDate by viewModel.referenceDate.collectAsStateWithLifecycle()
     val biorhythmLines = rememberBiorhythmLines()
     val context = LocalContext.current
     val locale = appLocale()
