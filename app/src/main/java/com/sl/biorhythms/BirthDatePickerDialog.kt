@@ -57,32 +57,32 @@ fun BirthDatePickerDialog(
         selectableDates = selectableDates,
     )
 
-    CompositionLocalProvider(
-        LocalContext provides localizedContext,
-        LocalConfiguration provides localizedConfiguration,
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val selectedMillis = pickerState.selectedDateMillis ?: return@TextButton
+                    onDateSelected(
+                        clampBirthDate(
+                            datePickerMillisToLocalDate(selectedMillis),
+                            today,
+                        ),
+                    )
+                },
+            ) {
+                Text(appString(R.string.action_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(appString(R.string.action_cancel))
+            }
+        },
     ) {
-        DatePickerDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val selectedMillis = pickerState.selectedDateMillis ?: return@TextButton
-                        onDateSelected(
-                            clampBirthDate(
-                                datePickerMillisToLocalDate(selectedMillis),
-                                today,
-                            ),
-                        )
-                    },
-                ) {
-                    Text(appString(R.string.action_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(appString(R.string.action_cancel))
-                }
-            },
+        CompositionLocalProvider(
+            LocalContext provides localizedContext,
+            LocalConfiguration provides localizedConfiguration,
         ) {
             DatePicker(
                 state = pickerState,
