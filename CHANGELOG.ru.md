@@ -11,6 +11,13 @@
 
 ## [Unreleased]
 
+### 📦 Совместимость с Google Play
+- Подтверждены `minSdk = 26`, `targetSdk = 37` и `compileSdk = 37` с текущим toolchain AGP 9.3.2 без дополнительного повышения требований к платформе.
+- Подписанный AAB назначен основным release-артефактом для Google Play, а подписанный APK сохранён как дополнительный артефакт для GitHub и прямой установки.
+- Добавлена проверка release-артефактов: `arm64-v8a`, 64-битные аналоги поставляемых 32-битных библиотек, допустимые ABI, одинаковый native-состав APK/AAB, 16 KB ELF alignment, 16 KB ZIP alignment APK и `PAGE_ALIGNMENT_16K` в AAB.
+- Добавлена явная runtime-проверка, что API 37 emulator для instrumentation-тестов действительно использует memory page size 16 KB.
+- Подтверждено, что текущие транзитивные native-библиотеки AndroidX поставляются для `arm64-v8a`, `armeabi-v7a`, `x86_64` и `x86` и совместимы с 16 KB page size.
+
 ---
 
 ## [1.4.2] - 01.09.2026

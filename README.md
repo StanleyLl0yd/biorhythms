@@ -13,7 +13,7 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current published version: **1.4.2** · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current published version: **1.4.2** · Min SDK: **26 (Android 8.0)** · Target SDK: **37** · Compile SDK: **37**
 
 ## ✨ Features
 
@@ -34,13 +34,32 @@ Current published version: **1.4.2** · Min SDK: **26 (Android 8.0)** · Target 
 
 > Biorhythms are not a medical or scientifically validated diagnostic method. The app visualizes the classic biorhythm model for informational and entertainment purposes.
 
-## 📦 Installation
+## 📦 Installation and release formats
 
-The recommended way to install the app is to download the signed APK from the latest GitHub Release:
+The signed **AAB is the primary release format for Google Play**. It is intended for store distribution and is not directly installable by users.
+
+For direct installation and GitHub distribution, each release also includes a signed APK:
 
 [Download latest release](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Android 8.0 or newer is required. Each release also includes an AAB and a `SHA256SUMS.txt` file for verifying the published binaries.
+Android 8.0 or newer is required. Each release also includes `SHA256SUMS.txt` for verifying the published AAB and APK.
+
+## ▶️ Google Play compatibility
+
+The project currently uses `minSdk = 26`, `targetSdk = 37` and `compileSdk = 37`. API 37 is supported by the current Android Gradle Plugin toolchain and exceeds the Google Play target API requirement for new apps and app updates.
+
+The release contains transitive AndroidX native libraries. Release verification therefore checks the actual generated APK and AAB rather than assuming the project is JVM-only. CI requires:
+
+- `arm64-v8a` whenever native libraries are present;
+- 64-bit counterparts for shipped 32-bit ARM/x86 native libraries;
+- only the standard `arm64-v8a`, `armeabi-v7a`, `x86_64` and `x86` ABI families;
+- matching native-library/ABI sets between APK and AAB;
+- at least 16 KB ELF `PT_LOAD` alignment for every packaged native library;
+- 16 KB ZIP alignment for uncompressed native libraries in the APK;
+- `PAGE_ALIGNMENT_16K` in the AAB `BundleConfig`;
+- runtime instrumentation tests on an API 37 emulator whose memory page size is explicitly verified as 16 KB.
+
+No ABI filter is applied because removing currently supported ABIs would reduce compatibility without a meaningful Google Play download-size benefit: App Bundles deliver device-specific ABI splits.
 
 ## 🛠️ Build from source
 
@@ -82,8 +101,9 @@ GitHub Actions validates pull requests and pushes to `main` with:
 - Android Lint
 - debug APK assembly
 - unsigned release APK/AAB assembly with R8 and resource shrinking
+- Google Play SDK/ABI/16 KB release-artifact compatibility verification
 - Android instrumentation-test compilation
-- Android runtime instrumentation and accessibility tests on API 37
+- Android runtime instrumentation and accessibility tests on API 37 with a verified 16 KB memory page size
 
 A weekly CI run also exercises the runtime test suite on the minimum supported API 26. CodeQL analyzes Java/Kotlin code separately, SonarQube Cloud enforces the configured quality gate, and Gradle dependency verification validates downloaded build artifacts against committed SHA-256 metadata.
 
@@ -91,9 +111,9 @@ The protected `main` branch requires `Verify`, `CodeQL` and `SonarCloud Code Ana
 
 ## 🔐 Release signing
 
-Production signing is isolated from normal branch and pull-request CI. Signed APK/AAB artifacts are built only by the Android Release workflow for a version tag such as `v1.4.2`, or by a manual workflow run that explicitly names an existing version tag.
+Production signing is isolated from normal branch and pull-request CI. The primary signed AAB and supplementary signed APK are built only by the Android Release workflow for a version tag such as `v1.4.2`, or by a manual workflow run that explicitly names an existing version tag.
 
-Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts`. After the signed build succeeds, a separate publish job without signing secrets creates the GitHub Release and attaches the signed APK, AAB and `SHA256SUMS.txt`.
+Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts` and validates Google Play compatibility on unsigned release artifacts. After signing, it verifies the APK signature, AAB signature and Google Play compatibility again. A separate publish job without signing secrets creates the GitHub Release and attaches the signed AAB, supplementary APK and `SHA256SUMS.txt`.
 
 Release signing uses:
 
