@@ -11,14 +11,22 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.4.1] - 2026-09-01
+
 ### 🐛 Fixed
+- Fixed a crash when opening **Settings → Birth date** by replacing the platform date dialog with the Material 3 Compose date picker while keeping dialog window ownership on the Activity context.
+- Birth-date selection now follows the app-selected locale, rejects future dates and preserves calendar dates without timezone or DST shifts.
 - Widget title and settings accessibility text now follow the app-selected language instead of falling back to the system locale.
 - Widget configuration preview now matches the actual home-screen widget structure instead of showing visual bars that are not rendered by the widget.
 
 ### 🧹 Maintenance
-- Removed unused chart legend code, obsolete widget color resources and an empty custom ProGuard file.
+- Updated the Gradle Wrapper to 9.5.1 with the distribution checksum pinned.
+- Fixed release APK signature verification by resolving `apksigner` from the installed Android Build Tools path and kept signature verification mandatory.
 - Hardened release verification so an AAB must be explicitly reported as verified by `jarsigner` before publication.
-- Added regression coverage for widget localization and preview content.
+- Removed unused chart legend code, obsolete widget color resources and an empty custom ProGuard file.
+- Added runtime regression coverage for opening the birth-date picker and the other interactive Settings rows, plus widget localization and preview-content coverage.
 
 ---
 
