@@ -47,6 +47,16 @@ jobs:
       - name: Verify release build without signing
         run: ./gradlew assembleRelease bundleRelease --stacktrace
 
+      - name: Verify Google Play release compatibility
+        run: |
+          set -euo pipefail
+          release_apk=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
+          test -n "$release_apk"
+          python3 .github/scripts/verify-play-compatibility.py \
+            --gradle-file app/build.gradle.kts \
+            --apk "$release_apk" \
+            --aab app/build/outputs/bundle/release/app-release.aab
+
       - name: Upload debug APK
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -123,6 +133,10 @@ jobs:
           adb shell settings put global window_animation_scale 0
           adb shell settings put global transition_animation_scale 0
           adb shell settings put global animator_duration_scale 0
+
+      - name: Verify 16 KB emulator page size
+        if: matrix.api-level == '37'
+        run: test "$(adb shell getconf PAGESIZE | tr -d '\r')" = "16384"
 
       - name: Run Android tests
         run: ./gradlew connectedDebugAndroidTest --stacktrace
