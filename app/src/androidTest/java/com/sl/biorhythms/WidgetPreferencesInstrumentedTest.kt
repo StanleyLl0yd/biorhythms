@@ -62,4 +62,20 @@ class WidgetPreferencesInstrumentedTest {
             ids.forEach(prefs::deleteAlpha)
         }
     }
+
+    @Test
+    fun restoredUnchangedWidgetIdRetainsAlpha() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = WidgetPreferences(context)
+        val widgetId = Int.MAX_VALUE - 104
+
+        try {
+            prefs.deleteAlpha(widgetId)
+            prefs.setAlpha(widgetId, 63)
+            prefs.remapAlpha(intArrayOf(widgetId), intArrayOf(widgetId))
+            assertEquals(63, prefs.getAlpha(widgetId))
+        } finally {
+            prefs.deleteAlpha(widgetId)
+        }
+    }
 }
