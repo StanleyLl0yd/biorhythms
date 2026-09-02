@@ -1,12 +1,11 @@
 package com.sl.biorhythms
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -33,15 +32,15 @@ class SettingsNavigationInstrumentedTest {
 
         composeRule.onNodeWithContentDescription(settingsTitle).performClick()
 
-        composeRule.onNodeWithText(themeOption).performTouchInput { click() }
+        composeRule.onNodeWithText(themeOption).performScrollTo().performClick()
         composeRule.onNodeWithText(lightTheme).assertIsDisplayed()
         composeRule.onNodeWithText(close).performClick()
 
-        composeRule.onNodeWithText(languageOption).performTouchInput { click() }
+        composeRule.onNodeWithText(languageOption).performScrollTo().performClick()
         composeRule.onNodeWithText(englishLanguage).assertIsDisplayed()
         composeRule.onNodeWithText(close).performClick()
 
-        composeRule.onNodeWithText(aboutOption).performTouchInput { click() }
+        composeRule.onNodeWithText(aboutOption).performScrollTo().performClick()
         composeRule.onNodeWithText(aboutTitle).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(back).performClick()
         composeRule.onNodeWithText(settingsTitle).assertIsDisplayed()

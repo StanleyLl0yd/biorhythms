@@ -13,7 +13,7 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current version: **1.5.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37** · Compile SDK: **37**
+Current version: **1.6.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37** · Compile SDK: **37**
 
 ## ✨ Features
 
@@ -23,6 +23,10 @@ Current version: **1.5.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37*
 - Seven-day forecast with rising, falling and steady trend indicators
 - Critical-day, peak and minimum detection for each classic cycle
 - Dedicated synchronized-extreme warning when all three cycles are simultaneously at least +80% or at most −80%
+- Opt-in notifications with a configurable daily delivery time
+- Daily notification summary with independently selectable physical, emotional and intellectual cycles
+- Important-event notifications for critical points, peaks, lows and synchronized ±80% extremes, including an important-events-only mode
+- Notification schedule recovery after reboot, clock, timezone, locale and app-package changes without exact-alarm special access
 - Interactive chart inspection by tap or drag
 - Clear five-day chart grid with a highlighted selected day
 - Birth date selection and persistence
@@ -92,6 +96,7 @@ To run the non-emulator project checks:
 | UI | Jetpack Compose 1.12 + Material 3 |
 | State | ViewModel + Lifecycle |
 | Storage | DataStore Preferences |
+| Notifications | Android NotificationManager + inexact AlarmManager scheduling |
 | Widget | Android AppWidget / RemoteViews |
 | Build | Gradle 9.7.1, Kotlin DSL |
 | Android Gradle Plugin | 9.3.2 |
@@ -114,9 +119,9 @@ The protected `main` branch requires `Verify`, `CodeQL` and `SonarCloud Code Ana
 
 ## 🔐 Release signing
 
-Production signing is isolated from normal branch and pull-request CI. The primary signed AAB and supplementary signed APK are built only by the Android Release workflow for a version tag such as `v1.5.0`, or by a manual workflow run that explicitly names an existing version tag.
+Production signing is isolated from normal branch and pull-request CI. The primary signed AAB and supplementary signed APK are built only by the Android Release workflow for a version tag such as `v1.6.0`, a matching `release/v1.6.0` branch, or a manual workflow run that explicitly names an existing version tag.
 
-Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts` and validates Google Play compatibility on unsigned release artifacts. After signing, it verifies the APK signature, AAB signature and Google Play compatibility again. A separate publish job without signing secrets creates the GitHub Release and attaches the signed AAB, supplementary APK and `SHA256SUMS.txt`.
+Before signing, the workflow verifies that the release ref matches `versionName` in `app/build.gradle.kts` and validates Google Play compatibility on unsigned release artifacts. After signing, it verifies the APK signature, AAB signature and Google Play compatibility again. A separate publish job without signing secrets ensures the immutable version tag points to the verified release commit, creates the GitHub Release and attaches the signed AAB, supplementary APK and `SHA256SUMS.txt`.
 
 Release signing uses:
 
@@ -129,7 +134,7 @@ GitHub Actions restores `ANDROID_KEYSTORE_PATH` from the `ANDROID_KEYSTORE_BASE6
 
 ## 🔒 Privacy
 
-The app does not request Internet access and does not include advertising or analytics SDKs. The locally stored preferences file containing the birth date is excluded from Android cloud backup.
+The app does not request Internet access and does not include advertising or analytics SDKs. Notifications are local and opt-in; Android 13+ notification permission is requested only when the feature is enabled. The locally stored preferences file containing the birth date is excluded from Android cloud backup.
 
 ## 🌍 Languages
 

@@ -32,10 +32,24 @@
 
     <string name="settings_title">Settings</string>
     <string name="settings_section_profile">Profile</string>
+    <string name="settings_section_notifications">Notifications</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_language">Language</string>
     <string name="settings_section_about">About</string>
     <string name="settings_birth_date_option">Birth date</string>
+    <string name="settings_notifications_option">Biorhythm notifications</string>
+    <string name="settings_notifications_enabled_summary">Daily schedule is active</string>
+    <string name="settings_notifications_disabled_summary">Off</string>
+    <string name="settings_notifications_birth_date_required">Set your birth date first</string>
+    <string name="settings_notifications_permission_blocked">Blocked by Android notification settings</string>
+    <string name="settings_notifications_android_settings">Open Android notification settings</string>
+    <string name="settings_notifications_no_types">No notification types selected</string>
+    <string name="settings_notifications_time">Notification time</string>
+    <string name="settings_notifications_daily_summary">Daily summary</string>
+    <string name="settings_notifications_daily_summary_description">Show the selected cycle values and trends every day.</string>
+    <string name="settings_notifications_important_events">Important cycle events</string>
+    <string name="settings_notifications_important_events_description">Critical days, peaks, lows and synchronized ±%1$d%% extremes.</string>
+    <string name="settings_notifications_include_cycle">Include in the daily summary</string>
     <string name="settings_theme_system">Use system theme</string>
     <string name="settings_theme_light">Light theme</string>
     <string name="settings_theme_dark">Dark theme</string>
@@ -46,6 +60,14 @@
     <string name="settings_language_option">App language</string>
     <string name="settings_about_option">About Biorhythms</string>
     <string name="settings_about_summary">App, author, license and source code</string>
+
+    <string name="notification_channel_name">Biorhythm updates</string>
+    <string name="notification_channel_description">Daily biorhythm summaries and important cycle events</string>
+    <string name="notification_today_title">Biorhythms today</string>
+    <string name="notification_critical_title">Critical cycle today</string>
+    <string name="notification_important_title">Important cycle point today</string>
+    <string name="notification_cycle_event_format">%1$s: %2$s</string>
+    <string name="notification_cycle_value_format">%1$s: %2$s %3$s</string>
 
     <string name="about_title">About</string>
     <string name="about_version">Version %1$s</string>

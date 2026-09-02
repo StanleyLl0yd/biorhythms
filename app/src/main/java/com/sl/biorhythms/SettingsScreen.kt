@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.sl.biorhythms.notification.NotificationPreferences
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -46,12 +47,16 @@ data class SettingsState(
     val themeMode: AppThemeMode,
     val language: AppLanguage,
     val birthDate: LocalDate?,
+    val notificationPreferences: NotificationPreferences,
+    val notificationPermissionGranted: Boolean,
 )
 
 data class SettingsActions(
     val onThemeModeChange: (AppThemeMode) -> Unit,
     val onLanguageChange: (AppLanguage) -> Unit,
     val onBirthDateChange: (LocalDate) -> Unit,
+    val onNotificationPreferencesChange: (NotificationPreferences) -> Unit,
+    val onOpenNotificationSettings: () -> Unit,
     val onOpenAbout: () -> Unit,
     val onBack: () -> Unit,
 )
@@ -75,13 +80,11 @@ fun SettingsScreen(
     val dateFormatter = remember(locale) {
         DateTimeFormatter.ofPattern("d MMMM yyyy", locale)
     }
-
     val themeValueText = when (state.themeMode) {
         AppThemeMode.SYSTEM -> appString(R.string.settings_theme_system)
         AppThemeMode.LIGHT -> appString(R.string.settings_theme_light)
         AppThemeMode.DARK -> appString(R.string.settings_theme_dark)
     }
-
     val languageValueText = when (state.language) {
         AppLanguage.SYSTEM -> appString(R.string.settings_language_system)
         AppLanguage.RU -> appString(R.string.settings_language_russian)
@@ -121,6 +124,14 @@ fun SettingsScreen(
                     onClick = { showDatePicker = true },
                 )
             }
+
+            NotificationSettingsSection(
+                birthDateAvailable = state.birthDate != null,
+                notificationPermissionGranted = state.notificationPermissionGranted,
+                preferences = state.notificationPreferences,
+                onPreferencesChange = actions.onNotificationPreferencesChange,
+                onOpenAndroidSettings = actions.onOpenNotificationSettings,
+            )
 
             SectionBlock(title = appString(R.string.settings_section_appearance)) {
                 SectionRow(

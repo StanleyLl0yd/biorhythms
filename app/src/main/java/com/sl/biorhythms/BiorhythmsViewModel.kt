@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.sl.biorhythms.notification.NotificationPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +34,9 @@ class BiorhythmsViewModel(
     private val _language = MutableStateFlow(AppLanguage.SYSTEM)
     val language: StateFlow<AppLanguage> = _language.asStateFlow()
 
+    private val _notificationPreferences = MutableStateFlow(NotificationPreferences())
+    val notificationPreferences: StateFlow<NotificationPreferences> = _notificationPreferences.asStateFlow()
+
     init {
         viewModelScope.launch {
             dataStore.data
@@ -48,6 +52,7 @@ class BiorhythmsViewModel(
                     _birthDate.value = storedBirthDate(prefs[PreferencesKeys.BirthDate])
                     _themeMode.value = AppThemeMode.fromStored(prefs[PreferencesKeys.ThemeMode])
                     _language.value = AppLanguage.fromStored(prefs[PreferencesKeys.Language])
+                    _notificationPreferences.value = NotificationPreferences.fromPreferences(prefs)
                 }
         }
     }
@@ -87,6 +92,31 @@ class BiorhythmsViewModel(
             onPersisted = onPersisted,
         ) { prefs ->
             prefs[PreferencesKeys.Language] = language.storedValue
+        }
+    }
+
+    fun onNotificationPreferencesSelected(
+        preferences: NotificationPreferences,
+        onPersisted: () -> Unit = {},
+    ) {
+        val validPreferences = preferences.copy(
+            hour = preferences.hour.coerceIn(0, 23),
+            minute = preferences.minute.coerceIn(0, 59),
+        )
+        persistSelection(
+            state = _notificationPreferences,
+            value = validPreferences,
+            errorMessage = "Unable to persist notification settings",
+            onPersisted = onPersisted,
+        ) { prefs ->
+            prefs[PreferencesKeys.NotificationEnabled] = validPreferences.enabled
+            prefs[PreferencesKeys.NotificationHour] = validPreferences.hour
+            prefs[PreferencesKeys.NotificationMinute] = validPreferences.minute
+            prefs[PreferencesKeys.NotificationDailySummary] = validPreferences.dailySummary
+            prefs[PreferencesKeys.NotificationImportantEvents] = validPreferences.importantEvents
+            prefs[PreferencesKeys.NotificationPhysical] = validPreferences.physical
+            prefs[PreferencesKeys.NotificationEmotional] = validPreferences.emotional
+            prefs[PreferencesKeys.NotificationIntellectual] = validPreferences.intellectual
         }
     }
 

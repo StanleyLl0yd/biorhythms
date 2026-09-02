@@ -13,6 +13,29 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.6.0] - 2026-09-02
+
+### 🔔 Notifications
+- Added opt-in local biorhythm notifications with a configurable daily delivery time, defaulting to 09:00.
+- Added a daily summary with independently selectable physical, emotional and intellectual cycle values and trend indicators.
+- Added important-event notifications for critical points, peaks, lows and synchronized ±80% extremes; daily summaries can be disabled to receive only important events.
+- Android 13+ notification permission is requested only when the user enables notifications, and blocked notification delivery can be opened directly in Android app-notification settings.
+
+### 🐛 Reliability
+- Notification delivery uses a single inexact `AlarmManager.setAndAllowWhileIdle` alarm and does not request `SCHEDULE_EXACT_ALARM` or exact-alarm special access.
+- The next local notification is recalculated after every delivery and after device boot, manual clock changes, timezone changes, system-locale changes and application replacement.
+- Added local-day delivery deduplication so repeated receiver execution cannot post the same daily notification twice.
+- Fixed release publication so a missing version tag is detected correctly and created only at the verified release commit before GitHub Release publication.
+
+### ✅ Quality
+- Added unit coverage for same-day/next-day notification scheduling, DST transitions, ordinary-day silence in important-only mode and important-event delivery decisions.
+- Added an API 37 instrumentation test that grants notification permission, publishes a real localized notification through `NotificationManager` and verifies its title.
+
+### 📦 Release
+- Bumped the app to `versionCode` 11 and `versionName` `1.6.0` without changing `minSdk = 26`, `targetSdk = 37` or `compileSdk = 37`.
+
+---
+
 ## [1.5.0] - 2026-09-02
 
 ### ✨ Added

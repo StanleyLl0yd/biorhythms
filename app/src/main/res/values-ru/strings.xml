@@ -32,10 +32,24 @@
 
     <string name="settings_title">Настройки</string>
     <string name="settings_section_profile">Профиль</string>
+    <string name="settings_section_notifications">Уведомления</string>
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_language">Язык</string>
     <string name="settings_section_about">О приложении</string>
     <string name="settings_birth_date_option">Дата рождения</string>
+    <string name="settings_notifications_option">Уведомления о биоритмах</string>
+    <string name="settings_notifications_enabled_summary">Ежедневное расписание активно</string>
+    <string name="settings_notifications_disabled_summary">Выключены</string>
+    <string name="settings_notifications_birth_date_required">Сначала укажите дату рождения</string>
+    <string name="settings_notifications_permission_blocked">Заблокированы настройками уведомлений Android</string>
+    <string name="settings_notifications_android_settings">Открыть настройки уведомлений Android</string>
+    <string name="settings_notifications_no_types">Не выбран ни один тип уведомлений</string>
+    <string name="settings_notifications_time">Время уведомления</string>
+    <string name="settings_notifications_daily_summary">Ежедневная сводка</string>
+    <string name="settings_notifications_daily_summary_description">Каждый день показывать выбранные циклы, их значения и направление.</string>
+    <string name="settings_notifications_important_events">Важные события циклов</string>
+    <string name="settings_notifications_important_events_description">Критические дни, пики, минимумы и синхронные экстремумы ±%1$d%%.</string>
+    <string name="settings_notifications_include_cycle">Включать в ежедневную сводку</string>
     <string name="settings_theme_system">Как на устройстве</string>
     <string name="settings_theme_light">Светлая тема</string>
     <string name="settings_theme_dark">Тёмная тема</string>
@@ -46,6 +60,14 @@
     <string name="settings_language_option">Язык приложения</string>
     <string name="settings_about_option">О Biorhythms</string>
     <string name="settings_about_summary">Описание, автор, лицензия и исходный код</string>
+
+    <string name="notification_channel_name">Биоритмы</string>
+    <string name="notification_channel_description">Ежедневные сводки и важные события циклов</string>
+    <string name="notification_today_title">Биоритмы сегодня</string>
+    <string name="notification_critical_title">Сегодня критическая точка цикла</string>
+    <string name="notification_important_title">Сегодня важная точка цикла</string>
+    <string name="notification_cycle_event_format">%1$s: %2$s</string>
+    <string name="notification_cycle_value_format">%1$s: %2$s %3$s</string>
 
     <string name="about_title">О приложении</string>
     <string name="about_version">Версия %1$s</string>

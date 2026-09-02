@@ -1,10 +1,19 @@
 package com.sl.biorhythms
 
+import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,6 +57,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sl.biorhythms.notification.NotificationPreferences
+import com.sl.biorhythms.notification.NotificationScheduler
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
 import com.sl.biorhythms.widget.WidgetUpdater
 import java.time.LocalDate
@@ -82,13 +93,39 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val language by viewModel.language.collectAsStateWithLifecycle()
     val birthDate by viewModel.birthDate.collectAsStateWithLifecycle()
+    val notificationPreferences by viewModel.notificationPreferences.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var currentScreen by rememberSaveable { mutableStateOf(AppScreen.MAIN) }
+    var notificationPermissionGranted by remember {
+        mutableStateOf(notificationsAvailable(context))
+    }
+    var pendingNotificationPreferences by remember {
+        mutableStateOf<NotificationPreferences?>(null)
+    }
+
+    val persistNotificationPreferences: (NotificationPreferences) -> Unit = { updated ->
+        viewModel.onNotificationPreferencesSelected(updated) {
+            NotificationScheduler.reconcile(context, updated)
+        }
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        notificationPermissionGranted = notificationsAvailable(context)
+        val pending = pendingNotificationPreferences
+        pendingNotificationPreferences = null
+        if (granted && pending != null) {
+            persistNotificationPreferences(pending)
+        }
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshReferenceDate()
         WidgetUpdater.requestUpdate(context)
+        notificationPermissionGranted = notificationsAvailable(context)
+        NotificationScheduler.reconcile(context, notificationPreferences)
     }
 
     BackHandler(enabled = currentScreen != AppScreen.MAIN) {
@@ -113,6 +150,8 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
                         themeMode = themeMode,
                         language = language,
                         birthDate = birthDate,
+                        notificationPreferences = notificationPreferences,
+                        notificationPermissionGranted = notificationPermissionGranted,
                     ),
                     actions = SettingsActions(
                         onThemeModeChange = { mode ->
@@ -130,6 +169,23 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
                                 WidgetUpdater.requestUpdate(context)
                             }
                         },
+                        onNotificationPreferencesChange = { updated ->
+                            val enablingNotifications = updated.enabled && !notificationPreferences.enabled
+                            if (enablingNotifications && !hasNotificationRuntimePermission(context)) {
+                                pendingNotificationPreferences = updated
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                persistNotificationPreferences(updated)
+                            }
+                        },
+                        onOpenNotificationSettings = {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                                )
+                            }
+                        },
                         onOpenAbout = { currentScreen = AppScreen.ABOUT },
                         onBack = { currentScreen = AppScreen.MAIN },
                     ),
@@ -141,6 +197,16 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
             }
         }
     }
+}
+
+private fun hasNotificationRuntimePermission(context: Context): Boolean =
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+        context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+private fun notificationsAvailable(context: Context): Boolean {
+    if (!hasNotificationRuntimePermission(context)) return false
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return false
+    return manager.areNotificationsEnabled()
 }
 
 @Composable
