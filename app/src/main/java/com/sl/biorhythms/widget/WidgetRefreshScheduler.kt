@@ -32,8 +32,7 @@ internal object WidgetRefreshScheduler {
         val pendingIntent = PendingIntent.getBroadcast(
             appContext,
             0,
-            Intent(appContext, BiorhythmsWidgetProvider::class.java)
-                .setAction(ACTION_DAILY_REFRESH),
+            refreshBroadcastIntent(appContext),
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
         ) ?: return
 
@@ -45,10 +44,14 @@ internal object WidgetRefreshScheduler {
         PendingIntent.getBroadcast(
             context,
             0,
-            Intent(context, BiorhythmsWidgetProvider::class.java)
-                .setAction(ACTION_DAILY_REFRESH),
+            refreshBroadcastIntent(context),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+
+    private fun refreshBroadcastIntent(context: Context): Intent =
+        Intent(context, BiorhythmsWidgetProvider::class.java)
+            .setPackage(context.packageName)
+            .setAction(ACTION_DAILY_REFRESH)
 }
 
 internal fun nextWidgetRefreshEpochMillis(now: ZonedDateTime): Long =
