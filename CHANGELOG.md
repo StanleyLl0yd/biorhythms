@@ -11,14 +11,32 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### 🐛 Fixed
+---
+
+## [1.5.0] - 2026-09-02
+
+### ✨ Added
+- Added a seven-day forecast for the physical, emotional and intellectual cycles.
+- Added rising, falling and steady trend indicators for every forecasted cycle value.
+- Added critical-day, local-peak and local-minimum detection for each classic cycle.
+- Added a dedicated synchronized-extreme warning whenever all three cycles are simultaneously at least +80% or at most −80%; the warning is shown on the selected day, in forecast rows and in the home-screen widget.
+
+### ♿ UI & widget
+- Home-screen widget values now include cycle trend arrows and show the synchronized-extreme warning when applicable.
+- Widget configuration preview mirrors the trend indicators and synchronized warning rendered by the actual widget.
+
+### 🐛 Reliability
 - Added one inexact local-day widget refresh so values roll over after midnight without requiring exact-alarm special access, while retaining the platform daily AppWidget update as a fallback.
 - Widgets now refresh and reschedule after device boot, manual clock changes, timezone changes, system-locale changes and application replacement.
 - Preserved per-widget opacity when Android restores widgets with remapped IDs and marked successful widget restore completion on API 30+.
 - Added Preferences DataStore corruption recovery so a damaged preferences file resets to safe defaults instead of breaking future reads.
 
 ### ✅ Quality
+- Added regression coverage for forecast length, cycle events, synchronized ±80% threshold behavior and synchronized warning rendering in the widget preview.
 - Added regression coverage for leap-day and DST refresh boundaries plus overlapping widget-ID preference remapping.
+
+### 📦 Release
+- Bumped the app to `versionCode` 10 and `versionName` `1.5.0` without changing `minSdk = 26`, `targetSdk = 37` or `compileSdk = 37`.
 
 ---
 
