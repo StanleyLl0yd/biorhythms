@@ -13,7 +13,7 @@ Android-приложение для расчёта и визуализации �
 
 [⬇️ Скачать последнюю версию APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Текущая опубликованная версия: **1.4.2** · Min SDK: **26 (Android 8.0)** · Target SDK: **37** · Compile SDK: **37**
+Текущая опубликованная версия: **1.4.3** · Min SDK: **26 (Android 8.0)** · Target SDK: **37** · Compile SDK: **37**
 
 ## ✨ Возможности
 
@@ -111,7 +111,7 @@ GitHub Actions проверяет pull request и push в `main`:
 
 ## 🔐 Подпись release-сборки
 
-Production signing отделён от обычного CI веток и pull request. Основной подписанный AAB и дополнительный подписанный APK создаются только workflow Android Release для тега версии, например `v1.4.2`, либо при ручном запуске с явным указанием существующего тега версии.
+Production signing отделён от обычного CI веток и pull request. Основной подписанный AAB и дополнительный подписанный APK создаются только workflow Android Release для тега версии, например `v1.4.3`, либо при ручном запуске с явным указанием существующего тега версии.
 
 Перед подписью workflow проверяет, что тег соответствует `versionName` в `app/build.gradle.kts`, и проверяет Google Play-совместимость неподписанных release-артефактов. После подписания отдельно проверяются подпись APK, подпись AAB и Google Play-совместимость уже финальных файлов. Затем отдельный publish job без signing secrets создаёт GitHub Release и прикладывает подписанный AAB, дополнительный APK и `SHA256SUMS.txt`.
 
