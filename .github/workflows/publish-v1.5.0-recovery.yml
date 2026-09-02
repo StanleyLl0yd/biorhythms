@@ -1,0 +1,76 @@
+name: Publish Biorhythms 1.5.0 Recovery
+
+on:
+  push:
+    branches:
+      - 'publish/v1.5.0'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    name: Publish verified 1.5.0 artifacts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: v1.5.0
+      RELEASE_SHA: be9dba45dd3a3a8ad657bbc3aa6e6d6ab8768b19
+      SOURCE_RUN_ID: '33613874763'
+
+    steps:
+      - name: Download verified signed artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets/bundle release-assets/apk
+          gh run download "$SOURCE_RUN_ID" \
+            --name "biorhythms-${RELEASE_TAG}-google-play-aab" \
+            --dir release-assets/bundle
+          gh run download "$SOURCE_RUN_ID" \
+            --name "biorhythms-${RELEASE_TAG}-direct-install-apk" \
+            --dir release-assets/apk
+
+      - name: Prepare release assets
+        run: |
+          set -euo pipefail
+          test -s release-assets/bundle/app-release.aab
+          test -s release-assets/apk/app-release.apk
+          mv release-assets/bundle/app-release.aab "release-assets/biorhythms-${RELEASE_TAG}.aab"
+          mv release-assets/apk/app-release.apk "release-assets/biorhythms-${RELEASE_TAG}.apk"
+          (
+            cd release-assets
+            sha256sum "biorhythms-${RELEASE_TAG}.aab" "biorhythms-${RELEASE_TAG}.apk" > SHA256SUMS.txt
+          )
+
+      - name: Ensure release tag
+        run: |
+          set -euo pipefail
+          tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null || true)
+          if [[ -z "$tag_sha" ]]; then
+            gh api --method POST "repos/$GH_REPO/git/refs" \
+              -f ref="refs/tags/$RELEASE_TAG" \
+              -f sha="$RELEASE_SHA" >/dev/null
+            tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
+          fi
+          test "$tag_sha" = "$RELEASE_SHA"
+
+      - name: Publish GitHub Release
+        run: |
+          set -euo pipefail
+          assets=(
+            "release-assets/biorhythms-${RELEASE_TAG}.aab"
+            "release-assets/biorhythms-${RELEASE_TAG}.apk"
+            "release-assets/SHA256SUMS.txt"
+          )
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --verify-tag \
+              --title "Biorhythms ${RELEASE_TAG#v}" \
+              --generate-notes \
+              --latest
+          fi
