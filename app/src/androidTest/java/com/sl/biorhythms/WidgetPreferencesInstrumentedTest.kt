@@ -34,4 +34,32 @@ class WidgetPreferencesInstrumentedTest {
 
         assertEquals(WidgetPreferences.DEFAULT_ALPHA, prefs.getAlpha(widgetId))
     }
+
+    @Test
+    fun restoredWidgetIdsPreserveAlphaAcrossOverlappingMappings() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = WidgetPreferences(context)
+        val oldFirst = Int.MAX_VALUE - 101
+        val oldSecond = Int.MAX_VALUE - 102
+        val newFirst = oldSecond
+        val newSecond = Int.MAX_VALUE - 103
+        val ids = intArrayOf(oldFirst, oldSecond, newSecond)
+
+        try {
+            ids.forEach(prefs::deleteAlpha)
+            prefs.setAlpha(oldFirst, 25)
+            prefs.setAlpha(oldSecond, 75)
+
+            prefs.remapAlpha(
+                oldWidgetIds = intArrayOf(oldFirst, oldSecond),
+                newWidgetIds = intArrayOf(newFirst, newSecond),
+            )
+
+            assertEquals(WidgetPreferences.DEFAULT_ALPHA, prefs.getAlpha(oldFirst))
+            assertEquals(25, prefs.getAlpha(newFirst))
+            assertEquals(75, prefs.getAlpha(newSecond))
+        } finally {
+            ids.forEach(prefs::deleteAlpha)
+        }
+    }
 }
