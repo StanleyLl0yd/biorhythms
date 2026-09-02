@@ -1,4 +1,4 @@
-name: Icon Inspect
+name: Install Approved Launcher PNG
 
 on:
   push:
@@ -6,21 +6,40 @@ on:
       - fix/original-png-icon-1.6.2
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  inspect:
+  install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect icon
-        run: |
-          file app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
-          wc -c app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
-          sha256sum app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
-      - name: Upload icon
-        uses: actions/upload-artifact@v4
         with:
-          name: inspected-icon
-          path: app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
-          if-no-files-found: error
+          fetch-depth: 0
+      - name: Verify approved source and install exact PNG
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_file="app/src/main/ic_launcher-playstore.png"
+          target_file="app/src/main/res/drawable-nodpi/ic_launcher_artwork.png"
+          expected="abc878b9b42d05c8195fb6a6c556da66102eda3e4c62c0bf73cb29c1d017b1a2"
+
+          test -f "$source_file"
+          actual=$(sha256sum "$source_file" | awk '{print $1}')
+          echo "Source SHA-256: $actual"
+          test "$actual" = "$expected"
+
+          mkdir -p "$(dirname "$target_file")"
+          cp "$source_file" "$target_file"
+          installed=$(sha256sum "$target_file" | awk '{print $1}')
+          test "$installed" = "$expected"
+
+          git add "$target_file"
+          if git diff --cached --quiet; then
+            echo "Approved launcher PNG is already installed exactly."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Install exact approved launcher PNG"
+          git push
