@@ -10,6 +10,7 @@ object PreferencesKeys {
     val Language = intPreferencesKey("language")
 
     val NotificationEnabled = booleanPreferencesKey("notification_enabled")
+    val LegacyNotificationEnabled = booleanPreferencesKey("notif_enabled")
     val NotificationHour = intPreferencesKey("notification_hour")
     val NotificationMinute = intPreferencesKey("notification_minute")
     val NotificationDailySummary = booleanPreferencesKey("notification_daily_summary")
