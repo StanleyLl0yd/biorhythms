@@ -49,12 +49,20 @@ jobs:
         run: |
           set -euo pipefail
           tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null || true)
+          echo "Existing tag SHA: ${tag_sha:-<none>}"
           if [[ -z "$tag_sha" ]]; then
-            gh api --method POST "repos/$GH_REPO/git/refs" \
+            echo "Creating refs/tags/$RELEASE_TAG at $RELEASE_SHA"
+            if ! response=$(gh api --method POST "repos/$GH_REPO/git/refs" \
               -f ref="refs/tags/$RELEASE_TAG" \
-              -f sha="$RELEASE_SHA" >/dev/null
+              -f sha="$RELEASE_SHA" 2>&1); then
+              status=$?
+              printf '%s\n' "$response"
+              exit "$status"
+            fi
+            printf '%s\n' "$response"
             tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
           fi
+          echo "Resolved tag SHA: $tag_sha"
           test "$tag_sha" = "$RELEASE_SHA"
 
       - name: Publish GitHub Release
