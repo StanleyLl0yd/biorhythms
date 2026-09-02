@@ -57,6 +57,13 @@ jobs:
             --apk "$release_apk" \
             --aab app/build/outputs/bundle/release/app-release.aab
 
+      - name: Verify launcher icon artwork
+        run: |
+          set -euo pipefail
+          release_apk=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
+          test -n "$release_apk"
+          python3 .github/scripts/verify-launcher-icon.py --apk "$release_apk"
+
       - name: Upload debug APK
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
