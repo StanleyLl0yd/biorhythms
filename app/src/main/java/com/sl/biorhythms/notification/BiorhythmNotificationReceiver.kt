@@ -18,13 +18,16 @@ import java.time.LocalDate
 
 class BiorhythmNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action ?: return
+        if (action !in SUPPORTED_ACTIONS) return
+
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 val preferences = context.dataStore.data.first()
                 val notificationPreferences = NotificationPreferences.fromPreferences(preferences)
 
-                if (intent.action == NotificationScheduler.ACTION_DAILY_NOTIFICATION &&
+                if (action == NotificationScheduler.ACTION_DAILY_NOTIFICATION &&
                     notificationPreferences.shouldSchedule
                 ) {
                     val today = LocalDate.now()
@@ -58,5 +61,14 @@ class BiorhythmNotificationReceiver : BroadcastReceiver() {
 
     private companion object {
         const val TAG = "BiorhythmNotification"
+
+        val SUPPORTED_ACTIONS = setOf(
+            NotificationScheduler.ACTION_DAILY_NOTIFICATION,
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_LOCALE_CHANGED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+        )
     }
 }
