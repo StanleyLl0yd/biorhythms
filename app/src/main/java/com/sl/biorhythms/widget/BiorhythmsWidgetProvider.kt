@@ -14,11 +14,12 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.sl.biorhythms.AppLanguage
 import com.sl.biorhythms.AppThemeMode
-import com.sl.biorhythms.BiorhythmCycleForecast
+import com.sl.biorhythms.BiorhythmDayForecast
 import com.sl.biorhythms.BiorhythmForecast
 import com.sl.biorhythms.MainActivity
 import com.sl.biorhythms.PreferencesKeys
 import com.sl.biorhythms.R
+import com.sl.biorhythms.SynchronizedExtreme
 import com.sl.biorhythms.dataStore
 import com.sl.biorhythms.resolveLocale
 import com.sl.biorhythms.storedBirthDate
@@ -142,7 +143,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             views = views,
             resources = resources,
             locale = locale,
-            cycles = BiorhythmForecast.day(birthDate, today).cycles,
+            forecast = BiorhythmForecast.day(birthDate, today),
             textColor = widgetViews.textColor,
         )
         appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -211,11 +212,13 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         views.setInt(R.id.widget_container, "setBackgroundColor", colorWithAlpha)
         views.setTextColor(R.id.widget_title, textColor)
         views.setTextColor(R.id.widget_status, textColor)
+        views.setTextColor(R.id.widget_alert, textColor)
         views.setInt(R.id.widget_settings, "setColorFilter", textColor)
     }
 
     private fun showStatus(views: RemoteViews, status: String) {
         views.setViewVisibility(R.id.widget_values, View.GONE)
+        views.setViewVisibility(R.id.widget_alert, View.GONE)
         views.setViewVisibility(R.id.widget_status, View.VISIBLE)
         views.setTextViewText(R.id.widget_status, status)
     }
@@ -225,7 +228,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         views: RemoteViews,
         resources: Resources,
         locale: Locale,
-        cycles: List<BiorhythmCycleForecast>,
+        forecast: BiorhythmDayForecast,
         textColor: Int,
     ) {
         views.setViewVisibility(R.id.widget_status, View.GONE)
@@ -238,7 +241,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             resources.getString(R.string.legend_intellectual),
         )
 
-        labels.zip(cycles).forEach { (label, cycle) ->
+        labels.zip(forecast.cycles).forEach { (label, cycle) ->
             val valueText = String.format(
                 locale,
                 "%+d%% %s",
@@ -253,6 +256,20 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
                 setContentDescription(R.id.widget_cycle_row, "$label $valueText")
             }
             views.addView(R.id.widget_values, row)
+        }
+
+        val extreme = forecast.synchronizedExtreme
+        if (extreme == null) {
+            views.setViewVisibility(R.id.widget_alert, View.GONE)
+        } else {
+            val threshold = BiorhythmForecast.SYNCHRONIZED_EXTREME_THRESHOLD.roundToInt()
+            val alertResId = if (extreme == SynchronizedExtreme.LOW) {
+                R.string.sync_low_compact
+            } else {
+                R.string.sync_high_compact
+            }
+            views.setTextViewText(R.id.widget_alert, resources.getString(alertResId, threshold))
+            views.setViewVisibility(R.id.widget_alert, View.VISIBLE)
         }
     }
 
