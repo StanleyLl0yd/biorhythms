@@ -77,6 +77,23 @@ class AccessibilityInstrumentedTest {
     }
 
     @Test
+    fun widgetPreviewShowsSynchronizedHighAlert() {
+        composeRule.setContent {
+            BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
+                CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                    WidgetConfigScreen(
+                        initialAlpha = 75,
+                        birthDate = LocalDate.now().minusDays(5),
+                        onSave = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("⚠ ≥ +80%").fetchSemanticsNode()
+    }
+
+    @Test
     fun widgetPreviewKeepsTitleWhenBirthDateIsMissing() {
         composeRule.setContent {
             BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
