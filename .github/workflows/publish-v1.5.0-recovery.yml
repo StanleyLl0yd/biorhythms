@@ -48,18 +48,16 @@ jobs:
       - name: Ensure release tag
         run: |
           set -euo pipefail
-          tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null || true)
+          tag_sha=""
+          if tag_response=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" 2>/dev/null); then
+            tag_sha=$(jq -r '.object.sha' <<< "$tag_response")
+          fi
           echo "Existing tag SHA: ${tag_sha:-<none>}"
           if [[ -z "$tag_sha" ]]; then
             echo "Creating refs/tags/$RELEASE_TAG at $RELEASE_SHA"
-            if ! response=$(gh api --method POST "repos/$GH_REPO/git/refs" \
+            gh api --method POST "repos/$GH_REPO/git/refs" \
               -f ref="refs/tags/$RELEASE_TAG" \
-              -f sha="$RELEASE_SHA" 2>&1); then
-              status=$?
-              printf '%s\n' "$response"
-              exit "$status"
-            fi
-            printf '%s\n' "$response"
+              -f sha="$RELEASE_SHA" >/dev/null
             tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
           fi
           echo "Resolved tag SHA: $tag_sha"
