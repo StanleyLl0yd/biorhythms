@@ -1,0 +1,26 @@
+name: Icon Inspect
+
+on:
+  push:
+    branches:
+      - fix/original-png-icon-1.6.2
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect icon
+        run: |
+          file app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
+          wc -c app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
+          sha256sum app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
+      - name: Upload icon
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspected-icon
+          path: app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
+          if-no-files-found: error
