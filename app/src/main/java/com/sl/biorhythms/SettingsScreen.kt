@@ -1,7 +1,5 @@
 package com.sl.biorhythms
 
-import android.app.TimePickerDialog
-import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,17 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.DirectionsRun
-import androidx.compose.material.icons.outlined.Event
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.ListAlt
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Psychology
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,12 +38,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.sl.biorhythms.notification.NotificationPreferences
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.math.roundToInt
 
 data class SettingsState(
     val themeMode: AppThemeMode,
@@ -88,37 +76,19 @@ fun SettingsScreen(
     var showThemeDialog by rememberSaveable { mutableStateOf(false) }
     var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
 
-    val context = LocalContext.current
     val locale = appLocale()
     val dateFormatter = remember(locale) {
         DateTimeFormatter.ofPattern("d MMMM yyyy", locale)
     }
-    val notifications = state.notificationPreferences
-    val notificationsSummary = when {
-        state.birthDate == null -> appString(R.string.settings_notifications_birth_date_required)
-        notifications.enabled && !state.notificationPermissionGranted ->
-            appString(R.string.settings_notifications_permission_blocked)
-        notifications.enabled && !notifications.shouldSchedule ->
-            appString(R.string.settings_notifications_no_types)
-        notifications.enabled -> appString(R.string.settings_notifications_enabled_summary)
-        else -> appString(R.string.settings_notifications_disabled_summary)
-    }
-    val timeValueText = String.format(locale, "%02d:%02d", notifications.hour, notifications.minute)
-
     val themeValueText = when (state.themeMode) {
         AppThemeMode.SYSTEM -> appString(R.string.settings_theme_system)
         AppThemeMode.LIGHT -> appString(R.string.settings_theme_light)
         AppThemeMode.DARK -> appString(R.string.settings_theme_dark)
     }
-
     val languageValueText = when (state.language) {
         AppLanguage.SYSTEM -> appString(R.string.settings_language_system)
         AppLanguage.RU -> appString(R.string.settings_language_russian)
         AppLanguage.EN -> appString(R.string.settings_language_english)
-    }
-
-    fun updateNotifications(transform: (NotificationPreferences) -> NotificationPreferences) {
-        actions.onNotificationPreferencesChange(transform(notifications))
     }
 
     Scaffold(
@@ -155,105 +125,13 @@ fun SettingsScreen(
                 )
             }
 
-            SectionBlock(title = appString(R.string.settings_section_notifications)) {
-                SettingsSwitchRow(
-                    icon = Icons.Outlined.Notifications,
-                    label = appString(R.string.settings_notifications_option),
-                    summary = notificationsSummary,
-                    checked = notifications.enabled,
-                    enabled = state.birthDate != null,
-                    onCheckedChange = { enabled -> updateNotifications { it.copy(enabled = enabled) } },
-                )
-
-                if (notifications.enabled && !state.notificationPermissionGranted) {
-                    SectionRow(
-                        icon = Icons.Outlined.Settings,
-                        label = appString(R.string.settings_notifications_android_settings),
-                        onClick = actions.onOpenNotificationSettings,
-                    )
-                }
-
-                SectionRow(
-                    icon = Icons.Outlined.Schedule,
-                    label = appString(R.string.settings_notifications_time),
-                    value = timeValueText,
-                    onClick = if (notifications.enabled) {
-                        {
-                            TimePickerDialog(
-                                context,
-                                { _, hour, minute ->
-                                    updateNotifications { it.copy(hour = hour, minute = minute) }
-                                },
-                                notifications.hour,
-                                notifications.minute,
-                                DateFormat.is24HourFormat(context),
-                            ).show()
-                        }
-                    } else {
-                        null
-                    },
-                )
-
-                SettingsSwitchRow(
-                    icon = Icons.Outlined.ListAlt,
-                    label = appString(R.string.settings_notifications_daily_summary),
-                    summary = appString(R.string.settings_notifications_daily_summary_description),
-                    checked = notifications.dailySummary,
-                    enabled = notifications.enabled,
-                    onCheckedChange = { checked -> updateNotifications { it.copy(dailySummary = checked) } },
-                )
-
-                SettingsSwitchRow(
-                    icon = Icons.Outlined.Event,
-                    label = appString(R.string.settings_notifications_important_events),
-                    summary = appString(
-                        R.string.settings_notifications_important_events_description,
-                        BiorhythmForecast.SYNCHRONIZED_EXTREME_THRESHOLD.roundToInt(),
-                    ),
-                    checked = notifications.importantEvents,
-                    enabled = notifications.enabled,
-                    onCheckedChange = { checked -> updateNotifications { it.copy(importantEvents = checked) } },
-                )
-
-                SettingsSwitchRow(
-                    icon = Icons.Outlined.DirectionsRun,
-                    label = appString(R.string.legend_physical),
-                    summary = appString(R.string.settings_notifications_include_cycle),
-                    checked = notifications.physical,
-                    enabled = notifications.enabled && notifications.dailySummary,
-                    onCheckedChange = { checked ->
-                        if (checked || notifications.emotional || notifications.intellectual) {
-                            updateNotifications { it.copy(physical = checked) }
-                        }
-                    },
-                )
-
-                SettingsSwitchRow(
-                    icon = Icons.Outlined.FavoriteBorder,
-                    label = appString(R.string.legend_emotional),
-                    summary = appString(R.string.settings_notifications_include_cycle),
-                    checked = notifications.emotional,
-                    enabled = notifications.enabled && notifications.dailySummary,
-                    onCheckedChange = { checked ->
-                        if (checked || notifications.physical || notifications.intellectual) {
-                            updateNotifications { it.copy(emotional = checked) }
-                        }
-                    },
-                )
-
-                SettingsSwitchRow(
-                    icon = Icons.Outlined.Psychology,
-                    label = appString(R.string.legend_intellectual),
-                    summary = appString(R.string.settings_notifications_include_cycle),
-                    checked = notifications.intellectual,
-                    enabled = notifications.enabled && notifications.dailySummary,
-                    onCheckedChange = { checked ->
-                        if (checked || notifications.physical || notifications.emotional) {
-                            updateNotifications { it.copy(intellectual = checked) }
-                        }
-                    },
-                )
-            }
+            NotificationSettingsSection(
+                birthDateAvailable = state.birthDate != null,
+                notificationPermissionGranted = state.notificationPermissionGranted,
+                preferences = state.notificationPreferences,
+                onPreferencesChange = actions.onNotificationPreferencesChange,
+                onOpenAndroidSettings = actions.onOpenNotificationSettings,
+            )
 
             SectionBlock(title = appString(R.string.settings_section_appearance)) {
                 SectionRow(
