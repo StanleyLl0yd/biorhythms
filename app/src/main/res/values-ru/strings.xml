@@ -42,6 +42,7 @@
     <string name="settings_notifications_disabled_summary">Выключены</string>
     <string name="settings_notifications_birth_date_required">Сначала укажите дату рождения</string>
     <string name="settings_notifications_permission_blocked">Заблокированы настройками уведомлений Android</string>
+    <string name="settings_notifications_android_settings">Открыть настройки уведомлений Android</string>
     <string name="settings_notifications_no_types">Не выбран ни один тип уведомлений</string>
     <string name="settings_notifications_time">Время уведомления</string>
     <string name="settings_notifications_daily_summary">Ежедневная сводка</string>
