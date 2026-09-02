@@ -3,10 +3,10 @@ package com.sl.biorhythms
 import android.app.TimePickerDialog
 import android.text.format.DateFormat
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DirectionsRun
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Schedule
@@ -80,7 +80,7 @@ internal fun NotificationSettingsSection(
         )
 
         SettingsSwitchRow(
-            icon = Icons.Outlined.ListAlt,
+            icon = Icons.AutoMirrored.Outlined.ListAlt,
             label = appString(R.string.settings_notifications_daily_summary),
             summary = appString(R.string.settings_notifications_daily_summary_description),
             checked = preferences.dailySummary,
@@ -101,7 +101,7 @@ internal fun NotificationSettingsSection(
         )
 
         NotificationCycleSwitch(
-            icon = Icons.Outlined.DirectionsRun,
+            icon = Icons.AutoMirrored.Outlined.DirectionsRun,
             label = appString(R.string.legend_physical),
             checked = preferences.physical,
             enabled = preferences.enabled && preferences.dailySummary,
