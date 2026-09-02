@@ -11,6 +11,10 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.4.3] - 2026-09-02
+
 ### 🧹 Maintenance
 - Replaced the manual Compose lifecycle observer with `LifecycleEventEffect` while preserving the existing `ON_RESUME` refresh and widget-update behavior.
 - Removed the redundant direct `lifecycle-runtime-ktx` dependency after confirming the app compiles against the lifecycle Compose/ViewModel artifacts it uses directly.
