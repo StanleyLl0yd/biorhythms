@@ -202,6 +202,14 @@ private fun MainScreen(
                     locale = locale,
                 )
 
+                BiorhythmForecastPanel(
+                    birthDate = birthDate,
+                    referenceDate = referenceDate,
+                    selectedDate = selectedDate,
+                    lines = biorhythmLines,
+                    locale = locale,
+                )
+
                 Text(
                     text = appString(R.string.chart_title_today_range, DEFAULT_RANGE_DAYS),
                     style = MaterialTheme.typography.titleMedium,
