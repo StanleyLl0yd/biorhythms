@@ -2,7 +2,12 @@ package com.sl.biorhythms
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "biorhythms_prefs")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "biorhythms_prefs",
+    corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+)
