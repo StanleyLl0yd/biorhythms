@@ -3,6 +3,7 @@ package com.sl.biorhythms
 import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -36,9 +37,11 @@ fun appString(
     val resources = if (language == AppLanguage.SYSTEM) {
         baseResources
     } else {
-        val config = Configuration(configuration)
-        config.setLocale(resolveLocale(language, configuration.locales[0]))
-        context.createConfigurationContext(config).resources
+        remember(context, configuration, language) {
+            val config = Configuration(configuration)
+            config.setLocale(resolveLocale(language, configuration.locales[0]))
+            context.createConfigurationContext(config).resources
+        }
     }
 
     return if (formatArgs.isEmpty()) {
