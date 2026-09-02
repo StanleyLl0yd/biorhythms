@@ -2,6 +2,8 @@ name: Android Release
 
 on:
   push:
+    branches:
+      - 'release/v*'
     tags:
       - 'v*'
   workflow_dispatch:
@@ -18,33 +20,46 @@ concurrency:
   group: android-release-${{ github.ref }}-${{ inputs.release_tag }}
   cancel-in-progress: false
 
-env:
-  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
-
 jobs:
   verify-release:
     name: Verify release
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      release_tag: ${{ steps.release_meta.outputs.release_tag }}
+      release_sha: ${{ steps.release_meta.outputs.release_sha }}
 
     steps:
-      - &checkout_release
-        name: Checkout release tag
+      - name: Checkout release source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
           persist-credentials: false
 
-      - name: Validate release tag and app version
+      - id: release_meta
+        name: Resolve and validate release
         run: |
           set -euo pipefail
-          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           version_name=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -n 1)
           version_code=$(sed -n 's/.*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -n 1)
           test -n "$version_name"
           test -n "$version_code"
-          test "$RELEASE_TAG" = "v$version_name"
-          echo "Validated $RELEASE_TAG with versionCode $version_code"
+
+          release_tag="v$version_name"
+          [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            test "${{ inputs.release_tag }}" = "$release_tag"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            test "${{ github.ref_name }}" = "$release_tag"
+          else
+            test "${{ github.ref_name }}" = "release/$release_tag"
+          fi
+
+          release_sha=$(git rev-parse HEAD)
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+          echo "Validated $release_tag with versionCode $version_code at $release_sha"
 
       - &checkout_ci_helpers
         name: Checkout CI helpers
@@ -82,9 +97,16 @@ jobs:
     needs: verify-release
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      RELEASE_TAG: ${{ needs.verify-release.outputs.release_tag }}
 
     steps:
-      - *checkout_release
+      - name: Checkout release source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.verify-release.outputs.release_sha }}
+          persist-credentials: false
+
       - *checkout_ci_helpers
       - *setup_release_environment
       - *install_android_platform
@@ -150,7 +172,9 @@ jobs:
 
   publish-release:
     name: Publish GitHub Release
-    needs: signed-release
+    needs:
+      - verify-release
+      - signed-release
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -159,6 +183,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ needs.verify-release.outputs.release_tag }}
+      RELEASE_SHA: ${{ needs.verify-release.outputs.release_sha }}
 
     steps:
       - name: Download signed release artifacts
@@ -192,11 +218,23 @@ jobs:
             "release-assets/biorhythms-${RELEASE_TAG}.apk"
             "release-assets/SHA256SUMS.txt"
           )
+
+          tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null || true)
+          if [[ -n "$tag_sha" ]]; then
+            test "$tag_sha" = "$RELEASE_SHA"
+          fi
+
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
-          else
+          elif [[ -n "$tag_sha" ]]; then
             gh release create "$RELEASE_TAG" "${assets[@]}" \
               --verify-tag \
+              --title "Biorhythms ${RELEASE_TAG#v}" \
+              --generate-notes \
+              --latest
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --target "$RELEASE_SHA" \
               --title "Biorhythms ${RELEASE_TAG#v}" \
               --generate-notes \
               --latest
