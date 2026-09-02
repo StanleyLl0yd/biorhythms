@@ -29,4 +29,28 @@ class WidgetPreferences(context: Context) {
             remove(KEY_ALPHA + appWidgetId)
         }
     }
+
+    fun remapAlpha(oldWidgetIds: IntArray, newWidgetIds: IntArray) {
+        val mappings = buildList {
+            repeat(minOf(oldWidgetIds.size, newWidgetIds.size)) { index ->
+                val oldId = oldWidgetIds[index]
+                val newId = newWidgetIds[index]
+                if (oldId != newId && prefs.contains(KEY_ALPHA + oldId)) {
+                    add(AlphaMapping(oldId, newId, getAlpha(oldId)))
+                }
+            }
+        }
+        if (mappings.isEmpty()) return
+
+        prefs.edit {
+            mappings.forEach { remove(KEY_ALPHA + it.oldId) }
+            mappings.forEach { putInt(KEY_ALPHA + it.newId, it.alpha) }
+        }
+    }
+
+    private data class AlphaMapping(
+        val oldId: Int,
+        val newId: Int,
+        val alpha: Int,
+    )
 }
