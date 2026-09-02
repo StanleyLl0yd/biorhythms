@@ -1,0 +1,68 @@
+name: Prepare widget hardening documentation
+
+on:
+  push:
+    branches:
+      - fix/widget-day-rollover-hardening
+    paths:
+      - .github/workflows/widget-hardening-docs.yml
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: fix/widget-day-rollover-hardening
+
+      - name: Update documentation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          en = Path('CHANGELOG.md')
+          text = en.read_text()
+          marker = '## [Unreleased]\n\n---'
+          replacement = '''## [Unreleased]\n\n### 🐛 Fixed\n- Added one inexact local-day widget refresh so values roll over after midnight without requiring exact-alarm special access, while retaining the platform daily AppWidget update as a fallback.\n- Widgets now refresh and reschedule after device boot, manual clock changes, timezone changes, system-locale changes and application replacement.\n- Preserved per-widget opacity when Android restores widgets with remapped IDs and marked successful widget restore completion on API 30+.\n- Added Preferences DataStore corruption recovery so a damaged preferences file resets to safe defaults instead of breaking future reads.\n\n### ✅ Quality\n- Added regression coverage for leap-day and DST refresh boundaries plus overlapping widget-ID preference remapping.\n\n---'''
+          if marker not in text:
+              raise SystemExit('English changelog marker not found')
+          en.write_text(text.replace(marker, replacement, 1))
+
+          ru = Path('CHANGELOG.ru.md')
+          text = ru.read_text()
+          marker = '## [Unreleased]\n\n---'
+          replacement = '''## [Unreleased]\n\n### 🐛 Исправлено\n- Добавлено одно неточное локальное суточное обновление виджета, чтобы значения менялись после полуночи без специального доступа к точным будильникам; системное суточное обновление AppWidget сохранено как резервный механизм.\n- Виджеты теперь обновляются и перепланируют следующее обновление после загрузки устройства, ручного изменения времени, смены часового пояса, системной локали и обновления приложения.\n- Индивидуальная прозрачность виджета сохраняется при восстановлении Android с переназначением widget ID; на API 30+ отмечается успешное завершение восстановления.\n- Добавлено восстановление после повреждения Preferences DataStore: повреждённый файл сбрасывается к безопасным значениям по умолчанию вместо последующих ошибок чтения.\n\n### ✅ Качество\n- Добавлены регрессионные тесты границ обновления для високосного дня и DST, а также перекрывающегося переназначения widget ID.\n\n---'''
+          if marker not in text:
+              raise SystemExit('Russian changelog marker not found')
+          ru.write_text(text.replace(marker, replacement, 1))
+
+          readme = Path('README.md')
+          text = readme.read_text()
+          old = '- Automatic widget refresh after birth date, theme or language changes\n'
+          new = '- Automatic widget refresh after birth date, theme or language changes and after local-day, clock, timezone or system-locale changes\n'
+          if old not in text:
+              raise SystemExit('English README marker not found')
+          readme.write_text(text.replace(old, new, 1))
+
+          readme = Path('README.ru.md')
+          text = readme.read_text()
+          old = '- Автоматическое обновление виджета после изменения даты рождения, темы или языка\n'
+          new = '- Автоматическое обновление виджета после изменения даты рождения, темы или языка, а также после смены суток, времени, часового пояса или системной локали\n'
+          if old not in text:
+              raise SystemExit('Russian README marker not found')
+          readme.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Remove temporary workflow and commit
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/widget-hardening-docs.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CHANGELOG.md CHANGELOG.ru.md README.md README.ru.md
+          git commit -m 'Document widget rollover hardening'
+          git push origin HEAD:fix/widget-day-rollover-hardening
