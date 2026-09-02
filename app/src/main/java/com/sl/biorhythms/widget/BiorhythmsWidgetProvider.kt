@@ -14,13 +14,15 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.sl.biorhythms.AppLanguage
 import com.sl.biorhythms.AppThemeMode
-import com.sl.biorhythms.BiorhythmCalculator
+import com.sl.biorhythms.BiorhythmCycleForecast
+import com.sl.biorhythms.BiorhythmForecast
 import com.sl.biorhythms.MainActivity
 import com.sl.biorhythms.PreferencesKeys
 import com.sl.biorhythms.R
 import com.sl.biorhythms.dataStore
 import com.sl.biorhythms.resolveLocale
 import com.sl.biorhythms.storedBirthDate
+import com.sl.biorhythms.symbol
 import java.io.IOException
 import java.time.LocalDate
 import java.util.Locale
@@ -135,18 +137,12 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             return
         }
 
-        val values = listOf(
-            BiorhythmCalculator.percent(birthDate, today, BiorhythmCalculator.PHYSICAL_PERIOD),
-            BiorhythmCalculator.percent(birthDate, today, BiorhythmCalculator.EMOTIONAL_PERIOD),
-            BiorhythmCalculator.percent(birthDate, today, BiorhythmCalculator.INTELLECTUAL_PERIOD),
-        )
-
         showValues(
             context = context,
             views = views,
             resources = resources,
             locale = locale,
-            values = values,
+            cycles = BiorhythmForecast.day(birthDate, today).cycles,
             textColor = widgetViews.textColor,
         )
         appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -229,7 +225,7 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         views: RemoteViews,
         resources: Resources,
         locale: Locale,
-        values: List<Double>,
+        cycles: List<BiorhythmCycleForecast>,
         textColor: Int,
     ) {
         views.setViewVisibility(R.id.widget_status, View.GONE)
@@ -242,8 +238,13 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
             resources.getString(R.string.legend_intellectual),
         )
 
-        labels.zip(values).forEach { (label, value) ->
-            val valueText = String.format(locale, "%+d%%", value.roundToInt())
+        labels.zip(cycles).forEach { (label, cycle) ->
+            val valueText = String.format(
+                locale,
+                "%+d%% %s",
+                cycle.percent.roundToInt(),
+                cycle.trend.symbol(),
+            )
             val row = RemoteViews(context.packageName, R.layout.widget_biorhythm_row).apply {
                 setTextViewText(R.id.widget_cycle_label, label)
                 setTextViewText(R.id.widget_cycle_value, valueText)
