@@ -42,6 +42,7 @@
     <string name="settings_notifications_disabled_summary">Off</string>
     <string name="settings_notifications_birth_date_required">Set your birth date first</string>
     <string name="settings_notifications_permission_blocked">Blocked by Android notification settings</string>
+    <string name="settings_notifications_android_settings">Open Android notification settings</string>
     <string name="settings_notifications_no_types">No notification types selected</string>
     <string name="settings_notifications_time">Notification time</string>
     <string name="settings_notifications_daily_summary">Daily summary</string>
