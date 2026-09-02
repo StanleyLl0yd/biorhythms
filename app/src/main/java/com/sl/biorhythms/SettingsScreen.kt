@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -67,6 +68,7 @@ data class SettingsActions(
     val onLanguageChange: (AppLanguage) -> Unit,
     val onBirthDateChange: (LocalDate) -> Unit,
     val onNotificationPreferencesChange: (NotificationPreferences) -> Unit,
+    val onOpenNotificationSettings: () -> Unit,
     val onOpenAbout: () -> Unit,
     val onBack: () -> Unit,
 )
@@ -162,6 +164,14 @@ fun SettingsScreen(
                     enabled = state.birthDate != null,
                     onCheckedChange = { enabled -> updateNotifications { it.copy(enabled = enabled) } },
                 )
+
+                if (notifications.enabled && !state.notificationPermissionGranted) {
+                    SectionRow(
+                        icon = Icons.Outlined.Settings,
+                        label = appString(R.string.settings_notifications_android_settings),
+                        onClick = actions.onOpenNotificationSettings,
+                    )
+                }
 
                 SectionRow(
                     icon = Icons.Outlined.Schedule,
