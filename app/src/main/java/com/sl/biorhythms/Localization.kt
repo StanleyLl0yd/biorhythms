@@ -1,6 +1,8 @@
 package com.sl.biorhythms
 
+import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Resources
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -16,6 +18,17 @@ fun resolveLocale(language: AppLanguage, systemLocale: Locale): Locale = when (l
     AppLanguage.SYSTEM -> systemLocale
     AppLanguage.RU -> Locale.forLanguageTag("ru")
     AppLanguage.EN -> Locale.forLanguageTag("en")
+}
+
+fun localizedResources(
+    context: Context,
+    language: AppLanguage,
+    configuration: Configuration = context.resources.configuration,
+): Resources {
+    if (language == AppLanguage.SYSTEM) return context.resources
+    val config = Configuration(configuration)
+    config.setLocale(resolveLocale(language, configuration.locales[0]))
+    return context.createConfigurationContext(config).resources
 }
 
 @Composable
@@ -38,9 +51,7 @@ fun appString(
         baseResources
     } else {
         remember(context, configuration, language) {
-            val config = Configuration(configuration)
-            config.setLocale(resolveLocale(language, configuration.locales[0]))
-            context.createConfigurationContext(config).resources
+            localizedResources(context, language, configuration)
         }
     }
 
