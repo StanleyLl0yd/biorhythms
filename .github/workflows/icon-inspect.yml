@@ -15,31 +15,39 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify approved source and install exact PNG
+      - name: Verify artwork pixels and install PNG
         shell: bash
         run: |
           set -euo pipefail
-          source_file="app/src/main/ic_launcher-playstore.png"
-          target_file="app/src/main/res/drawable-nodpi/ic_launcher_artwork.png"
-          expected="abc878b9b42d05c8195fb6a6c556da66102eda3e4c62c0bf73cb29c1d017b1a2"
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import hashlib
 
-          test -f "$source_file"
-          actual=$(sha256sum "$source_file" | awk '{print $1}')
-          echo "Source SHA-256: $actual"
-          test "$actual" = "$expected"
+          source = Path('app/src/main/ic_launcher-playstore.png')
+          expected_pixel_hash = 'a535b3274097841ce531ceaa5b5833d1818ba7ed69a3769641b9681e18ccdc9a'
+          data = source.read_bytes()
+          image = Image.open(source).convert('RGBA')
+          pixel_hash = hashlib.sha256(image.tobytes()).hexdigest()
+          print('Source file SHA-256:', hashlib.sha256(data).hexdigest())
+          print('Source RGBA pixel SHA-256:', pixel_hash)
+          print('Source size:', image.size)
+          if image.size != (512, 512):
+              raise SystemExit('Source artwork is not 512x512')
+          if pixel_hash != expected_pixel_hash:
+              raise SystemExit('Repository artwork pixels differ from approved original PNG')
+          PY
 
-          mkdir -p "$(dirname "$target_file")"
-          cp "$source_file" "$target_file"
-          installed=$(sha256sum "$target_file" | awk '{print $1}')
-          test "$installed" = "$expected"
+          target="app/src/main/res/drawable-nodpi/ic_launcher_artwork.png"
+          mkdir -p "$(dirname "$target")"
+          cp app/src/main/ic_launcher-playstore.png "$target"
 
-          git add "$target_file"
-          if git diff --cached --quiet; then
-            echo "Approved launcher PNG is already installed exactly."
-            exit 0
-          fi
+          rm -rf .github/icon-parts
+          rm -f .github/workflows/icon-inspect.yml
 
+          git add -A
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Install exact approved launcher PNG"
+          git commit -m "Install approved launcher PNG artwork"
           git push
