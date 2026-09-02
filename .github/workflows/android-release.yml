@@ -219,22 +219,21 @@ jobs:
             "release-assets/SHA256SUMS.txt"
           )
 
-          tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null || true)
-          if [[ -n "$tag_sha" ]]; then
+          if tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null); then
+            test "$tag_sha" = "$RELEASE_SHA"
+          else
+            gh api --method POST "repos/$GH_REPO/git/refs" \
+              -f ref="refs/tags/$RELEASE_TAG" \
+              -f sha="$RELEASE_SHA" >/dev/null
+            tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
             test "$tag_sha" = "$RELEASE_SHA"
           fi
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
-          elif [[ -n "$tag_sha" ]]; then
-            gh release create "$RELEASE_TAG" "${assets[@]}" \
-              --verify-tag \
-              --title "Biorhythms ${RELEASE_TAG#v}" \
-              --generate-notes \
-              --latest
           else
             gh release create "$RELEASE_TAG" "${assets[@]}" \
-              --target "$RELEASE_SHA" \
+              --verify-tag \
               --title "Biorhythms ${RELEASE_TAG#v}" \
               --generate-notes \
               --latest
