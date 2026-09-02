@@ -3,9 +3,11 @@ package com.sl.biorhythms
 import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -174,6 +176,14 @@ fun BiorhythmsRoot(viewModel: BiorhythmsViewModel) {
                                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             } else {
                                 persistNotificationPreferences(updated)
+                            }
+                        },
+                        onOpenNotificationSettings = {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                                )
                             }
                         },
                         onOpenAbout = { currentScreen = AppScreen.ABOUT },
