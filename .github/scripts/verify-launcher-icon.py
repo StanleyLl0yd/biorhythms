@@ -6,36 +6,33 @@ import sys
 import zipfile
 from pathlib import Path
 
+ORIGINAL_ARTWORK_SHA256 = "abc878b9b42d05c8195fb6a6c556da66102eda3e4c62c0bf73cb29c1d017b1a2"
 OLD_LAUNCHER_HASHES = {
     "08d5e8697b228034cd5f6e40fdea8177daadc4cfdcfeef52f520ab8ec1c61fcd",
     "99d9da236ada54ed912ed308848c8d6e441af0b23708ac009653a63a7a366541",
     "6072f63499837b880f0c842a99d22ec79b784e9839bd69b08feb6b83e199ac02",
 }
 
-EXPECTED_COLORS = {"#078EDB", "#E7A30A", "#7F258F"}
-EXPECTED_BACKGROUND = "#080347"
-
 
 def fail(message: str) -> None:
     raise SystemExit(f"Launcher icon verification failed: {message}")
 
 
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def verify_sources(res_dir: Path) -> None:
-    foreground = res_dir / "drawable" / "ic_launcher_foreground.xml"
-    monochrome = res_dir / "drawable" / "ic_launcher_monochrome.xml"
-    background = res_dir / "values" / "ic_launcher_background.xml"
+    artwork = res_dir / "drawable-nodpi" / "ic_launcher_artwork.png"
+    if not artwork.is_file():
+        fail(f"missing original launcher artwork: {artwork}")
 
-    for path in (foreground, monochrome, background):
-        if not path.is_file():
-            fail(f"missing {path}")
-
-    foreground_text = foreground.read_text(encoding="utf-8")
-    for color in EXPECTED_COLORS:
-        if color not in foreground_text:
-            fail(f"new three-wave foreground is missing {color}")
-
-    if EXPECTED_BACKGROUND not in background.read_text(encoding="utf-8"):
-        fail(f"launcher background must remain {EXPECTED_BACKGROUND}")
+    digest = sha256(artwork)
+    if digest != ORIGINAL_ARTWORK_SHA256:
+        fail(
+            "launcher PNG is not the approved original artwork: "
+            f"expected {ORIGINAL_ARTWORK_SHA256}, got {digest}"
+        )
 
     adaptive_files = [
         res_dir / "mipmap-anydpi" / "ic_launcher.xml",
@@ -45,12 +42,19 @@ def verify_sources(res_dir: Path) -> None:
     ]
     for path in adaptive_files:
         text = path.read_text(encoding="utf-8")
-        if "@drawable/ic_launcher_foreground" not in text:
-            fail(f"{path} does not use the verified three-wave foreground")
+        if "@drawable/ic_launcher_artwork" not in text:
+            fail(f"{path} does not use the approved original PNG")
+        if "@drawable/ic_launcher_foreground" in text:
+            fail(f"{path} still references the hand-drawn vector foreground")
+        if "@drawable/ic_launcher_monochrome" in text:
+            fail(f"{path} still references the hand-drawn monochrome vector")
 
-    for path in adaptive_files[2:]:
-        if "@drawable/ic_launcher_monochrome" not in path.read_text(encoding="utf-8"):
-            fail(f"{path} does not use the themed monochrome artwork")
+    for obsolete in (
+        res_dir / "drawable" / "ic_launcher_foreground.xml",
+        res_dir / "drawable" / "ic_launcher_monochrome.xml",
+    ):
+        if obsolete.exists():
+            fail(f"obsolete hand-drawn launcher vector is still present: {obsolete}")
 
     legacy = []
     for directory in res_dir.glob("mipmap-*"):
@@ -76,7 +80,7 @@ def verify_apk(apk: Path) -> None:
                 found_old.append(entry.filename)
 
     if found_old:
-        fail("legacy 1.6.0 launcher artwork is packaged in APK: " + ", ".join(found_old))
+        fail("legacy launcher artwork is packaged in APK: " + ", ".join(found_old))
 
 
 def main() -> None:
@@ -88,7 +92,7 @@ def main() -> None:
     verify_sources(args.res_dir)
     if args.apk is not None:
         verify_apk(args.apk)
-    print("Launcher icon verification passed: three-wave artwork is active and legacy artwork is absent.")
+    print("Launcher icon verification passed: approved original PNG is wired and legacy/vector artwork is absent.")
 
 
 if __name__ == "__main__":
