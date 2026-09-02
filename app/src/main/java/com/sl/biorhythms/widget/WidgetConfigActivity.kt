@@ -45,15 +45,17 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sl.biorhythms.BiorhythmCalculator
+import com.sl.biorhythms.BiorhythmForecast
 import com.sl.biorhythms.BiorhythmsViewModel
 import com.sl.biorhythms.BiorhythmsViewModelFactory
 import com.sl.biorhythms.LocalAppLanguage
 import com.sl.biorhythms.R
+import com.sl.biorhythms.SynchronizedExtreme
 import com.sl.biorhythms.appLocale
 import com.sl.biorhythms.appString
 import com.sl.biorhythms.dataStore
 import com.sl.biorhythms.rememberBiorhythmLines
+import com.sl.biorhythms.symbol
 import com.sl.biorhythms.ui.theme.BiorhythmsTheme
 import java.time.LocalDate
 import kotlin.math.roundToInt
@@ -215,12 +217,17 @@ private fun WidgetPreview(
     val shape = MaterialTheme.shapes.large
     val checkerLight = MaterialTheme.colorScheme.surfaceVariant
     val checkerDark = MaterialTheme.colorScheme.outlineVariant
-    val percentTexts = remember(lines, birthDate, today, locale) {
-        birthDate?.let { date ->
-            lines.map { line ->
-                val percent = BiorhythmCalculator.percent(date, today, line.period)
-                String.format(locale, "%+d%%", percent.roundToInt())
-            }
+    val forecast = remember(birthDate, today) {
+        birthDate?.let { BiorhythmForecast.day(it, today) }
+    }
+    val percentTexts = remember(forecast, locale) {
+        forecast?.cycles?.map { cycle ->
+            String.format(
+                locale,
+                "%+d%% %s",
+                cycle.percent.roundToInt(),
+                cycle.trend.symbol(),
+            )
         }.orEmpty()
     }
 
@@ -272,6 +279,21 @@ private fun WidgetPreview(
                         WidgetPreviewLine(
                             label = appString(line.labelResId),
                             percentText = percentTexts[index],
+                        )
+                    }
+                    forecast?.synchronizedExtreme?.let { extreme ->
+                        val threshold = BiorhythmForecast.SYNCHRONIZED_EXTREME_THRESHOLD.roundToInt()
+                        Text(
+                            text = appString(
+                                if (extreme == SynchronizedExtreme.LOW) {
+                                    R.string.sync_low_compact
+                                } else {
+                                    R.string.sync_high_compact
+                                },
+                                threshold,
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }

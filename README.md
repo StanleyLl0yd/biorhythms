@@ -13,20 +13,23 @@ An Android app for calculating and visualizing classic biorhythm cycles based on
 
 [⬇️ Download the latest APK](https://github.com/StanleyLl0yd/biorhythms/releases/latest)
 
-Current published version: **1.4.3** · Min SDK: **26 (Android 8.0)** · Target SDK: **37** · Compile SDK: **37**
+Current version: **1.5.0** · Min SDK: **26 (Android 8.0)** · Target SDK: **37** · Compile SDK: **37**
 
 ## ✨ Features
 
 - Physical, emotional and intellectual biorhythm cycles
 - First-run birth-date onboarding directly on the main screen
 - Selected-day summary cards with all three current values
+- Seven-day forecast with rising, falling and steady trend indicators
+- Critical-day, peak and minimum detection for each classic cycle
+- Dedicated synchronized-extreme warning when all three cycles are simultaneously at least +80% or at most −80%
 - Interactive chart inspection by tap or drag
 - Clear five-day chart grid with a highlighted selected day
 - Birth date selection and persistence
 - Light, dark and system themes
 - English, Russian and system UI language
 - Locale-aware date formatting
-- Home-screen widget with current biorhythm values
+- Home-screen widget with current values, trends and synchronized-extreme warning
 - Live widget preview and per-widget background opacity setting
 - Automatic widget refresh after birth date, theme or language changes and after local-day, clock, timezone or system-locale changes
 - Widget rendering that adapts to resizing without bitmap payloads
@@ -111,7 +114,7 @@ The protected `main` branch requires `Verify`, `CodeQL` and `SonarCloud Code Ana
 
 ## 🔐 Release signing
 
-Production signing is isolated from normal branch and pull-request CI. The primary signed AAB and supplementary signed APK are built only by the Android Release workflow for a version tag such as `v1.4.3`, or by a manual workflow run that explicitly names an existing version tag.
+Production signing is isolated from normal branch and pull-request CI. The primary signed AAB and supplementary signed APK are built only by the Android Release workflow for a version tag such as `v1.5.0`, or by a manual workflow run that explicitly names an existing version tag.
 
 Before signing, the workflow verifies that the tag matches `versionName` in `app/build.gradle.kts` and validates Google Play compatibility on unsigned release artifacts. After signing, it verifies the APK signature, AAB signature and Google Play compatibility again. A separate publish job without signing secrets creates the GitHub Release and attaches the signed AAB, supplementary APK and `SHA256SUMS.txt`.
 

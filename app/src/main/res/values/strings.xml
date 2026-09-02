@@ -18,6 +18,18 @@
     <string name="label_today">Today</string>
     <string name="chart_a11y_description">Biorhythm chart from %1$s to %2$s. Selected %3$s:</string>
 
+    <string name="forecast_title">Next 7 days</string>
+    <string name="cycle_events_title">Important cycle points</string>
+    <string name="cycle_event_critical">Critical</string>
+    <string name="cycle_event_peak">Peak</string>
+    <string name="cycle_event_low">Low</string>
+    <string name="sync_high_title">All three cycles ≥ +%1$d%%</string>
+    <string name="sync_low_title">All three cycles ≤ −%1$d%%</string>
+    <string name="sync_high_description">Physical, emotional and intellectual cycles are simultaneously in the high zone.</string>
+    <string name="sync_low_description">Physical, emotional and intellectual cycles are simultaneously in the low zone.</string>
+    <string name="sync_high_compact">⚠ ≥ +%1$d%%</string>
+    <string name="sync_low_compact">⚠ ≤ −%1$d%%</string>
+
     <string name="settings_title">Settings</string>
     <string name="settings_section_profile">Profile</string>
     <string name="settings_section_appearance">Appearance</string>

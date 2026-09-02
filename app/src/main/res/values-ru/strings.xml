@@ -18,6 +18,18 @@
     <string name="label_today">Сегодня</string>
     <string name="chart_a11y_description">График биоритмов с %1$s по %2$s. Выбрано %3$s:</string>
 
+    <string name="forecast_title">Ближайшие 7 дней</string>
+    <string name="cycle_events_title">Важные точки циклов</string>
+    <string name="cycle_event_critical">Критический день</string>
+    <string name="cycle_event_peak">Пик</string>
+    <string name="cycle_event_low">Минимум</string>
+    <string name="sync_high_title">Все три цикла ≥ +%1$d%%</string>
+    <string name="sync_low_title">Все три цикла ≤ −%1$d%%</string>
+    <string name="sync_high_description">Физический, эмоциональный и интеллектуальный циклы одновременно находятся в высокой зоне.</string>
+    <string name="sync_low_description">Физический, эмоциональный и интеллектуальный циклы одновременно находятся в низкой зоне.</string>
+    <string name="sync_high_compact">⚠ ≥ +%1$d%%</string>
+    <string name="sync_low_compact">⚠ ≤ −%1$d%%</string>
+
     <string name="settings_title">Настройки</string>
     <string name="settings_section_profile">Профиль</string>
     <string name="settings_section_appearance">Оформление</string>
