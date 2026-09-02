@@ -25,7 +25,9 @@ data class NotificationPreferences(
 
         fun fromPreferences(preferences: Preferences): NotificationPreferences =
             NotificationPreferences(
-                enabled = preferences[PreferencesKeys.NotificationEnabled] ?: false,
+                enabled = preferences[PreferencesKeys.NotificationEnabled]
+                    ?: preferences[PreferencesKeys.LegacyNotificationEnabled]
+                    ?: false,
                 hour = (preferences[PreferencesKeys.NotificationHour] ?: DEFAULT_HOUR).coerceIn(0, 23),
                 minute = (preferences[PreferencesKeys.NotificationMinute] ?: DEFAULT_MINUTE).coerceIn(0, 59),
                 dailySummary = preferences[PreferencesKeys.NotificationDailySummary] ?: true,
