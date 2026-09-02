@@ -28,7 +28,7 @@ Current published version: **1.4.3** · Min SDK: **26 (Android 8.0)** · Target 
 - Locale-aware date formatting
 - Home-screen widget with current biorhythm values
 - Live widget preview and per-widget background opacity setting
-- Automatic widget refresh after birth date, theme or language changes
+- Automatic widget refresh after birth date, theme or language changes and after local-day, clock, timezone or system-locale changes
 - Widget rendering that adapts to resizing without bitmap payloads
 - In-app About screen with the app description, author, license and GitHub source link
 

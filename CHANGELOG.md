@@ -11,6 +11,15 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### 🐛 Fixed
+- Added one inexact local-day widget refresh so values roll over after midnight without requiring exact-alarm special access, while retaining the platform daily AppWidget update as a fallback.
+- Widgets now refresh and reschedule after device boot, manual clock changes, timezone changes, system-locale changes and application replacement.
+- Preserved per-widget opacity when Android restores widgets with remapped IDs and marked successful widget restore completion on API 30+.
+- Added Preferences DataStore corruption recovery so a damaged preferences file resets to safe defaults instead of breaking future reads.
+
+### ✅ Quality
+- Added regression coverage for leap-day and DST refresh boundaries plus overlapping widget-ID preference remapping.
+
 ---
 
 ## [1.4.3] - 2026-09-02
