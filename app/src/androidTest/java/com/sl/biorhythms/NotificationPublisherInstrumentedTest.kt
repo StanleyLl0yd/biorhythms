@@ -3,11 +3,13 @@ package com.sl.biorhythms
 import android.Manifest
 import android.app.Notification
 import android.app.NotificationManager
+import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.sl.biorhythms.notification.NotificationPreferences
 import com.sl.biorhythms.notification.NotificationPublisher
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,10 +42,19 @@ class NotificationPublisherInstrumentedTest {
             )
 
             assertTrue(posted)
-            val notification = notificationManager.activeNotifications.single().notification
+            val deadline = SystemClock.elapsedRealtime() + 3_000
+            var notification: Notification? = null
+            while (notification == null && SystemClock.elapsedRealtime() < deadline) {
+                notification = notificationManager.activeNotifications.singleOrNull()?.notification
+                if (notification == null) {
+                    SystemClock.sleep(50)
+                }
+            }
+
+            assertNotNull("Notification was not posted", notification)
             assertEquals(
                 localizedResources(context, AppLanguage.EN).getString(R.string.notification_today_title),
-                notification.extras.getString(Notification.EXTRA_TITLE),
+                notification?.extras?.getString(Notification.EXTRA_TITLE),
             )
         } finally {
             notificationManager.cancelAll()
