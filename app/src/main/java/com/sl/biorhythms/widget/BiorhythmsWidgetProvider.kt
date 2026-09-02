@@ -3,10 +3,12 @@ package com.sl.biorhythms.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
@@ -30,12 +32,36 @@ import kotlin.math.roundToInt
 
 class BiorhythmsWidgetProvider : AppWidgetProvider() {
 
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action in refreshActions) {
+            val manager = AppWidgetManager.getInstance(context)
+            val appWidgetIds = activeWidgetIds(context, manager)
+            if (appWidgetIds.isNotEmpty()) {
+                updateAsync(context, manager, appWidgetIds)
+            }
+            WidgetRefreshScheduler.schedule(context)
+            return
+        }
+        super.onReceive(context, intent)
+    }
+
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
         updateAsync(context, appWidgetManager, appWidgetIds)
+        WidgetRefreshScheduler.schedule(context)
+    }
+
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        WidgetRefreshScheduler.schedule(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        WidgetRefreshScheduler.cancel(context)
+        super.onDisabled(context)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -51,6 +77,19 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         val prefs = WidgetPreferences(context)
         appWidgetIds.forEach(prefs::deleteAlpha)
         super.onDeleted(context, appWidgetIds)
+    }
+
+    override fun onRestored(context: Context, oldWidgetIds: IntArray, newWidgetIds: IntArray) {
+        WidgetPreferences(context).remapAlpha(oldWidgetIds, newWidgetIds)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val manager = AppWidgetManager.getInstance(context)
+            newWidgetIds.forEach { appWidgetId ->
+                val options = manager.getAppWidgetOptions(appWidgetId)
+                options.putBoolean(AppWidgetManager.OPTION_APPWIDGET_RESTORE_COMPLETED, true)
+                manager.updateAppWidgetOptions(appWidgetId, options)
+            }
+        }
+        super.onRestored(context, oldWidgetIds, newWidgetIds)
     }
 
     private fun updateAsync(
@@ -246,6 +285,9 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
+    private fun activeWidgetIds(context: Context, manager: AppWidgetManager): IntArray =
+        manager.getAppWidgetIds(ComponentName(context, BiorhythmsWidgetProvider::class.java))
+
     private data class WidgetViews(
         val remoteViews: RemoteViews,
         val textColor: Int,
@@ -253,6 +295,14 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
 
     private companion object {
         const val TAG = "BiorhythmsWidget"
+        val refreshActions = setOf(
+            WidgetRefreshScheduler.ACTION_DAILY_REFRESH,
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_LOCALE_CHANGED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+        )
     }
 }
 
