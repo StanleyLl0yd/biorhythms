@@ -32,10 +32,12 @@ jobs:
             cat .github/icon-parts/fix08a.b64 .github/icon-parts/fix08b.b64
             cat .github/icon-parts/part09.b64
             cat .github/icon-parts/part10.b64
-            cat .github/icon-parts/fix11.b64
+            cat .github/icon-parts/fix11a.b64 .github/icon-parts/fix11b.b64
           } | tr -d '\r\n ' | base64 --decode > /tmp/approved-icon.png
 
-          test "$(wc -c < /tmp/approved-icon.png)" -eq 101112
+          size=$(wc -c < /tmp/approved-icon.png)
+          echo "Approved PNG size: $size"
+          test "$size" -eq 101112
           expected="abc878b9b42d05c8195fb6a6c556da66102eda3e4c62c0bf73cb29c1d017b1a2"
           actual=$(sha256sum /tmp/approved-icon.png | awk '{print $1}')
           echo "Approved PNG SHA-256: $actual"
