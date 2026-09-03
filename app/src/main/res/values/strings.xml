@@ -59,7 +59,7 @@
     <string name="settings_theme_option">Theme</string>
     <string name="settings_language_option">App language</string>
     <string name="settings_about_option">About Biorhythms</string>
-    <string name="settings_about_summary">App, author, license and source code</string>
+    <string name="settings_about_summary">App, author, license and privacy</string>
 
     <string name="notification_channel_name">Biorhythm updates</string>
     <string name="notification_channel_description">Daily biorhythm summaries and important cycle events</string>
@@ -77,9 +77,10 @@
     <string name="about_license_title">License</string>
     <string name="about_license_name">PolyForm Noncommercial 1.0.0</string>
     <string name="about_license_summary">Open the full license terms</string>
-    <string name="about_source_title">Source code</string>
-    <string name="about_github_label">GitHub repository</string>
-    <string name="about_github_value">github.com/StanleyLl0yd/biorhythms</string>
+    <string name="about_website_title">App website</string>
+    <string name="about_website_value">stanleyll0yd.github.io</string>
+    <string name="about_privacy_title">Privacy</string>
+    <string name="about_privacy_label">Privacy policy</string>
 
     <string name="widget_title">Biorhythms Today</string>
     <string name="widget_no_birth_date">Set birth date in app</string>
