@@ -32,7 +32,7 @@ jobs:
             cat .github/icon-parts/fix08a.b64 .github/icon-parts/fix08b.b64
             cat .github/icon-parts/part09.b64
             cat .github/icon-parts/part10.b64
-            cat .github/icon-parts/fix11a.b64 .github/icon-parts/fix11b.b64
+            cat .github/icon-parts/fix11a.b64 .github/icon-parts/fix11b0.b64 .github/icon-parts/fix11b1.b64 .github/icon-parts/fix11b2.b64 .github/icon-parts/fix11b3.b64
           } | tr -d '\r\n ' | base64 --decode > /tmp/approved-icon.png
 
           size=$(wc -c < /tmp/approved-icon.png)
