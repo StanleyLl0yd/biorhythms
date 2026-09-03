@@ -1,56 +1,47 @@
 package com.sl.biorhythms
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.BitmapDrawable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.security.MessageDigest
 
 @RunWith(AndroidJUnit4::class)
 class LauncherIconInstrumentedTest {
     @Test
-    fun launcherIconUsesThreeWaveArtwork() {
+    fun launcherIconUsesExactApprovedPng() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val icon = context.packageManager.getApplicationIcon(context.packageName)
         assertTrue("Launcher icon must remain adaptive", icon is AdaptiveIconDrawable)
 
-        val size = 432
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        icon.setBounds(0, 0, size, size)
-        icon.draw(Canvas(bitmap))
+        val adaptiveIcon = icon as AdaptiveIconDrawable
+        val background = adaptiveIcon.background
+        assertTrue("Adaptive icon background must be the approved PNG", background is BitmapDrawable)
 
-        val center = bitmap.getPixel(size / 2, size / 2)
-        assertTrue(
-            "The center must be the dark indigo background, not the legacy white nucleus",
-            Color.red(center) < 80 && Color.green(center) < 80 && Color.blue(center) < 120,
-        )
+        val bitmap = (background as BitmapDrawable).bitmap
+        assertEquals(512, bitmap.width)
+        assertEquals(512, bitmap.height)
 
-        var bluePixels = 0
-        var orangePixels = 0
-        var purplePixels = 0
-        var whitePixels = 0
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
 
-        for (y in 0 until size step 2) {
-            for (x in 0 until size step 2) {
-                val color = bitmap.getPixel(x, y)
-                val red = Color.red(color)
-                val green = Color.green(color)
-                val blue = Color.blue(color)
-
-                if (blue > 140 && green > 70 && red < 80) bluePixels++
-                if (red > 160 && green > 80 && blue < 90) orangePixels++
-                if (red > 70 && blue > 70 && green < 100) purplePixels++
-                if (red > 220 && green > 220 && blue > 220) whitePixels++
-            }
+        val digest = MessageDigest.getInstance("SHA-256")
+        for (pixel in pixels) {
+            digest.update((pixel ushr 24).toByte())
+            digest.update((pixel ushr 16).toByte())
+            digest.update((pixel ushr 8).toByte())
+            digest.update(pixel.toByte())
         }
 
-        assertTrue("Blue biorhythm ribbon is missing", bluePixels > 250)
-        assertTrue("Orange biorhythm ribbon is missing", orangePixels > 250)
-        assertTrue("Purple biorhythm ribbon is missing", purplePixels > 250)
-        assertTrue("Legacy white nucleus must not be present", whitePixels < 30)
+        val pixelHash = digest.digest().joinToString("") { "%02x".format(it) }
+        assertEquals(
+            "Packaged launcher artwork pixels differ from the approved original PNG",
+            "acb6036810d2b4c66d8f19bdb07413dccd378f16fe04ff590da5fa279376cf38",
+            pixelHash,
+        )
     }
 }
