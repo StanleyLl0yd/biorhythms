@@ -11,9 +11,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Gavel
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,7 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 
-private const val REPOSITORY_URL = "https://github.com/StanleyLl0yd/biorhythms"
+private const val APP_WEBSITE_URL = "https://stanleyll0yd.github.io/apps/biorhythms/"
+private const val PRIVACY_POLICY_URL = "https://stanleyll0yd.github.io/apps/biorhythms/privacy/"
 private const val LICENSE_URL = "https://polyformproject.org/licenses/noncommercial/1.0.0"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,12 +98,20 @@ fun AboutScreen(onBack: () -> Unit) {
                 )
             }
 
-            SectionBlock(title = appString(R.string.about_source_title)) {
+            SectionBlock(title = appString(R.string.about_website_title)) {
                 SectionRow(
-                    icon = Icons.Outlined.Code,
-                    label = appString(R.string.about_github_label),
-                    value = appString(R.string.about_github_value),
-                    onClick = { runCatching { uriHandler.openUri(REPOSITORY_URL) } },
+                    icon = Icons.Outlined.Language,
+                    label = appString(R.string.about_website_value),
+                    onClick = { runCatching { uriHandler.openUri(APP_WEBSITE_URL) } },
+                )
+            }
+
+            SectionBlock(title = appString(R.string.about_privacy_title)) {
+                SectionRow(
+                    icon = Icons.Outlined.PrivacyTip,
+                    label = appString(R.string.about_privacy_label),
+                    value = appString(R.string.about_website_value),
+                    onClick = { runCatching { uriHandler.openUri(PRIVACY_POLICY_URL) } },
                 )
             }
         }
