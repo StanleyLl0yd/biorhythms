@@ -59,7 +59,7 @@
     <string name="settings_theme_option">Тема</string>
     <string name="settings_language_option">Язык приложения</string>
     <string name="settings_about_option">О Biorhythms</string>
-    <string name="settings_about_summary">Описание, автор, лицензия и исходный код</string>
+    <string name="settings_about_summary">Описание, автор, лицензия и конфиденциальность</string>
 
     <string name="notification_channel_name">Биоритмы</string>
     <string name="notification_channel_description">Ежедневные сводки и важные события циклов</string>
@@ -77,9 +77,10 @@
     <string name="about_license_title">Лицензия</string>
     <string name="about_license_name">PolyForm Noncommercial 1.0.0</string>
     <string name="about_license_summary">Открыть полный текст лицензии</string>
-    <string name="about_source_title">Исходный код</string>
-    <string name="about_github_label">Репозиторий GitHub</string>
-    <string name="about_github_value">github.com/StanleyLl0yd/biorhythms</string>
+    <string name="about_website_title">Сайт приложения</string>
+    <string name="about_website_value">stanleyll0yd.github.io</string>
+    <string name="about_privacy_title">Конфиденциальность</string>
+    <string name="about_privacy_label">Политика конфиденциальности</string>
 
     <string name="widget_title">Биоритмы сегодня</string>
     <string name="widget_no_birth_date">Укажите дату рождения в приложении</string>
