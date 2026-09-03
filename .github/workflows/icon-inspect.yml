@@ -15,33 +15,38 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify artwork pixels and install PNG
+      - name: Reconstruct and install exact approved PNG
         shell: bash
         run: |
           set -euo pipefail
+
+          test "$(find .github/icon-parts -maxdepth 1 -name 'part*.b64' | wc -l)" -eq 12
+          cat .github/icon-parts/part*.b64 | base64 --decode > /tmp/approved-icon.png
+
+          test "$(wc -c < /tmp/approved-icon.png)" -eq 101112
+          expected="abc878b9b42d05c8195fb6a6c556da66102eda3e4c62c0bf73cb29c1d017b1a2"
+          actual=$(sha256sum /tmp/approved-icon.png | awk '{print $1}')
+          echo "Approved PNG SHA-256: $actual"
+          test "$actual" = "$expected"
+
           python3 -m pip install --quiet pillow
           python3 - <<'PY'
-          from pathlib import Path
           from PIL import Image
           import hashlib
 
-          source = Path('app/src/main/ic_launcher-playstore.png')
-          expected_pixel_hash = 'a535b3274097841ce531ceaa5b5833d1818ba7ed69a3769641b9681e18ccdc9a'
-          data = source.read_bytes()
-          image = Image.open(source).convert('RGBA')
+          image = Image.open('/tmp/approved-icon.png').convert('RGBA')
+          assert image.size == (512, 512), image.size
           pixel_hash = hashlib.sha256(image.tobytes()).hexdigest()
-          print('Source file SHA-256:', hashlib.sha256(data).hexdigest())
-          print('Source RGBA pixel SHA-256:', pixel_hash)
-          print('Source size:', image.size)
-          if image.size != (512, 512):
-              raise SystemExit('Source artwork is not 512x512')
-          if pixel_hash != expected_pixel_hash:
-              raise SystemExit('Repository artwork pixels differ from approved original PNG')
+          print('Approved RGBA pixel SHA-256:', pixel_hash)
+          assert pixel_hash == 'a535b3274097841ce531ceaa5b5833d1818ba7ed69a3769641b9681e18ccdc9a'
           PY
 
-          target="app/src/main/res/drawable-nodpi/ic_launcher_artwork.png"
-          mkdir -p "$(dirname "$target")"
-          cp app/src/main/ic_launcher-playstore.png "$target"
+          mkdir -p app/src/main/res/drawable-nodpi
+          cp /tmp/approved-icon.png app/src/main/res/drawable-nodpi/ic_launcher_artwork.png
+          cp /tmp/approved-icon.png app/src/main/ic_launcher-playstore.png
+
+          test "$(sha256sum app/src/main/res/drawable-nodpi/ic_launcher_artwork.png | awk '{print $1}')" = "$expected"
+          test "$(sha256sum app/src/main/ic_launcher-playstore.png | awk '{print $1}')" = "$expected"
 
           rm -rf .github/icon-parts
           rm -f .github/workflows/icon-inspect.yml
@@ -49,5 +54,5 @@ jobs:
           git add -A
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Install approved launcher PNG artwork"
+          git commit -m "Install exact approved launcher PNG"
           git push
