@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import com.sl.biorhythms.AppLanguage
+import com.sl.biorhythms.BiorhythmCycleType
 import com.sl.biorhythms.BiorhythmEvent
 import com.sl.biorhythms.BiorhythmForecast
 import com.sl.biorhythms.MainActivity
@@ -43,13 +44,6 @@ object NotificationPublisher {
         val locale = resolveLocale(language, resources.configuration.locales[0])
         ensureChannel(manager, resources.getString(R.string.notification_channel_name), resources.getString(R.string.notification_channel_description))
 
-        val labels = listOf(
-            resources.getString(R.string.legend_physical),
-            resources.getString(R.string.legend_emotional),
-            resources.getString(R.string.legend_intellectual),
-        )
-        val selected = listOf(preferences.physical, preferences.emotional, preferences.intellectual)
-
         val eventLines = if (preferences.importantEvents) {
             buildList {
                 forecast.synchronizedExtreme?.let { extreme ->
@@ -64,12 +58,12 @@ object NotificationPublisher {
                         ),
                     )
                 }
-                forecast.cycles.forEachIndexed { index, cycle ->
+                BiorhythmCycleType.entries.zip(forecast.cycles).forEach { (type, cycle) ->
                     cycle.event?.let { event ->
                         add(
                             resources.getString(
                                 R.string.notification_cycle_event_format,
-                                labels[index],
+                                resources.getString(type.labelResId),
                                 resources.getString(event.labelResId()),
                             ),
                         )
@@ -81,11 +75,11 @@ object NotificationPublisher {
         }
 
         val summaryLines = if (preferences.dailySummary) {
-            forecast.cycles.mapIndexedNotNull { index, cycle ->
-                if (!selected[index]) return@mapIndexedNotNull null
+            BiorhythmCycleType.entries.zip(forecast.cycles).mapNotNull { (type, cycle) ->
+                if (!preferences.isSelected(type)) return@mapNotNull null
                 resources.getString(
                     R.string.notification_cycle_value_format,
-                    labels[index],
+                    resources.getString(type.labelResId),
                     String.format(locale, "%+d%%", cycle.percent.roundToInt()),
                     cycle.trend.symbol(),
                 )

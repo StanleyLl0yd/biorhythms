@@ -9,6 +9,15 @@ enum class BiorhythmTrend {
     STEADY,
 }
 
+enum class BiorhythmCycleType(
+    val labelResId: Int,
+    val period: Double,
+) {
+    PHYSICAL(R.string.legend_physical, BiorhythmCalculator.PHYSICAL_PERIOD),
+    EMOTIONAL(R.string.legend_emotional, BiorhythmCalculator.EMOTIONAL_PERIOD),
+    INTELLECTUAL(R.string.legend_intellectual, BiorhythmCalculator.INTELLECTUAL_PERIOD),
+}
+
 enum class BiorhythmEvent {
     CRITICAL,
     PEAK,
@@ -36,14 +45,8 @@ object BiorhythmForecast {
     const val SYNCHRONIZED_EXTREME_THRESHOLD = 80.0
     const val DEFAULT_FORECAST_DAYS = 7
 
-    private val classicPeriods = listOf(
-        BiorhythmCalculator.PHYSICAL_PERIOD,
-        BiorhythmCalculator.EMOTIONAL_PERIOD,
-        BiorhythmCalculator.INTELLECTUAL_PERIOD,
-    )
-
     fun day(birthDate: LocalDate, date: LocalDate): BiorhythmDayForecast {
-        val cycles = classicPeriods.map { period -> cycle(birthDate, date, period) }
+        val cycles = BiorhythmCycleType.entries.map { type -> cycle(birthDate, date, type.period) }
         return BiorhythmDayForecast(
             date = date,
             cycles = cycles,
@@ -76,6 +79,7 @@ object BiorhythmForecast {
                 else -> BiorhythmTrend.STEADY
             },
             event = when {
+                // Critical proximity takes precedence over local peak/low classification.
                 abs(current) < abs(previous) && abs(current) <= abs(next) -> BiorhythmEvent.CRITICAL
                 current > previous && current >= next -> BiorhythmEvent.PEAK
                 current < previous && current <= next -> BiorhythmEvent.LOW
@@ -89,7 +93,7 @@ object BiorhythmForecast {
         threshold: Double = SYNCHRONIZED_EXTREME_THRESHOLD,
     ): SynchronizedExtreme? {
         require(threshold in 0.0..100.0) { "threshold must be within 0..100" }
-        if (values.size != classicPeriods.size) return null
+        if (values.size != BiorhythmCycleType.entries.size) return null
         return when {
             values.all { it >= threshold } -> SynchronizedExtreme.HIGH
             values.all { it <= -threshold } -> SynchronizedExtreme.LOW

@@ -35,10 +35,12 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 data class BiorhythmLine(
-    val labelResId: Int,
-    val period: Double,
+    val type: BiorhythmCycleType,
     val color: Color,
-)
+) {
+    val labelResId: Int get() = type.labelResId
+    val period: Double get() = type.period
+}
 
 data class BiorhythmChartRange(
     val pastDays: Int,
@@ -61,11 +63,16 @@ private data class ChartGeometry(
 
 @Composable
 fun rememberBiorhythmLines(): List<BiorhythmLine> = remember {
-    listOf(
-        BiorhythmLine(R.string.legend_physical, BiorhythmCalculator.PHYSICAL_PERIOD, PhysicalLineColor),
-        BiorhythmLine(R.string.legend_emotional, BiorhythmCalculator.EMOTIONAL_PERIOD, EmotionalLineColor),
-        BiorhythmLine(R.string.legend_intellectual, BiorhythmCalculator.INTELLECTUAL_PERIOD, IntellectualLineColor),
-    )
+    BiorhythmCycleType.entries.map { type ->
+        BiorhythmLine(
+            type = type,
+            color = when (type) {
+                BiorhythmCycleType.PHYSICAL -> PhysicalLineColor
+                BiorhythmCycleType.EMOTIONAL -> EmotionalLineColor
+                BiorhythmCycleType.INTELLECTUAL -> IntellectualLineColor
+            },
+        )
+    }
 }
 
 @Composable

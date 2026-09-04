@@ -18,6 +18,7 @@ object NotificationScheduler {
         runCatching {
             val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
             val triggerAt = nextTrigger(ZonedDateTime.now(), hour, minute)
+            // Deliberately inexact: daily notifications are best-effort and require no exact-alarm access.
             alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerAt.toInstant().toEpochMilli(),
