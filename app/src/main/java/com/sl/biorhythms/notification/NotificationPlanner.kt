@@ -9,10 +9,5 @@ object NotificationPlanner {
     fun shouldNotify(
         preferences: NotificationPreferences,
         forecast: BiorhythmDayForecast,
-    ): Boolean {
-        if (!preferences.enabled) return false
-        val hasDailySummary = preferences.dailySummary && preferences.hasSelectedCycles
-        val hasImportantEvent = preferences.importantEvents && hasImportantEvent(forecast)
-        return hasDailySummary || hasImportantEvent
-    }
+    ): Boolean = preferences.shouldNotify(hasImportantEvent(forecast))
 }
