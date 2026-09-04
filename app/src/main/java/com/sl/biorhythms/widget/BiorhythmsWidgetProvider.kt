@@ -14,6 +14,7 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.sl.biorhythms.AppLanguage
 import com.sl.biorhythms.AppThemeMode
+import com.sl.biorhythms.BiorhythmCycleType
 import com.sl.biorhythms.BiorhythmDayForecast
 import com.sl.biorhythms.BiorhythmForecast
 import com.sl.biorhythms.MainActivity
@@ -235,13 +236,8 @@ class BiorhythmsWidgetProvider : AppWidgetProvider() {
         views.setViewVisibility(R.id.widget_values, View.VISIBLE)
         views.removeAllViews(R.id.widget_values)
 
-        val labels = listOf(
-            resources.getString(R.string.legend_physical),
-            resources.getString(R.string.legend_emotional),
-            resources.getString(R.string.legend_intellectual),
-        )
-
-        labels.zip(forecast.cycles).forEach { (label, cycle) ->
+        BiorhythmCycleType.entries.zip(forecast.cycles).forEach { (type, cycle) ->
+            val label = resources.getString(type.labelResId)
             val valueText = String.format(
                 locale,
                 "%+d%% %s",
