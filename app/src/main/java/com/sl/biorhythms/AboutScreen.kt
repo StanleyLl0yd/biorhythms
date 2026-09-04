@@ -28,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 
-private const val APP_WEBSITE_URL = "https://stanleyll0yd.github.io/apps/biorhythms/"
-private const val PRIVACY_POLICY_URL = "https://stanleyll0yd.github.io/apps/biorhythms/privacy/"
-private const val LICENSE_URL = "https://polyformproject.org/licenses/noncommercial/1.0.0"
+internal object AboutLinks {
+    const val APP_WEBSITE_URL = "https://stanleyll0yd.github.io/apps/biorhythms/"
+    const val PRIVACY_POLICY_URL = "https://stanleyll0yd.github.io/apps/biorhythms/privacy/"
+    const val LICENSE_URL = "https://polyformproject.org/licenses/noncommercial/1.0.0"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +96,7 @@ fun AboutScreen(onBack: () -> Unit) {
                     icon = Icons.Outlined.Gavel,
                     label = appString(R.string.about_license_name),
                     value = appString(R.string.about_license_summary),
-                    onClick = { runCatching { uriHandler.openUri(LICENSE_URL) } },
+                    onClick = { runCatching { uriHandler.openUri(AboutLinks.LICENSE_URL) } },
                 )
             }
 
@@ -102,7 +104,7 @@ fun AboutScreen(onBack: () -> Unit) {
                 SectionRow(
                     icon = Icons.Outlined.Language,
                     label = appString(R.string.about_website_value),
-                    onClick = { runCatching { uriHandler.openUri(APP_WEBSITE_URL) } },
+                    onClick = { runCatching { uriHandler.openUri(AboutLinks.APP_WEBSITE_URL) } },
                 )
             }
 
@@ -111,7 +113,7 @@ fun AboutScreen(onBack: () -> Unit) {
                     icon = Icons.Outlined.PrivacyTip,
                     label = appString(R.string.about_privacy_label),
                     value = appString(R.string.about_website_value),
-                    onClick = { runCatching { uriHandler.openUri(PRIVACY_POLICY_URL) } },
+                    onClick = { runCatching { uriHandler.openUri(AboutLinks.PRIVACY_POLICY_URL) } },
                 )
             }
         }
