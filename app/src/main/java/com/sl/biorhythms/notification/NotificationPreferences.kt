@@ -1,6 +1,7 @@
 package com.sl.biorhythms.notification
 
 import androidx.datastore.preferences.core.Preferences
+import com.sl.biorhythms.BiorhythmCycleType
 import com.sl.biorhythms.PreferencesKeys
 
 data class NotificationPreferences(
@@ -16,8 +17,23 @@ data class NotificationPreferences(
     val hasSelectedCycles: Boolean
         get() = physical || emotional || intellectual
 
+    private val dailySummaryActive: Boolean
+        get() = enabled && dailySummary && hasSelectedCycles
+
+    private val importantEventsActive: Boolean
+        get() = enabled && importantEvents
+
     val shouldSchedule: Boolean
-        get() = enabled && ((dailySummary && hasSelectedCycles) || importantEvents)
+        get() = dailySummaryActive || importantEventsActive
+
+    internal fun shouldNotify(hasImportantEvent: Boolean): Boolean =
+        dailySummaryActive || (importantEventsActive && hasImportantEvent)
+
+    internal fun isSelected(type: BiorhythmCycleType): Boolean = when (type) {
+        BiorhythmCycleType.PHYSICAL -> physical
+        BiorhythmCycleType.EMOTIONAL -> emotional
+        BiorhythmCycleType.INTELLECTUAL -> intellectual
+    }
 
     companion object {
         const val DEFAULT_HOUR = 9
