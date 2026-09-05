@@ -1,7 +1,9 @@
 package com.sl.biorhythms
 
+import android.graphics.Color
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
@@ -13,16 +15,24 @@ import java.security.MessageDigest
 @RunWith(AndroidJUnit4::class)
 class LauncherIconInstrumentedTest {
     @Test
-    fun launcherIconUsesExactApprovedPng() {
+    fun launcherIconUsesExactApprovedPngAsForeground() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val icon = context.packageManager.getApplicationIcon(context.packageName)
         assertTrue("Launcher icon must remain adaptive", icon is AdaptiveIconDrawable)
 
         val adaptiveIcon = icon as AdaptiveIconDrawable
         val background = adaptiveIcon.background
-        assertTrue("Adaptive icon background must be the approved PNG", background is BitmapDrawable)
+        assertTrue("Adaptive icon background must be opaque", background is ColorDrawable)
+        assertEquals(
+            "Adaptive icon background color changed",
+            Color.rgb(8, 3, 71),
+            (background as ColorDrawable).color,
+        )
 
-        val bitmap = (background as BitmapDrawable).bitmap
+        val foreground = adaptiveIcon.foreground
+        assertTrue("Adaptive icon foreground must be the approved PNG", foreground is BitmapDrawable)
+
+        val bitmap = (foreground as BitmapDrawable).bitmap
         assertEquals(512, bitmap.width)
         assertEquals(512, bitmap.height)
 

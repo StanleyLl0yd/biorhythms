@@ -3,10 +3,13 @@
 import argparse
 import hashlib
 import sys
+import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
 ORIGINAL_ARTWORK_SHA256 = "abc878b9b42d05c8195fb6a6c556da66102eda3e4c62c0bf73cb29c1d017b1a2"
+EXPECTED_BACKGROUND = "#080347"
+ANDROID_DRAWABLE = "{http://schemas.android.com/apk/res/android}drawable"
 OLD_LAUNCHER_HASHES = {
     "08d5e8697b228034cd5f6e40fdea8177daadc4cfdcfeef52f520ab8ec1c61fcd",
     "99d9da236ada54ed912ed308848c8d6e441af0b23708ac009653a63a7a366541",
@@ -34,6 +37,14 @@ def verify_sources(res_dir: Path) -> None:
             f"expected {ORIGINAL_ARTWORK_SHA256}, got {digest}"
         )
 
+    background_file = res_dir / "values" / "ic_launcher_background.xml"
+    if not background_file.is_file():
+        fail(f"missing adaptive launcher background color: {background_file}")
+    background_root = ET.parse(background_file).getroot()
+    background_color = background_root.find("./color[@name='ic_launcher_background']")
+    if background_color is None or (background_color.text or "").strip().upper() != EXPECTED_BACKGROUND:
+        fail(f"adaptive launcher background must be {EXPECTED_BACKGROUND}")
+
     adaptive_files = [
         res_dir / "mipmap-anydpi" / "ic_launcher.xml",
         res_dir / "mipmap-anydpi" / "ic_launcher_round.xml",
@@ -41,13 +52,15 @@ def verify_sources(res_dir: Path) -> None:
         res_dir / "mipmap-anydpi-v33" / "ic_launcher_round.xml",
     ]
     for path in adaptive_files:
-        text = path.read_text(encoding="utf-8")
-        if "@drawable/ic_launcher_artwork" not in text:
-            fail(f"{path} does not use the approved original PNG")
-        if "@drawable/ic_launcher_foreground" in text:
-            fail(f"{path} still references the hand-drawn vector foreground")
-        if "@drawable/ic_launcher_monochrome" in text:
-            fail(f"{path} still references the hand-drawn monochrome vector")
+        root = ET.parse(path).getroot()
+        background = root.find("background")
+        foreground = root.find("foreground")
+        if background is None or background.get(ANDROID_DRAWABLE) != "@color/ic_launcher_background":
+            fail(f"{path} must use the opaque launcher color as adaptive background")
+        if foreground is None or foreground.get(ANDROID_DRAWABLE) != "@drawable/ic_launcher_artwork":
+            fail(f"{path} must use the approved original PNG as adaptive foreground")
+        if root.find("monochrome") is not None:
+            fail(f"{path} must not derive a themed icon from the full-color PNG")
 
     for obsolete in (
         res_dir / "drawable" / "ic_launcher_foreground.xml",
@@ -92,7 +105,10 @@ def main() -> None:
     verify_sources(args.res_dir)
     if args.apk is not None:
         verify_apk(args.apk)
-    print("Launcher icon verification passed: approved original PNG is wired and legacy/vector artwork is absent.")
+    print(
+        "Launcher icon verification passed: approved PNG is the adaptive foreground, "
+        "the opaque background is correct, and legacy/vector artwork is absent."
+    )
 
 
 if __name__ == "__main__":
