@@ -13,6 +13,18 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.6.5] - 2026-09-05
+
+### 🐛 Fixed
+- Fixed adaptive launcher icon packaging so the approved 512×512 artwork is used as the foreground over the existing opaque `#080347` background.
+- Prevented OEM launchers from showing the icon with incorrect masking, reduced visual size, transparent-corner artifacts or halo-like edges.
+- Kept the approved source PNG unchanged and strengthened regression checks for the adaptive-icon layer roles.
+
+### 📦 Release
+- Bumped the app to `versionCode` 16 and `versionName` `1.6.5`.
+
+---
+
 ## [1.6.0] - 2026-09-02
 
 ### 🔔 Notifications
