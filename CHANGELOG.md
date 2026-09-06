@@ -13,6 +13,17 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.6.6] - 2026-09-06
+
+### 🎨 Changed
+- Reordered the main screen so the interactive biorhythm chart appears immediately after the selected-day values.
+- Moved the seven-day forecast below the chart, restoring the intended flow from current values to visualization and then to forward-looking details.
+
+### 📦 Release
+- Bumped the app to `versionCode` 17 and `versionName` `1.6.6`.
+
+---
+
 ## [1.6.5] - 2026-09-05
 
 ### 🐛 Fixed
