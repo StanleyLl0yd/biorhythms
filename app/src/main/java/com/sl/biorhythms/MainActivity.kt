@@ -268,14 +268,6 @@ private fun MainScreen(
                     locale = locale,
                 )
 
-                BiorhythmForecastPanel(
-                    birthDate = birthDate,
-                    referenceDate = referenceDate,
-                    selectedDate = selectedDate,
-                    lines = biorhythmLines,
-                    locale = locale,
-                )
-
                 Text(
                     text = appString(R.string.chart_title_today_range, DEFAULT_RANGE_DAYS),
                     style = MaterialTheme.typography.titleMedium,
@@ -298,6 +290,14 @@ private fun MainScreen(
                     text = appString(R.string.chart_interaction_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                BiorhythmForecastPanel(
+                    birthDate = birthDate,
+                    referenceDate = referenceDate,
+                    selectedDate = selectedDate,
+                    lines = biorhythmLines,
+                    locale = locale,
                 )
             } else {
                 BirthDateOnboardingCard(onChooseDate = { showDatePicker = true })
