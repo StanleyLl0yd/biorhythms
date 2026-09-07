@@ -22,18 +22,13 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
-internal fun BiorhythmForecastPanel(
+internal fun SelectedBiorhythmEvents(
     birthDate: LocalDate,
-    referenceDate: LocalDate,
     selectedDate: LocalDate,
     lines: List<BiorhythmLine>,
-    locale: Locale,
 ) {
     val selectedForecast = remember(birthDate, selectedDate) {
         BiorhythmForecast.day(birthDate, selectedDate)
-    }
-    val forecast = remember(birthDate, referenceDate) {
-        BiorhythmForecast.days(birthDate, referenceDate)
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -47,7 +42,21 @@ internal fun BiorhythmForecastPanel(
                 lines = lines,
             )
         }
+    }
+}
 
+@Composable
+internal fun BiorhythmForecastPanel(
+    birthDate: LocalDate,
+    referenceDate: LocalDate,
+    lines: List<BiorhythmLine>,
+    locale: Locale,
+) {
+    val forecast = remember(birthDate, referenceDate) {
+        BiorhythmForecast.days(birthDate, referenceDate)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = appString(R.string.forecast_title),
             style = MaterialTheme.typography.titleMedium,
@@ -197,7 +206,8 @@ private fun ForecastDayRow(
         ) {
             day.cycles.forEachIndexed { index, cycle ->
                 ForecastCycleCell(
-                    label = appString(lines[index].labelResId),
+                    label = forecastCycleLabel(lines[index].type),
+                    color = lines[index].color,
                     cycle = cycle,
                     locale = locale,
                     modifier = Modifier.weight(1f),
@@ -210,6 +220,7 @@ private fun ForecastDayRow(
 @Composable
 private fun ForecastCycleCell(
     label: String,
+    color: androidx.compose.ui.graphics.Color,
     cycle: BiorhythmCycleForecast,
     locale: Locale,
     modifier: Modifier = Modifier,
@@ -222,7 +233,7 @@ private fun ForecastCycleCell(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = color,
             textAlign = TextAlign.Center,
             maxLines = 1,
         )
@@ -246,6 +257,15 @@ private fun ForecastCycleCell(
         }
     }
 }
+
+@Composable
+private fun forecastCycleLabel(type: BiorhythmCycleType): String = appString(
+    when (type) {
+        BiorhythmCycleType.PHYSICAL -> R.string.forecast_physical_short
+        BiorhythmCycleType.EMOTIONAL -> R.string.forecast_emotional_short
+        BiorhythmCycleType.INTELLECTUAL -> R.string.forecast_intellectual_short
+    },
+)
 
 @Composable
 private fun eventLabel(event: BiorhythmEvent): String = appString(
