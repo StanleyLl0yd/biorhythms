@@ -486,3 +486,28 @@ The final goal is a codebase containing only the complexity required to implemen
 - Do not overwrite, recompress, optimize in place, or otherwise rewrite the canonical PNG. Keep the uploaded source unchanged.
 - Platform-required derivatives may be generated only as raster derivatives of that PNG. Resizing and required raster packaging/container formats such as PNG size variants, ICO, or ICNS are allowed, but the visible artwork must remain unchanged: no cropping, padding, color changes, removed details, or other design edits unless explicitly requested.
 - If an older icon in another format is currently canonical, keep it until the project owner explicitly supplies a replacement PNG as the new app icon. Once supplied, that PNG becomes the canonical source and the asset pipeline should derive required icons from it rather than converting it to a vector source.
+
+## GitHub security baseline
+
+These requirements apply to repository, CI/CD, dependency, and release changes.
+
+- Keep all non-local GitHub Actions pinned to immutable full 40-character commit SHAs and retain a nearby version comment.
+- Pin workflow container images by SHA-256 digest. Never use latest for build, scanner, or release containers.
+- Do not use pull_request_target for normal validation. Never execute untrusted pull-request code with repository secrets, signing credentials, privileged runners, or write-capable tokens.
+- Default every workflow to permissions: {} and grant only the minimum job-level scopes required.
+- Keep the existing aggregate Verify check merge-blocking. It must continue to enforce build/tests, API 37 runtime tests, Dependency Review, Semgrep, and Gitleaks. CodeQL and SonarCloud remain independent security/quality gates.
+- Keep CodeQL enabled for Java/Kotlin on pull requests, main, and a scheduled scan, with security-events: write limited to the analysis job.
+- Keep Dependency Review pull-request-only and fail introduction of high-severity known vulnerabilities.
+- Keep Gitleaks scanning the full repository history without PR-comment write permissions.
+- Do not commit secrets, tokens, signing material, local.properties, key.properties, .env files, service-account credentials, private keys, or production certificates/keystores.
+- Preserve strict Gradle dependency verification and the pinned Gradle distribution checksum. Do not weaken dependency verification to make a build pass.
+- Release signing credentials must remain outside the repository and must only be exposed to the dedicated tagged release signing job.
+- Production releases must be built only from semver v* tags that point to verified main history. Do not restore production signing from arbitrary release/* branches.
+- Verify both APK/AAB signatures and the pinned production signing-certificate SHA-256 fingerprint before publication.
+- Keep release checksums and GitHub artifact attestations for published APK/AAB binaries.
+- Existing GitHub releases must never be overwritten or have their assets silently replaced.
+- Release tags v* are intended to be immutable and must be protected from update/deletion by repository rules.
+- Keep main squash-only and linear where repository protection supports it; do not add mandatory human approvals solely for a single-maintainer repository.
+- Run python3 .github/scripts/verify-ci-supply-chain.py whenever .github/workflows/** or .github/actions/** changes.
+- After security or release-pipeline changes, require the complete available CI suite to pass before merging.
+

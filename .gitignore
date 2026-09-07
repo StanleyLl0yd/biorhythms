@@ -14,6 +14,20 @@ local.properties
 .cxx/
 .externalNativeBuild/
 
+.env
+.env.*
+!.env.example
+key.properties
+*.jks
+*.keystore
+*.keystore.jks
+*.p12
+*.pfx
+*.pem
+*.key
+service-account*.json
+credentials*.json
+
 *.log
 *.hprof
 hs_err_pid*
@@ -37,7 +51,3 @@ replay_pid*
 *.aar
 *.dex
 captures/
-
-*.jks
-*.keystore
-*.keystore.jks

@@ -2,248 +2,355 @@ name: Android Release
 
 on:
   push:
-    branches:
-      - 'release/v*'
     tags:
       - 'v*'
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing release tag to build, for example v1.4.0
+        description: Existing release tag, for example v1.6.7
         required: true
         type: string
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: android-release-${{ github.ref }}-${{ inputs.release_tag }}
   cancel-in-progress: false
 
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+
 jobs:
-  verify-release:
-    name: Verify release
+  validate:
+    name: Validate release request
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    outputs:
-      release_tag: ${{ steps.release_meta.outputs.release_tag }}
-      release_sha: ${{ steps.release_meta.outputs.release_sha }}
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      checks: read
+      contents: read
 
     steps:
-      - name: Checkout release source
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
-          persist-credentials: false
-
-      - id: release_meta
-        name: Resolve and validate release
+      - name: Validate tag format
         run: |
           set -euo pipefail
-          version_name=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -n 1)
-          version_code=$(sed -n 's/.*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -n 1)
-          test -n "$version_name"
-          test -n "$version_code"
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
 
-          release_tag="v$version_name"
-          [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            test "${{ inputs.release_tag }}" = "$release_tag"
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            test "${{ github.ref_name }}" = "$release_tag"
-          else
-            test "${{ github.ref_name }}" = "release/$release_tag"
-          fi
-
-          release_sha=$(git rev-parse HEAD)
-          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
-          echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
-          echo "Validated $release_tag with versionCode $version_code at $release_sha"
-
-      - &checkout_ci_helpers
-        name: Checkout CI helpers
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Checkout release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.workflow_sha }}
-          path: .ci
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
           persist-credentials: false
 
-      - &setup_release_environment
-        name: Set up Android release environment
-        uses: ./.ci/.github/actions/android-gradle-setup
+      - name: Verify CI supply-chain policy
+        run: python3 .github/scripts/verify-ci-supply-chain.py
+
+      - name: Validate tag source and app version
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+          version_name="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          version_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -1)"
+          namespace="$(sed -n 's/^[[:space:]]*namespace = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          application_id="$(sed -n 's/^[[:space:]]*applicationId = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+
+          test -n "$version_name"
+          [[ "$version_code" =~ ^[0-9]+$ ]]
+          (( version_code > 0 ))
+          test "$namespace" = "com.sl.biorhythms"
+          test "$application_id" = "com.sl.biorhythms"
+          test "$RELEASE_TAG" = "v$version_name"
+
+          max_previous_code=0
+          max_previous_tag=""
+          while IFS= read -r tag; do
+            [[ "$tag" == "$RELEASE_TAG" ]] && continue
+            [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+            previous_file="$(git show "${tag}:app/build.gradle.kts" 2>/dev/null || true)"
+            [[ -n "$previous_file" ]] || continue
+            previous_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' <<< "$previous_file" | head -1)"
+            [[ "$previous_code" =~ ^[0-9]+$ ]] || continue
+            if (( previous_code > max_previous_code )); then
+              max_previous_code="$previous_code"
+              max_previous_tag="$tag"
+            fi
+          done < <(git tag --list 'v*')
+
+          if (( version_code <= max_previous_code )); then
+            echo "versionCode $version_code must be greater than $max_previous_code from $max_previous_tag." >&2
+            exit 1
+          fi
+
+          echo "Validated $RELEASE_TAG with versionCode $version_code and application ID $application_id"
+
+      - name: Require successful main verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_sha="$(git rev-parse HEAD)"
+          required_workflows=("Android CI" "CodeQL")
+
+          for attempt in $(seq 1 40); do
+            runs="$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$release_sha&per_page=100")"
+            checks="$(gh api "/repos/$GITHUB_REPOSITORY/commits/$release_sha/check-runs?per_page=100")"
+            pending=0
+
+            for workflow in "${required_workflows[@]}"; do
+              record="$(jq -c --arg name "$workflow" \
+                '[.workflow_runs[] | select(.name == $name and .event == "push" and .head_branch == "main")] | sort_by(.created_at) | last // empty' \
+                <<< "$runs")"
+
+              if [[ -z "$record" ]]; then
+                echo "$workflow: waiting for a main push run"
+                pending=1
+                continue
+              fi
+
+              status="$(jq -r '.status' <<< "$record")"
+              conclusion="$(jq -r '.conclusion // ""' <<< "$record")"
+              run_url="$(jq -r '.html_url' <<< "$record")"
+
+              if [[ "$status" != "completed" ]]; then
+                echo "$workflow: $status ($run_url)"
+                pending=1
+              elif [[ "$conclusion" != "success" ]]; then
+                echo "$workflow failed with conclusion '$conclusion': $run_url" >&2
+                exit 1
+              else
+                echo "$workflow: success ($run_url)"
+              fi
+            done
+
+            sonar="$(jq -c \
+              '[.check_runs[] | select(.name == "SonarCloud Code Analysis")] | sort_by(.started_at) | last // empty' \
+              <<< "$checks")"
+            if [[ -z "$sonar" ]]; then
+              echo "SonarCloud Code Analysis: waiting"
+              pending=1
+            else
+              sonar_status="$(jq -r '.status' <<< "$sonar")"
+              sonar_conclusion="$(jq -r '.conclusion // ""' <<< "$sonar")"
+              sonar_url="$(jq -r '.details_url // ""' <<< "$sonar")"
+              if [[ "$sonar_status" != "completed" ]]; then
+                echo "SonarCloud Code Analysis: $sonar_status ($sonar_url)"
+                pending=1
+              elif [[ "$sonar_conclusion" != "success" ]]; then
+                echo "SonarCloud Code Analysis failed with conclusion '$sonar_conclusion': $sonar_url" >&2
+                exit 1
+              else
+                echo "SonarCloud Code Analysis: success ($sonar_url)"
+              fi
+            fi
+
+            if (( pending == 0 )); then
+              exit 0
+            fi
+
+            if (( attempt < 40 )); then
+              sleep 15
+            fi
+          done
+
+          echo "Timed out waiting for required main verification." >&2
+          exit 1
+
+  build-sign:
+    name: Test, build, sign, and attest
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+    env:
+      EXPECTED_CERT_SHA256: f02571c40741e2cb071564f5b63fd3dc38a875d0eda11a8c42269ed635bc2a58
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+
+      - name: Set up Android build environment
+        uses: ./.github/actions/android-gradle-setup
         with:
           gradle-cache-read-only: true
 
-      - &install_android_platform
-        name: Install Android 37 platform
+      - name: Install Android 37 platform
         run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
-
-      - name: Run release verification
-        run: ./gradlew testDebugUnitTest lintDebug assembleRelease bundleRelease --stacktrace
-
-      - name: Verify Google Play release compatibility
-        run: |
-          set -euo pipefail
-          release_apk=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
-          test -n "$release_apk"
-          python3 .ci/.github/scripts/verify-play-compatibility.py \
-            --gradle-file app/build.gradle.kts \
-            --apk "$release_apk" \
-            --aab app/build/outputs/bundle/release/app-release.aab
-
-      - name: Verify launcher icon artwork
-        run: |
-          set -euo pipefail
-          release_apk=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
-          test -n "$release_apk"
-          python3 .github/scripts/verify-launcher-icon.py --apk "$release_apk"
-
-  signed-release:
-    name: Signed release build
-    needs: verify-release
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    env:
-      RELEASE_TAG: ${{ needs.verify-release.outputs.release_tag }}
-
-    steps:
-      - name: Checkout release source
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          ref: ${{ needs.verify-release.outputs.release_sha }}
-          persist-credentials: false
-
-      - *checkout_ci_helpers
-      - *setup_release_environment
-      - *install_android_platform
 
       - name: Restore and validate release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           test -n "$ANDROID_KEYSTORE_BASE64"
           test -n "$ANDROID_KEYSTORE_PASSWORD"
           test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
           umask 077
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/android-release.jks"
-          test -s "$RUNNER_TEMP/android-release.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/biorhythms-release.jks"
+          test -s "$RUNNER_TEMP/biorhythms-release.jks"
           keytool -list \
-            -keystore "$RUNNER_TEMP/android-release.jks" \
+            -keystore "$RUNNER_TEMP/biorhythms-release.jks" \
             -storepass "$ANDROID_KEYSTORE_PASSWORD" \
             -alias "$ANDROID_KEY_ALIAS" >/dev/null
 
-      - name: Build signed release AAB and APK
+      - name: Test and lint release source
+        run: ./gradlew testDebugUnitTest lintDebug --stacktrace
+
+      - name: Build signed APK and AAB
         env:
-          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/android-release.jks
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/biorhythms-release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew bundleRelease assembleRelease --stacktrace
+        run: ./gradlew assembleRelease bundleRelease --stacktrace
 
-      - name: Verify signed release outputs
+      - name: Verify signatures and package release
+        id: package
+        env:
+          LC_ALL: C.UTF-8
         run: |
           set -euo pipefail
-          apksigner_path="$ANDROID_SDK_ROOT/build-tools/37.0.0/apksigner"
-          test -x "$apksigner_path"
-          "$apksigner_path" verify app/build/outputs/apk/release/app-release.apk
-          aab_verification=$(jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1)
-          grep -Fq 'jar verified.' <<< "$aab_verification"
-          python3 .ci/.github/scripts/verify-play-compatibility.py \
+          source_apk="app/build/outputs/apk/release/app-release.apk"
+          source_aab="app/build/outputs/bundle/release/app-release.aab"
+          test -s "$source_apk"
+          test -s "$source_aab"
+
+          python3 .github/scripts/verify-play-compatibility.py \
             --gradle-file app/build.gradle.kts \
-            --apk app/build/outputs/apk/release/app-release.apk \
-            --aab app/build/outputs/bundle/release/app-release.aab
-          python3 .github/scripts/verify-launcher-icon.py \
-            --apk app/build/outputs/apk/release/app-release.apk
+            --apk "$source_apk" \
+            --aab "$source_aab"
+          python3 .github/scripts/verify-launcher-icon.py --apk "$source_apk"
 
-      - name: Upload Google Play bundle
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+          aapt="$ANDROID_SDK_ROOT/build-tools/37.0.0/aapt"
+          apksigner="$ANDROID_SDK_ROOT/build-tools/37.0.0/apksigner"
+          test -x "$aapt"
+          test -x "$apksigner"
+
+          package_name="$("$aapt" dump badging "$source_apk" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -1)"
+          test "$package_name" = "com.sl.biorhythms"
+
+          apk_report="$RUNNER_TEMP/apksigner-report.txt"
+          "$apksigner" verify --verbose --print-certs "$source_apk" | tee "$apk_report"
+          grep -F 'Verified using v2 scheme (APK Signature Scheme v2): true' "$apk_report"
+          grep -F 'Verified using v3 scheme (APK Signature Scheme v3): true' "$apk_report"
+          grep -F 'Number of signers: 1' "$apk_report"
+
+          apk_fingerprint="$(awk -F': ' '/certificate SHA-256 digest:/ {print $NF; exit}' "$apk_report" | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          test "$apk_fingerprint" = "$EXPECTED_CERT_SHA256"
+
+          aab_verification="$(jarsigner -verify "$source_aab" 2>&1)"
+          grep -Fq 'jar verified.' <<< "$aab_verification"
+          aab_fingerprint="$(keytool -printcert -jarfile "$source_aab" | awk -F': ' '/SHA256:/ {print $NF; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          test "$aab_fingerprint" = "$EXPECTED_CERT_SHA256"
+
+          mkdir -p release
+          apk_path="release/biorhythms-${RELEASE_TAG}.apk"
+          aab_path="release/biorhythms-${RELEASE_TAG}.aab"
+          checksum_path="release/SHA256SUMS.txt"
+          cp "$source_apk" "$apk_path"
+          cp "$source_aab" "$aab_path"
+          (
+            cd release
+            sha256sum "biorhythms-${RELEASE_TAG}.apk" "biorhythms-${RELEASE_TAG}.aab" > SHA256SUMS.txt
+            sha256sum --check SHA256SUMS.txt
+          )
+
+          echo "apk_path=$apk_path" >> "$GITHUB_OUTPUT"
+          echo "aab_path=$aab_path" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=$checksum_path" >> "$GITHUB_OUTPUT"
+
+      - name: Attest release APK and AAB
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          name: biorhythms-${{ env.RELEASE_TAG }}-google-play-aab
-          path: app/build/outputs/bundle/release/app-release.aab
+          subject-path: |
+            ${{ steps.package.outputs.apk_path }}
+            ${{ steps.package.outputs.aab_path }}
+
+      - name: Upload signed package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: biorhythms-${{ env.RELEASE_TAG }}-signed
+          path: |
+            ${{ steps.package.outputs.apk_path }}
+            ${{ steps.package.outputs.aab_path }}
+            ${{ steps.package.outputs.checksum_path }}
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload direct-install APK
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        with:
-          name: biorhythms-${{ env.RELEASE_TAG }}-direct-install-apk
-          path: app/build/outputs/apk/release/app-release.apk
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Remove release keystore
+      - name: Remove signing material
         if: always()
-        run: rm -f "$RUNNER_TEMP/android-release.jks"
+        run: rm -f "$RUNNER_TEMP/biorhythms-release.jks"
 
-  publish-release:
-    name: Publish GitHub Release
-    needs:
-      - verify-release
-      - signed-release
+  publish:
+    name: Publish GitHub release
+    needs: build-sign
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      actions: read
       contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      RELEASE_TAG: ${{ needs.verify-release.outputs.release_tag }}
-      RELEASE_SHA: ${{ needs.verify-release.outputs.release_sha }}
 
     steps:
-      - name: Download signed release artifacts
+      - name: Download signed package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: biorhythms-${{ env.RELEASE_TAG }}-signed
+          path: release
+
+      - name: Refuse an existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p release-assets/bundle release-assets/apk
-          gh run download "$GITHUB_RUN_ID" \
-            --name "biorhythms-${RELEASE_TAG}-google-play-aab" \
-            --dir release-assets/bundle
-          gh run download "$GITHUB_RUN_ID" \
-            --name "biorhythms-${RELEASE_TAG}-direct-install-apk" \
-            --dir release-assets/apk
-
-      - name: Prepare release assets
-        run: |
-          set -euo pipefail
-          test -s release-assets/bundle/app-release.aab
-          test -s release-assets/apk/app-release.apk
-          mv release-assets/bundle/app-release.aab "release-assets/biorhythms-${RELEASE_TAG}.aab"
-          mv release-assets/apk/app-release.apk "release-assets/biorhythms-${RELEASE_TAG}.apk"
-          (
-            cd release-assets
-            sha256sum "biorhythms-${RELEASE_TAG}.aab" "biorhythms-${RELEASE_TAG}.apk" > SHA256SUMS.txt
-          )
-
-      - name: Publish GitHub Release
-        run: |
-          set -euo pipefail
-          assets=(
-            "release-assets/biorhythms-${RELEASE_TAG}.aab"
-            "release-assets/biorhythms-${RELEASE_TAG}.apk"
-            "release-assets/SHA256SUMS.txt"
-          )
-
-          if tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null); then
-            test "$tag_sha" = "$RELEASE_SHA"
-          else
-            gh api --method POST "repos/$GH_REPO/git/refs" \
-              -f ref="refs/tags/$RELEASE_TAG" \
-              -f sha="$RELEASE_SHA" >/dev/null
-            tag_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
-            test "$tag_sha" = "$RELEASE_SHA"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists." >&2
+            exit 1
           fi
 
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
-          else
-            gh release create "$RELEASE_TAG" "${assets[@]}" \
-              --verify-tag \
-              --title "Biorhythms ${RELEASE_TAG#v}" \
-              --generate-notes \
-              --latest
-          fi
+      - name: Create draft release
+        id: draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            --verify-tag \
+            --draft \
+            --title "Biorhythms ${RELEASE_TAG#v}" \
+            --generate-notes \
+            --repo "$GITHUB_REPOSITORY"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Attach verified assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" \
+            "release/biorhythms-${RELEASE_TAG}.apk" \
+            "release/biorhythms-${RELEASE_TAG}.aab" \
+            "release/SHA256SUMS.txt" \
+            --repo "$GITHUB_REPOSITORY"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --latest --repo "$GITHUB_REPOSITORY"
+
+      - name: Remove failed draft
+        if: failure() && steps.draft.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete "$RELEASE_TAG" --yes --repo "$GITHUB_REPOSITORY"
