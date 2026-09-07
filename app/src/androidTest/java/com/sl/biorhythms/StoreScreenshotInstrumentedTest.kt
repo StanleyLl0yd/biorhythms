@@ -13,7 +13,8 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.datastore.preferences.core.edit
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -78,18 +79,18 @@ class StoreScreenshotInstrumentedTest {
         waitForText("Сегодня")
         saveStoreScreenshot("01_today.png", composeRule.onRoot().captureToImage())
 
-        composeRule.onNodeWithText("7 дней").performClick()
+        composeRule.onNodeWithText("7 дней").performSemanticsAction(SemanticsActions.OnClick)
         waitForText("Прогноз на 7 дней")
         saveStoreScreenshot("02_7_days.png", composeRule.onRoot().captureToImage())
 
         val settingsTitle = composeRule.activity.getString(R.string.settings_title)
-        composeRule.onNodeWithContentDescription(settingsTitle).performClick()
+        composeRule.onNodeWithContentDescription(settingsTitle).performSemanticsAction(SemanticsActions.OnClick)
         waitForText("Настройки")
         composeRule.onNodeWithText("Ежедневная сводка").performScrollTo()
         composeRule.waitForIdle()
         saveStoreScreenshot("03_notifications.png", composeRule.onRoot().captureToImage())
 
-        composeRule.onNodeWithText("О Biorhythms").performScrollTo().performClick()
+        composeRule.onNodeWithText("О Biorhythms").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
         waitForText("О приложении")
         saveStoreScreenshot("04_about.png", composeRule.onRoot().captureToImage())
     }
@@ -132,7 +133,14 @@ private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
     val directory = File(context.getExternalFilesDir(null), "store-screenshots").apply {
         mkdirs()
     }
-    File(directory, fileName).outputStream().use { output ->
+    val file = File(directory, fileName)
+    file.outputStream().use { output ->
         check(image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, output))
     }
+
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val destination = "/sdcard/Download/biorhythms-store-screenshots"
+    instrumentation.uiAutomation.executeShellCommand(
+        "mkdir -p $destination && cp '" + file.absolutePath + "' '" + destination + "/" + fileName + "'",
+    ).close()
 }
