@@ -40,6 +40,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -222,18 +225,20 @@ private fun MainScreen(
     val selectedDateFormatter = remember(locale) {
         DateTimeFormatter.ofPattern("EEE, d MMM", locale)
     }
+    val todayScrollState = rememberScrollState()
+    val forecastScrollState = rememberScrollState()
+    val onboardingScrollState = rememberScrollState()
 
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var selectedOffset by rememberSaveable(referenceDate) { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(contentWindowInsets = WindowInsets.systemBars) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -253,6 +258,13 @@ private fun MainScreen(
             }
 
             if (birthDate != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                MainTabSelector(
+                    selectedTab = selectedTab,
+                    onSelectedTabChange = { selectedTab = it },
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
                 val selectedDate = referenceDate.plusDays(selectedOffset.toLong())
                 val selectedDateLabel = if (selectedOffset == 0) {
                     appString(R.string.label_today)
@@ -260,50 +272,79 @@ private fun MainScreen(
                     selectedDate.format(selectedDateFormatter)
                 }
 
-                SelectedBiorhythmSummary(
-                    title = selectedDateLabel,
-                    lines = biorhythmLines,
-                    birthDate = birthDate,
-                    date = selectedDate,
-                    locale = locale,
-                )
+                if (selectedTab == 0) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(todayScrollState),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        SelectedBiorhythmSummary(
+                            title = selectedDateLabel,
+                            lines = biorhythmLines,
+                            birthDate = birthDate,
+                            date = selectedDate,
+                            locale = locale,
+                        )
 
-                Text(
-                    text = appString(R.string.chart_title_today_range, DEFAULT_RANGE_DAYS),
-                    style = MaterialTheme.typography.titleMedium,
-                )
+                        Text(
+                            text = appString(R.string.chart_title_today_range, DEFAULT_RANGE_DAYS),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
 
-                BiorhythmChart(
-                    birthDate = birthDate,
-                    referenceDate = referenceDate,
-                    range = BiorhythmChartRange(
-                        pastDays = DEFAULT_RANGE_DAYS,
-                        futureDays = DEFAULT_RANGE_DAYS,
-                    ),
-                    lines = biorhythmLines,
-                    selectedOffset = selectedOffset,
-                    onSelectedOffsetChange = { selectedOffset = it },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                        BiorhythmChart(
+                            birthDate = birthDate,
+                            referenceDate = referenceDate,
+                            range = BiorhythmChartRange(
+                                pastDays = DEFAULT_RANGE_DAYS,
+                                futureDays = DEFAULT_RANGE_DAYS,
+                            ),
+                            lines = biorhythmLines,
+                            selectedOffset = selectedOffset,
+                            onSelectedOffsetChange = { selectedOffset = it },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
-                Text(
-                    text = appString(R.string.chart_interaction_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                        Text(
+                            text = appString(R.string.chart_interaction_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
 
-                BiorhythmForecastPanel(
-                    birthDate = birthDate,
-                    referenceDate = referenceDate,
-                    selectedDate = selectedDate,
-                    lines = biorhythmLines,
-                    locale = locale,
-                )
+                        SelectedBiorhythmEvents(
+                            birthDate = birthDate,
+                            selectedDate = selectedDate,
+                            lines = biorhythmLines,
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(forecastScrollState),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        BiorhythmForecastPanel(
+                            birthDate = birthDate,
+                            referenceDate = referenceDate,
+                            lines = biorhythmLines,
+                            locale = locale,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
             } else {
-                BirthDateOnboardingCard(onChooseDate = { showDatePicker = true })
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(onboardingScrollState)
+                        .padding(top = 16.dp),
+                ) {
+                    BirthDateOnboardingCard(onChooseDate = { showDatePicker = true })
+                }
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 
@@ -318,6 +359,30 @@ private fun MainScreen(
                 }
             },
         )
+    }
+}
+
+@Composable
+internal fun MainTabSelector(
+    selectedTab: Int,
+    onSelectedTabChange: (Int) -> Unit,
+) {
+    val labels = listOf(
+        appString(R.string.main_tab_today),
+        appString(R.string.main_tab_forecast),
+    )
+
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        labels.forEachIndexed { index, label ->
+            SegmentedButton(
+                selected = selectedTab == index,
+                onClick = { onSelectedTabChange(index) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = labels.size),
+                modifier = Modifier.weight(1f),
+                icon = {},
+                label = { Text(label) },
+            )
+        }
     }
 }
 
