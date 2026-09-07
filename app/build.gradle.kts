@@ -22,8 +22,8 @@ android {
         applicationId = "com.sl.biorhythms"
         minSdk = 26
         targetSdk = 37
-        versionCode = 17
-        versionName = "1.6.6"
+        versionCode = 18
+        versionName = "1.7.0"
     }
 
     signingConfigs {
