@@ -10,10 +10,10 @@ from pathlib import Path
 ORIGINAL_ARTWORK_SHA256 = "abc878b9b42d05c8195fb6a6c556da66102eda3e4c62c0bf73cb29c1d017b1a2"
 EXPECTED_BACKGROUND = "#080347"
 COLOR_ELEMENT = re.compile(
-    r'<color\\s+name=["\\\']ic_launcher_background["\\\']\\s*>\\s*(#[0-9A-Fa-f]{6,8})\\s*</color>'
+    r'<color\s+name=["\']ic_launcher_background["\']\s*>\s*(#[0-9A-Fa-f]{6,8})\s*</color>'
 )
 DRAWABLE_ATTRIBUTE = re.compile(
-    r'android:drawable=["\\\']([^"\\\']+)["\\\']'
+    r'android:drawable=["\']([^"\']+)["\']'
 )
 OLD_LAUNCHER_HASHES = {
     "08d5e8697b228034cd5f6e40fdea8177daadc4cfdcfeef52f520ab8ec1c61fcd",
@@ -58,15 +58,15 @@ def verify_sources(res_dir: Path) -> None:
     ]
     for path in adaptive_files:
         text = path.read_text(encoding="utf-8")
-        background = re.search(r"<background\\b[^>]*>", text)
-        foreground = re.search(r"<foreground\\b[^>]*>", text)
+        background = re.search(r"<background\b[^>]*>", text)
+        foreground = re.search(r"<foreground\b[^>]*>", text)
         background_drawable = DRAWABLE_ATTRIBUTE.search(background.group(0)) if background else None
         foreground_drawable = DRAWABLE_ATTRIBUTE.search(foreground.group(0)) if foreground else None
         if background_drawable is None or background_drawable.group(1) != "@color/ic_launcher_background":
             fail(f"{path} must use the opaque launcher color as adaptive background")
         if foreground_drawable is None or foreground_drawable.group(1) != "@drawable/ic_launcher_artwork":
             fail(f"{path} must use the approved original PNG as adaptive foreground")
-        if re.search(r"<monochrome\\b", text):
+        if re.search(r"<monochrome\b", text):
             fail(f"{path} must not derive a themed icon from the full-color PNG")
 
     for obsolete in (
