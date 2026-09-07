@@ -16,9 +16,14 @@
     <string name="legend_emotional">Эмоциональный</string>
     <string name="legend_intellectual">Интеллектуальный</string>
     <string name="label_today">Сегодня</string>
+    <string name="main_tab_today">Сегодня</string>
+    <string name="main_tab_forecast">7 дней</string>
     <string name="chart_a11y_description">График биоритмов с %1$s по %2$s. Выбрано %3$s:</string>
 
-    <string name="forecast_title">Ближайшие 7 дней</string>
+    <string name="forecast_title">Прогноз на 7 дней</string>
+    <string name="forecast_physical_short">Физ.</string>
+    <string name="forecast_emotional_short">Эмоц.</string>
+    <string name="forecast_intellectual_short">Интелл.</string>
     <string name="cycle_events_title">Важные точки циклов</string>
     <string name="cycle_event_critical">Критический день</string>
     <string name="cycle_event_peak">Пик</string>
