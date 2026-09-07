@@ -11,10 +11,17 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.7.0] - 2026-09-07
+
 ### 🎨 Changed
 - Split the main experience into dedicated **Today** and **7 days** tabs: current values and the interactive ±15-day chart stay together, while the weekly forecast has its own focused view.
 - Preserved selected-day critical points and synchronized extremes below the interactive chart instead of mixing the weekly forecast into the Today flow.
 - Shortened cycle labels inside forecast rows so all three columns remain readable on narrow screens.
+
+### 📦 Release
+- Bumped the app to `versionCode` 18 and `versionName` `1.7.0`.
 
 ---
 
