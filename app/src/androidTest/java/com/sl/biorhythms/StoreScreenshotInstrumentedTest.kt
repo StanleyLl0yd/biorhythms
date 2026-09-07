@@ -10,7 +10,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.semantics.SemanticsActions
@@ -27,6 +26,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.io.FileInputStream
 import java.time.LocalDate
 
 private val storeBirthDate: LocalDate = LocalDate.of(1977, 12, 1)
@@ -83,16 +83,6 @@ class StoreScreenshotInstrumentedTest {
         waitForText("Прогноз на 7 дней")
         saveStoreScreenshot("02_7_days.png", composeRule.onRoot().captureToImage())
 
-        val settingsTitle = composeRule.activity.getString(R.string.settings_title)
-        composeRule.onNodeWithContentDescription(settingsTitle).performSemanticsAction(SemanticsActions.OnClick)
-        waitForText("Настройки")
-        composeRule.onNodeWithText("Ежедневная сводка").performScrollTo()
-        composeRule.waitForIdle()
-        saveStoreScreenshot("03_notifications.png", composeRule.onRoot().captureToImage())
-
-        composeRule.onNodeWithText("О Biorhythms").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
-        waitForText("О приложении")
-        saveStoreScreenshot("04_about.png", composeRule.onRoot().captureToImage())
     }
 
     private fun waitForText(text: String) {
@@ -100,6 +90,75 @@ class StoreScreenshotInstrumentedTest {
             composeRule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.waitForIdle()
+    }
+}
+
+@RunWith(AndroidJUnit4::class)
+class SettingsStoreScreenshotInstrumentedTest {
+
+    @get:Rule
+    val composeRule = createComposeRule()
+
+    @Test
+    fun captureNotificationSettingsScreen() {
+        composeRule.setContent {
+            BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
+                CompositionLocalProvider(LocalAppLanguage provides AppLanguage.RU) {
+                    SettingsScreen(
+                        state = SettingsState(
+                            themeMode = AppThemeMode.LIGHT,
+                            language = AppLanguage.RU,
+                            birthDate = storeBirthDate,
+                            notificationPreferences = NotificationPreferences(
+                                enabled = true,
+                                hour = 9,
+                                minute = 0,
+                                dailySummary = true,
+                                importantEvents = true,
+                                physical = true,
+                                emotional = true,
+                                intellectual = true,
+                            ),
+                            notificationPermissionGranted = true,
+                        ),
+                        actions = SettingsActions(
+                            onThemeModeChange = {},
+                            onLanguageChange = {},
+                            onBirthDateChange = {},
+                            onNotificationPreferencesChange = {},
+                            onOpenNotificationSettings = {},
+                            onOpenAbout = {},
+                            onBack = {},
+                        ),
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Ежедневная сводка").performScrollTo()
+        composeRule.waitForIdle()
+        saveStoreScreenshot("03_notifications.png", composeRule.onRoot().captureToImage())
+    }
+}
+
+@RunWith(AndroidJUnit4::class)
+class AboutStoreScreenshotInstrumentedTest {
+
+    @get:Rule
+    val composeRule = createComposeRule()
+
+    @Test
+    fun captureAboutScreen() {
+        composeRule.setContent {
+            BiorhythmsTheme(themeMode = AppThemeMode.LIGHT) {
+                CompositionLocalProvider(LocalAppLanguage provides AppLanguage.RU) {
+                    AboutScreen(onBack = {})
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+        saveStoreScreenshot("04_about.png", composeRule.onRoot().captureToImage())
     }
 }
 
@@ -140,7 +199,13 @@ private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
 
     val instrumentation = InstrumentationRegistry.getInstrumentation()
     val destination = "/sdcard/Download/biorhythms-store-screenshots"
-    instrumentation.uiAutomation.executeShellCommand(
-        "mkdir -p $destination && cp '" + file.absolutePath + "' '" + destination + "/" + fileName + "'",
-    ).close()
+    val command = "mkdir -p $destination && cp '" + file.absolutePath +
+        "' '" + destination + "/" + fileName + "' && sync"
+    instrumentation.uiAutomation.executeShellCommand(command).use { descriptor ->
+        FileInputStream(descriptor.fileDescriptor).use { stream ->
+            while (stream.read() != -1) {
+                Unit
+            }
+        }
+    }
 }
