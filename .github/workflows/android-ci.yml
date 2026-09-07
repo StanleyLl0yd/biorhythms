@@ -159,7 +159,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          source_dir="/sdcard/Android/data/com.sl.biorhythms/files/store-screenshots"
+          source_dir="/sdcard/Download/biorhythms-store-screenshots"
           target_dir="app/build/reports/androidTests/connected/store-screenshots"
           mkdir -p "$target_dir"
           adb shell test -d "$source_dir"
