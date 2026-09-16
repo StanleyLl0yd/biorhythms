@@ -159,16 +159,41 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          source_dir="/sdcard/Download/biorhythms-store-screenshots"
+          package="com.sl.biorhythms"
+          source_dir="/storage/emulated/0/Android/data/$package/files/store-screenshots"
           target_dir="app/build/reports/androidTests/connected/store-screenshots"
           mkdir -p "$target_dir"
-          adb shell test -d "$source_dir"
-          adb pull "$source_dir/." "$target_dir/"
-          test -s "$target_dir/01_today.png"
-          test -s "$target_dir/02_7_days.png"
-          test -s "$target_dir/03_notifications.png"
-          test -s "$target_dir/04_about.png"
-          test -s "$target_dir/05_widget.png"
+          files=(
+            01_today.png
+            02_7_days.png
+            03_notifications.png
+            04_about.png
+            05_widget.png
+          )
+          for file in "${files[@]}"; do
+            adb exec-out run-as "$package" cat "$source_dir/$file" > "$target_dir/$file"
+            test -s "$target_dir/$file"
+          done
+          python3 - <<'PY'
+          import pathlib, struct
+
+          expected = [
+              "01_today.png",
+              "02_7_days.png",
+              "03_notifications.png",
+              "04_about.png",
+              "05_widget.png",
+          ]
+          root = pathlib.Path("app/build/reports/androidTests/connected/store-screenshots")
+          actual = sorted(path.name for path in root.glob("*.png"))
+          assert actual == sorted(expected), (actual, expected)
+          for name in expected:
+              data = (root / name).read_bytes()
+              assert data[:8] == b"\x89PNG\r\n\x1a\n", name
+              width, height = struct.unpack(">II", data[16:24])
+              assert width > 0 and height > 0, (name, width, height)
+              print(f"{name}: {width}x{height}, {len(data)} bytes")
+          PY
 
       - name: Upload Android test reports
         if: always()
