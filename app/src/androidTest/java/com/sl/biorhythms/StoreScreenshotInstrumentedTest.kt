@@ -26,7 +26,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
-import java.io.FileInputStream
 import java.time.LocalDate
 
 private val storeBirthDate: LocalDate = LocalDate.of(1977, 12, 1)
@@ -189,23 +188,12 @@ class WidgetStoreScreenshotInstrumentedTest {
 
 private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
-    val directory = File(context.getExternalFilesDir(null), "store-screenshots").apply {
+    val directory = File(context.filesDir, "store-screenshots").apply {
         mkdirs()
     }
     val file = File(directory, fileName)
     file.outputStream().use { output ->
         check(image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, output))
     }
-
-    val instrumentation = InstrumentationRegistry.getInstrumentation()
-    val destination = "/sdcard/Download/biorhythms-store-screenshots"
-    val command = "mkdir -p $destination && cp '" + file.absolutePath +
-        "' '" + destination + "/" + fileName + "' && sync"
-    instrumentation.uiAutomation.executeShellCommand(command).use { descriptor ->
-        FileInputStream(descriptor.fileDescriptor).use { stream ->
-            while (stream.read() != -1) {
-                Unit
-            }
-        }
-    }
+    check(file.isFile && file.length() > 0L)
 }
