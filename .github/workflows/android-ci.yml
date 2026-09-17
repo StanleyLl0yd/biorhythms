@@ -159,7 +159,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          source_dir="/sdcard/Download/biorhythms-store-screenshots"
+          package_name="com.sl.biorhythms"
           target_dir="app/build/reports/androidTests/connected/store-screenshots"
           mkdir -p "$target_dir"
           files=(
@@ -170,7 +170,7 @@ jobs:
             05_widget.png
           )
           for file in "${files[@]}"; do
-            adb pull "$source_dir/$file" "$target_dir/$file" >/dev/null
+            adb exec-out run-as "$package_name" cat "files/store-screenshots/$file" > "$target_dir/$file"
             test -s "$target_dir/$file"
           done
           python3 - <<'PY'
