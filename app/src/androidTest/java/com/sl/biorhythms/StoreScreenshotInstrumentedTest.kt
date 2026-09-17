@@ -11,10 +11,10 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.onRoot
 import androidx.datastore.preferences.core.edit
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -187,7 +187,8 @@ class WidgetStoreScreenshotInstrumentedTest {
 }
 
 private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
-    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val context = instrumentation.targetContext
     val directory = File(context.filesDir, "store-screenshots").apply {
         mkdirs()
     }
@@ -196,4 +197,14 @@ private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
         check(image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, output))
     }
     check(file.isFile && file.length() > 0L)
+
+    val sharedDirectory = "/sdcard/Download/biorhythms-store-screenshots"
+    val command =
+        "mkdir -p $sharedDirectory && " +
+            "run-as ${context.packageName} cat ${file.absolutePath} > $sharedDirectory/$fileName"
+    instrumentation.uiAutomation.executeShellCommand(command).use { descriptor ->
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { input ->
+            input.readBytes()
+        }
+    }
 }
