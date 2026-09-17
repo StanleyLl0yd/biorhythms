@@ -160,7 +160,18 @@ jobs:
         run: |
           set -euo pipefail
           package_name="com.sl.biorhythms"
+          app_apk=$(find app/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' -print -quit)
+          test_apk=$(find app/build/outputs/apk/androidTest -type f -name '*.apk' -print -quit)
+          test -n "$app_apk"
+          test -n "$test_apk"
+          adb install -r "$app_apk" >/dev/null
+          adb install -r "$test_apk" >/dev/null
+          adb shell am instrument -w -r \
+            -e class 'com.sl.biorhythms.StoreScreenshotInstrumentedTest,com.sl.biorhythms.SettingsStoreScreenshotInstrumentedTest,com.sl.biorhythms.AboutStoreScreenshotInstrumentedTest,com.sl.biorhythms.WidgetStoreScreenshotInstrumentedTest' \
+            "$package_name.test/androidx.test.runner.AndroidJUnitRunner"
+
           target_dir="app/build/reports/androidTests/connected/store-screenshots"
+          rm -rf "$target_dir"
           mkdir -p "$target_dir"
           files=(
             01_today.png
