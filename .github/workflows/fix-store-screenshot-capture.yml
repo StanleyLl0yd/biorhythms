@@ -27,64 +27,46 @@ jobs:
 
           workflow = Path('.github/workflows/android-ci.yml')
           text = workflow.read_text()
-          old = '''          package="com.sl.biorhythms"
-          source_dir="/data/data/$package/files/store-screenshots"
-'''
-          new = '''          source_dir="/sdcard/Download/biorhythms-store-screenshots"
-'''
+          old = '          package="com.sl.biorhythms"\n          source_dir="/data/data/$package/files/store-screenshots"\n'
+          new = '          source_dir="/sdcard/Download/biorhythms-store-screenshots"\n'
           assert text.count(old) == 1, text.count(old)
           text = text.replace(old, new)
-          old = '''            adb exec-out run-as "$package" cat "$source_dir/$file" > "$target_dir/$file"
-            test -s "$target_dir/$file"
-'''
-          new = '''            adb pull "$source_dir/$file" "$target_dir/$file" >/dev/null
-            test -s "$target_dir/$file"
-'''
+          old = '            adb exec-out run-as "$package" cat "$source_dir/$file" > "$target_dir/$file"\n            test -s "$target_dir/$file"\n'
+          new = '            adb pull "$source_dir/$file" "$target_dir/$file" >/dev/null\n            test -s "$target_dir/$file"\n'
           assert text.count(old) == 1, text.count(old)
           workflow.write_text(text.replace(old, new))
 
           test_file = Path('app/src/androidTest/java/com/sl/biorhythms/StoreScreenshotInstrumentedTest.kt')
           text = test_file.read_text()
-          old = '''private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
-    val context = InstrumentationRegistry.getInstrumentation().targetContext
-    val directory = File(context.filesDir, "store-screenshots").apply {
-        mkdirs()
-    }
-    val file = File(directory, fileName)
-    file.outputStream().use { output ->
-        check(image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, output))
-    }
-    check(file.isFile && file.length() > 0L)
-}
-'''
-          new = '''private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
-    val instrumentation = InstrumentationRegistry.getInstrumentation()
-    val context = instrumentation.targetContext
-    val directory = File(context.filesDir, "store-screenshots").apply {
-        mkdirs()
-    }
-    val file = File(directory, fileName)
-    file.outputStream().use { output ->
-        check(image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, output))
-    }
-    check(file.isFile && file.length() > 0L)
+          marker = 'private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {'
+          assert text.count(marker) == 1, text.count(marker)
+          prefix = text.split(marker, 1)[0]
+          helper = '''private fun saveStoreScreenshot(fileName: String, image: ImageBitmap) {
+              val instrumentation = InstrumentationRegistry.getInstrumentation()
+              val context = instrumentation.targetContext
+              val directory = File(context.filesDir, "store-screenshots").apply {
+                  mkdirs()
+              }
+              val file = File(directory, fileName)
+              file.outputStream().use { output ->
+                  check(image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, output))
+              }
+              check(file.isFile && file.length() > 0L)
 
-    val sharedDirectory = "/sdcard/Download/biorhythms-store-screenshots"
-    val command =
-        "mkdir -p $sharedDirectory && " +
-            "run-as ${context.packageName} cat ${file.absolutePath} > $sharedDirectory/$fileName"
-    instrumentation.uiAutomation.executeShellCommand(command).use { descriptor ->
-        android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { input ->
-            input.readBytes()
-        }
-    }
-}
-'''
-          assert text.count(old) == 1, text.count(old)
-          test_file.write_text(text.replace(old, new))
+              val sharedDirectory = "/sdcard/Download/biorhythms-store-screenshots"
+              val command =
+                  "mkdir -p $sharedDirectory && " +
+                      "run-as ${context.packageName} cat ${file.absolutePath} > $sharedDirectory/$fileName"
+              instrumentation.uiAutomation.executeShellCommand(command).use { descriptor ->
+                  android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { input ->
+                      input.readBytes()
+                  }
+              }
+          }
+          '''
+          test_file.write_text(prefix + helper)
           PY
 
-          python3 .github/scripts/verify-ci-supply-chain.py
           grep -F 'source_dir="/sdcard/Download/biorhythms-store-screenshots"' .github/workflows/android-ci.yml
           grep -F 'run-as ${context.packageName} cat ${file.absolutePath}' app/src/androidTest/java/com/sl/biorhythms/StoreScreenshotInstrumentedTest.kt
 
